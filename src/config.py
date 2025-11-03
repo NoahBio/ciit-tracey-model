@@ -4,13 +4,16 @@ Global configuration and parameters for CIIT-Tracey computational model.
 ⚠️ PROVISIONAL UTILITY MATRIX ⚠️
 The U_MATRIX values below are placeholder values for initial development and should be replaced with empirically-grounded values when available.
 
-TODO: Replace U_MATRIX with validated values from:
-  - Expert consensus
-  - Empirical interpersonal research
-  - Calibration studies
+    TODO:
+  - update U_MATRIX Values
+  - maybe only fix "known" U_MATRIX values and generate others randomly from reasonable range (potentially increases training time)
+  - update weighting section to only include recency bias
+  - update success threshold to use client-specific u_matrix values
 """
 
 import numpy as np
+from numpy.typing import NDArray
+from typing import Optional
 
 # =============================================================================
 # OCTANT DEFINITIONS
@@ -33,44 +36,108 @@ OCTANT_NAMES = ["D", "WD", "W", "WS", "S", "CS", "C", "CD"]
 OCTANT_INDEX = {name: idx for idx, name in OCTANTS.items()}
 
 # =============================================================================
-# UTILITY MATRIX (U) - ⚠️ PROVISIONAL VALUES ⚠️
+# UTILITY MATRIX BOUNDS - Version 3
 # =============================================================================
 
 """
-Octant Interaction Utility Matrix U[client_behavior, therapist_behavior]
-Rows = Client behavior (0-7: D, WD, W, WS, S, CS, C, CD)
+Utility matrix bounds define the range of possible utilities for each 
+client-therapist octant interaction. Client-specific U_MATRIX values 
+are sampled from these ranges.
+
+Format: U_MIN[client, therapist] and U_MAX[client, therapist]
+Rows = Client behavior (0-7: D, WD, w, WS, S, CS, C, CD)
 Cols = Therapist behavior (0-7: D, WD, W, WS, S, CS, C, CD)
 """
 
-U_MATRIX = np.array([
-    # Therapist:  D     WD     W     WS     S     CS     C     CD
+# Minimum utility values
+U_MIN = np.array([
+    # Therapist:  D      WD      W      WS      S      CS      C      CD
     # Client D (Dominant)
-    [  -2.0,  -1.0,  +0.5,  +1.5,  +2.0,  +1.5,   0.0,  -2.0 ],  # D
+    [           -40,    -50,   -10,    +20,    +30,    +20,   -10,    -50 ],  # D
     
     # Client WD (Warm-Dominant)
-    [  -1.0,  +1.0,  +1.5,  +2.0,  +1.5,   0.0,  -1.0,  -2.0 ],  # WD
+    [           -30,      0,    +30,    +50,    +10,    -30,   -50,    -70 ],  # WD
     
     # Client W (Warm)
-    [  +0.5,  +1.5,  +2.0,  +1.5,  +0.5,  -0.5,  -2.0,  -1.5 ],  # W
+    [           -10,    +30,    +40,    +30,    -10,    -70,   -60,    -70 ],  # W
     
     # Client WS (Warm-Submissive)
-    [  +1.5,  +2.0,  +1.5,  +1.0,  -1.0,  -2.0,  -1.0,   0.0 ],  # WS
+    [           +10,    +50,    +30,      0,    -30,    -70,   -50,    -30 ],  # WS
     
     # Client S (Submissive)
-    [  +2.0,  +1.5,  +0.5,  -1.0,  -2.0,  -2.0,   0.0,  +1.5 ],  # S
+    [           +30,    +20,    -10,    -50,    -40,    -50,   -10,    +20 ],  # S
     
     # Client CS (Cold-Submissive)
-    [  +1.5,   0.0,  -1.0,  -2.0,  -1.0,  +1.0,  +1.5,  +2.0 ],  # CS
+    [           +10,    -10,    -30,    -40,    -20,    -10,   +10,    +20 ],  # CS
     
     # Client C (Cold)
-    [   0.0,  -1.5,  -2.0,  -1.5,   0.0,  +1.5,  +2.0,  +1.5 ],  # C
+    [           -10,    -40,    -30,    -40,    -10,    +10,   +20,    +10 ],  # C
     
     # Client CD (Cold-Dominant)
-    [  -1.0,  -2.0,  -1.0,   0.0,  +1.5,  +2.0,  +1.5,  +1.0 ],  # CD
+    [           -30,    -40,    -20,    -10,    +10,    +20,   +10,    -10 ],  # CD
 ])
 
-# Verify matrix shape
-assert U_MATRIX.shape == (8, 8), f"U_MATRIX must be 8x8, got {U_MATRIX.shape}"
+# Maximum utility values
+U_MAX = np.array([
+    # Therapist:  D      WD      W      WS      S      CS      C      CD
+    # Client D (Dominant)
+    [           -20,    -30,    +10,    +40,    +50,    +40,   +10,    -30 ],  # D
+    
+    # Client WD (Warm-Dominant)
+    [           -10,    +20,    +50,    +70,    +30,    -10,   -30,    -50 ],  # WD
+    
+    # Client W (Warm)
+    [           +10,    +50,    +60,    +50,    +10,    -50,   -40,    -50 ],  # W
+    
+    # Client WS (Warm-Submissive)
+    [           +30,    +70,    +50,    +20,    -10,    -50,   -30,    -10 ],  # WS
+    
+    # Client S (Submissive)
+    [           +50,    +40,    +10,    -30,    -20,    -30,   +10,    +40 ],  # S
+    
+    # Client CS (Cold-Submissive)
+    [           +30,    +10,    -10,    -20,      0,    +10,   +30,    +40 ],  # CS
+    
+    # Client C (Cold)
+    [           +10,    -20,    -10,    -20,    +10,    +30,   +40,    +30 ],  # C
+    
+    # Client CD (Cold-Dominant)
+    [           -10,    -20,      0,    +10,    +30,    +40,   +30,    +10 ],  # CD
+])
+
+# Verify shapes
+assert U_MIN.shape == (8, 8), f"U_MIN must be 8x8, got {U_MIN.shape}"
+assert U_MAX.shape == (8, 8), f"U_MAX must be 8x8, got {U_MAX.shape}"
+assert np.all(U_MIN <= U_MAX), "U_MIN must be <= U_MAX for all entries"
+
+def sample_u_matrix(random_state: Optional[int] = None) -> NDArray[np.float64]:
+    """
+    Sample a client-specific utility matrix from the defined ranges.
+    
+    Parameters
+    ----------
+    random_state : int, optional
+        Random seed for reproducibility
+        
+    Returns
+    -------
+    NDArray[np.float64]
+        8x8 utility matrix sampled from [U_MIN, U_MAX] ranges
+    """
+    rng = np.random.RandomState(random_state)
+    
+    # Sample uniformly between min and max for each cell
+    u_matrix = rng.uniform(low=U_MIN, high=U_MAX)
+    
+    return u_matrix
+
+# Keep a default/mean matrix for reference
+U_MATRIX = (U_MIN + U_MAX) / 2  # Midpoint of ranges
+
+print(f"\nUtility Matrix Ranges:")
+print(f"  Min value: {U_MIN.min()}")
+print(f"  Max value: {U_MAX.max()}")
+print(f"  Mean of midpoints: {U_MATRIX.mean():.2f}")
 
 # =============================================================================
 # MEMORY AND SATISFACTION PARAMETERS
@@ -78,12 +145,10 @@ assert U_MATRIX.shape == (8, 8), f"U_MATRIX must be 8x8, got {U_MATRIX.shape}"
 
 MEMORY_SIZE = 50  # Number of interaction pairs stored
 
-# Relationship Satisfaction weighting scheme
-MEMORY_WEIGHTING = "equal"  # Options: "equal", "recency_bias", "hybrid"
-
-def get_memory_weights(n_interactions: int = MEMORY_SIZE) -> np.ndarray:
+# Relationship Satisfaction weighting scheme: square root recency bias
+def get_memory_weights(n_interactions: int = MEMORY_SIZE) -> NDArray[np.float64]:
     """
-    Generate weights for relationship satisfaction calculation.
+    Square root recency weighting: oldest memory has 50% weight of newest
     
     Parameters
     ----------
@@ -92,41 +157,24 @@ def get_memory_weights(n_interactions: int = MEMORY_SIZE) -> np.ndarray:
         
     Returns
     -------
-    weights : np.ndarray
+    NDArray[np.float64]
         Normalized weights that sum to 1.0
     """
-    if MEMORY_WEIGHTING == "equal":
-        return np.ones(n_interactions) / n_interactions
-    
-    elif MEMORY_WEIGHTING == "recency_bias":
-        # Exponential decay: recent interactions weighted more
-        decay = 0.95
-        weights = np.array([decay ** i for i in range(n_interactions-1, -1, -1)])
-        return weights / weights.sum()
-    
-    elif MEMORY_WEIGHTING == "hybrid":
-        # Equal for first half, recency bias for second half
-        half = n_interactions // 2
-        first_half = np.ones(half) / n_interactions
-        decay = 0.95
-        second_half = np.array([decay ** i for i in range(half-1, -1, -1)])
-        second_half = second_half / second_half.sum() * 0.5
-        return np.concatenate([first_half, second_half])
-    
-    else:
-        raise ValueError(f"Unknown weighting scheme: {MEMORY_WEIGHTING}")
+    t = np.arange(n_interactions) / (n_interactions - 1)
+    weights = 1 + np.sqrt(t)
+    return weights / weights.sum()
 
 # =============================================================================
 # BOND CALCULATION PARAMETERS
 # =============================================================================
 
-def sigmoid(x: float, alpha: float = 1.0) -> float:
+def rs_to_bond(rs: float, alpha: float = 1.0) -> float:
     """
-    Sigmoid transformation for bond calculation.
+    Sigmoid transformation or rs for bond calculation.
     
     Parameters
     ----------
-    x : float
+    rs : float
         Input value (typically relationship satisfaction)
     alpha : float
         Steepness parameter (higher = steeper transition)
@@ -136,9 +184,9 @@ def sigmoid(x: float, alpha: float = 1.0) -> float:
     float
         Value in range [0, 1]
     """
-    return 1.0 / (1.0 + np.exp(-alpha * x))
+    return 1.0 / (1.0 + np.exp(-alpha * rs))
 
-BOND_ALPHA = 1.0  # Steepness of sigmoid transformation
+BOND_ALPHA = 1.0  # Steepness of sigmoid transformation, 1 corresponds to logistic function
 
 # =============================================================================
 # CLIENT PARAMETERS
@@ -151,19 +199,16 @@ CLIENT_ENTROPY_STD = 0.15
 CLIENT_ENTROPY_MIN = 0.1
 CLIENT_ENTROPY_MAX = 2.0
 
-# Dropout probability parameters
-DROPOUT_ALPHA = 2.0  # Steepness: P(dropout) = sigmoid(-alpha * bond)
-
 # =============================================================================
 # EPISODE PARAMETERS
 # =============================================================================
 
 MAX_SESSIONS = 100  # Maximum therapy sessions per episode
 
-# Success threshold: 90th percentile of possible relationship satisfaction values
+# Success threshold: 80th percentile of possible relationship satisfaction values
 def calculate_success_threshold() -> float:
     """
-    Calculate success threshold as 90th percentile of theoretically possible
+    Calculate success threshold as 80th percentile of theoretically possible
     relationship satisfaction values.
     
     Returns
@@ -176,15 +221,15 @@ def calculate_success_threshold() -> float:
     # Worst case: all interactions at min utility
     max_possible_rs = U_MATRIX.max()
     min_possible_rs = U_MATRIX.min()
-    
-    # 90th percentile: 90% of the way from min to max
-    threshold = min_possible_rs + 0.9 * (max_possible_rs - min_possible_rs)
+
+    # 80th percentile: 80% of the way from min to max
+    threshold = min_possible_rs + 0.8 * (max_possible_rs - min_possible_rs)
     
     return threshold
 
 SUCCESS_THRESHOLD = calculate_success_threshold()
 
-print(f"Success threshold (90th percentile): {SUCCESS_THRESHOLD:.3f}")
+print(f"Success threshold (80th percentile): {SUCCESS_THRESHOLD:.3f}")
 print(f"  (Range: [{U_MATRIX.min():.1f}, {U_MATRIX.max():.1f}])")
 
 # =============================================================================
