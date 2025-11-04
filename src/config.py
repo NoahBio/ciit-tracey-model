@@ -1,9 +1,6 @@
 """
 Global configuration and parameters for CIIT-Tracey computational model.
 
-⚠️ PROVISIONAL UTILITY MATRIX ⚠️
-The U_MATRIX values below are placeholder values for initial development and should be replaced with empirically-grounded values when available.
-
     TODO:
   - update U_MATRIX Values
   - maybe only fix "known" U_MATRIX values and generate others randomly from reasonable range (potentially increases training time)
@@ -117,14 +114,17 @@ def sample_u_matrix(random_state: Optional[int] = None) -> NDArray[np.float64]:
     Parameters
     ----------
     random_state : int, optional
-        Random seed for reproducibility
+        Random seed or RandomState instance for reproducibility
         
     Returns
     -------
     NDArray[np.float64]
         8x8 utility matrix sampled from [U_MIN, U_MAX] ranges
     """
-    rng = np.random.RandomState(random_state)
+    if isinstance(random_state, np.random.RandomState):
+        rng = random_state
+    else:
+        rng = np.random.RandomState(random_state)
     
     # Sample uniformly between min and max for each cell
     u_matrix = rng.uniform(low=U_MIN, high=U_MAX)
@@ -133,11 +133,6 @@ def sample_u_matrix(random_state: Optional[int] = None) -> NDArray[np.float64]:
 
 # Keep a default/mean matrix for reference
 U_MATRIX = (U_MIN + U_MAX) / 2  # Midpoint of ranges
-
-print(f"\nUtility Matrix Ranges:")
-print(f"  Min value: {U_MIN.min()}")
-print(f"  Max value: {U_MAX.max()}")
-print(f"  Mean of midpoints: {U_MATRIX.mean():.2f}")
 
 # =============================================================================
 # MEMORY AND SATISFACTION PARAMETERS
@@ -168,25 +163,46 @@ def get_memory_weights(n_interactions: int = MEMORY_SIZE) -> NDArray[np.float64]
 # BOND CALCULATION PARAMETERS
 # =============================================================================
 
-def rs_to_bond(rs: float, alpha: float = 1.0) -> float:
+def rs_to_bond(
+    rs: float, 
+    rs_min: float, 
+    rs_max: float, 
+    alpha: float = 3
+) -> float:
     """
-    Sigmoid transformation or rs for bond calculation.
+    Sigmoid transformation of RS for bond calculation with normalization.
+    
+    Normalizes RS to [-1, 1] range based on client-specific matrix bounds,
+    then applies sigmoid.
     
     Parameters
     ----------
     rs : float
-        Input value (typically relationship satisfaction)
+        Current relationship satisfaction
+    rs_min : float
+        Minimum possible RS for this client (min of their U_MATRIX)
+    rs_max : float
+        Maximum possible RS for this client (max of their U_MATRIX)
     alpha : float
-        Steepness parameter (higher = steeper transition)
+        Steepness parameter after normalization (default 3)
+        Higher values = steeper transition around midpoint
         
     Returns
     -------
     float
-        Value in range [0, 1]
+        Bond value in range [0, 1]
     """
-    return 1.0 / (1.0 + np.exp(-alpha * rs))
+    rs_range = rs_max - rs_min
 
-BOND_ALPHA = 1.0  # Steepness of sigmoid transformation, 1 corresponds to logistic function
+    # Normalize RS to [-1, 1] range
+    rs_normalized = 2 * (rs - rs_min) / rs_range - 1
+
+    # Apply sigmoid
+    bond = 1.0 / (1.0 + np.exp(-alpha * rs_normalized))
+
+    return float(bond)
+
+BOND_ALPHA = 3  # Steepness of sigmoid transformation; chosen based on plotting the sigmoid curve for various alpha values and selecting a values
 
 # =============================================================================
 # CLIENT PARAMETERS
@@ -228,9 +244,6 @@ def calculate_success_threshold() -> float:
     return threshold
 
 SUCCESS_THRESHOLD = calculate_success_threshold()
-
-print(f"Success threshold (80th percentile): {SUCCESS_THRESHOLD:.3f}")
-print(f"  (Range: [{U_MATRIX.min():.1f}, {U_MATRIX.max():.1f}])")
 
 # =============================================================================
 # REWARD FUNCTION PARAMETERS

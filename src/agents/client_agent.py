@@ -17,6 +17,7 @@ from collections import deque
 
 from src.config import (
     U_MATRIX,
+    sample_u_matrix,
     MEMORY_SIZE,
     get_memory_weights,
     rs_to_bond,
@@ -37,7 +38,7 @@ class ClientAgent:
     ----------
     initial_memory : List[Tuple[int, int]]
         Pre-filled memory representing interpersonal biography.
-        List of [client_octant, therapist_octant] pairs.
+        List of octant pairs, mostly [client_octant, therapist_octant]
         Length must equal MEMORY_SIZE (50).
     entropy : float
         Temperature parameter for softmax action selection.
@@ -68,17 +69,25 @@ class ClientAgent:
         
         # Initialize parameters
         self.entropy = entropy
-        self.u_matrix = U_MATRIX if u_matrix is None else u_matrix
-        
+        # Sample client-specific U_MATRIX if not provided
+        if u_matrix is None:
+            self.u_matrix = sample_u_matrix(random_state=random_state)
+        else:
+            self.u_matrix = u_matrix
+
         # Set random state
         if isinstance(random_state, np.random.RandomState):
             self.rng = random_state
         else:
             self.rng = np.random.RandomState(random_state)
-        
+
         # Initialize memory as deque for efficient append/pop
         self.memory = deque(initial_memory, maxlen=MEMORY_SIZE)
         
+        # Store client-specific RS bounds for normalization
+        self.rs_min = float(self.u_matrix.min())
+        self.rs_max = float(self.u_matrix.max())
+
         # Calculate initial state
         self.relationship_satisfaction = self._calculate_relationship_satisfaction()
         self.bond = self._calculate_bond()
@@ -87,7 +96,6 @@ class ClientAgent:
         self.initial_rs = self.relationship_satisfaction
         self.session_count = 0
         self.dropout_checked = False  # Track if we've already checked dropout
-
 
     def _calculate_relationship_satisfaction(self) -> float:
         """
@@ -113,19 +121,13 @@ class ClientAgent:
         return float(rs)
     
     def _calculate_bond(self) -> float:
-        """
-        Calculate bond as from relationship satisfaction.
-        
-        Bond represents trust/optimism about therapist responses:
-        - Low bond (≈0): Pessimistic expectations
-        - High bond (≈1): Optimistic expectations
-        
-        Returns
-        -------
-        float
-            Bond value in range [0, 1]
-        """
-        return rs_to_bond(self.relationship_satisfaction, alpha=BOND_ALPHA)
+        """Calculate bond using client-specific normalization."""
+        return rs_to_bond(
+            rs=self.relationship_satisfaction,
+            rs_min=self.rs_min,
+            rs_max=self.rs_max,
+            alpha=BOND_ALPHA  # Can still control steepness from config
+        )
     
     def _calculate_expected_payoffs(self) -> NDArray[np.float64]:
         """
@@ -291,18 +293,17 @@ class ClientAgent:
         """
         Generate initial memory representing problematic interpersonal patterns.
         
-        This creates the client's interpersonal biography - their history of
-        maladaptive interactions that led them to seek therapy.
+        Creates interaction history where:
+        1. Problem client samples from problematic octants 80% of time, random 20%
+        2. Other person responds randomly (uniform across all octants)
         
         Parameters
         ----------
         pattern_type : str
             Type of problematic pattern. Options:
-            - "cold_stuck": Client stuck in cold behaviors
-            - "dominant_stuck": Client stuck in dominant behaviors
-            - "submissive_stuck": Client stuck in submissive behaviors
-            - "cold_dominant": Cold-dominant pattern
-            - "cold_submissive": Cold-submissive pattern
+            - "cold_stuck": Client stuck in cold behaviors (CS, C, CD)
+            - "dominant_stuck": Client stuck in dominant behaviors (D, WD, CD)
+            - "submissive_stuck": Client stuck in submissive behaviors (S, WS, CS)
         n_interactions : int
             Number of interactions to generate
         random_state : int, optional
@@ -314,44 +315,40 @@ class ClientAgent:
             Memory of [client_octant, therapist_octant] pairs
         """
         rng = np.random.RandomState(random_state)
-        memory: List[Tuple[int, int]] = []
         
+        # Define problematic octant pools
         if pattern_type == "cold_stuck":
-            # Client predominantly uses cold behaviors (C, CS, CD)
-            # Others respond with coldness or withdrawal
-            client_pool = [5, 6, 7]  # CS, C, CD
-            therapist_pool = [5, 6, 7]  # Responding with coldness
+            problematic_octants = [5, 6, 7]  # CS, C, CD
             
         elif pattern_type == "dominant_stuck":
-            # Client predominantly dominant (D, WD, CD)
-            # Others respond with submission or withdrawal
-            client_pool = [0, 1, 7]  # D, WD, CD
-            therapist_pool = [3, 4, 5]  # WS, S, CS
+            problematic_octants = [0, 1, 7]  # D, WD, CD
             
         elif pattern_type == "submissive_stuck":
-            # Client predominantly submissive (S, WS, CS)
-            # Others respond with dominance
-            client_pool = [3, 4, 5]  # WS, S, CS
-            therapist_pool = [0, 1, 7]  # D, WD, CD
-            
-        elif pattern_type == "cold_dominant":
-            # Specific cold-dominant pattern
-            client_pool = [0, 7]  # D, CD
-            therapist_pool = [5, 6, 7]  # CS, C, CD
-            
-        elif pattern_type == "cold_submissive":
-            # Specific cold-submissive pattern
-            client_pool = [4, 5]  # S, CS
-            therapist_pool = [0, 6, 7]  # D, C, CD
+            problematic_octants = [3, 4, 5]  # WS, S, CS
             
         else:
-            raise ValueError(f"Unknown pattern_type: {pattern_type}")
+            raise ValueError(
+                f"Unknown pattern_type: {pattern_type}. "
+                f"Must be one of: cold_stuck, dominant_stuck, submissive_stuck"
+            )
         
         # Generate interactions
+        memory: List[Tuple[int, int]] = []
+        
         for _ in range(n_interactions):
-            client_oct = rng.choice(client_pool)
-            therapist_oct = rng.choice(therapist_pool)
-            memory.append((client_oct, therapist_oct))
+            # Problem client selects action (80% problematic, 20% random)
+            if rng.random() < 0.8:
+                # Sample from problematic octants
+                client_action = rng.choice(problematic_octants)
+            else:
+                # Random octant
+                client_action = rng.choice(8)
+            
+            # Other person responds randomly
+            other_action = rng.choice(8)
+            
+            # Store interaction
+            memory.append((client_action, other_action))
         
         return memory
 
@@ -366,21 +363,29 @@ def create_client(
     random_state: Optional[int] = None,
 ) -> ClientAgent:
     """
-    Convenience function to create a client with problematic interpersonal pattern (i.e. low relationship satisfaction).
+    Create a client with problematic interpersonal pattern.
+    
+    Each client gets:
+    - Client-specific u_matrix sampled from U_MIN/U_MAX ranges
+    - Entropy sampled from distribution (or custom value)
+    - Problematic memory history generated realistically
     
     Parameters
     ----------
     pattern_type : str
-        Type of problematic interpersonal pattern
+        Type of problematic interpersonal pattern:
+        - "cold_stuck": Stuck in cold behaviors
+        - "dominant_stuck": Stuck in dominant behaviors  
+        - "submissive_stuck": Stuck in submissive behaviors
     entropy : float, optional
         Temperature parameter. If None, samples from distribution.
     random_state : int, optional
-        Random seed
+        Random seed for reproducibility
         
     Returns
     -------
     ClientAgent
-        Initialized client agent
+        Initialized client agent with client-specific U_MATRIX
     """
     from src.config import CLIENT_ENTROPY_MEAN, CLIENT_ENTROPY_STD
     from src.config import CLIENT_ENTROPY_MIN, CLIENT_ENTROPY_MAX
@@ -394,16 +399,18 @@ def create_client(
     else:
         entropy = float(entropy)
     
-    # Generate problematic memory
+    # Generate problematic memory using generate_problematic_memory()
     initial_memory = ClientAgent.generate_problematic_memory(
         pattern_type=pattern_type,
         random_state=random_state,
     )
     
-    # Create client
+    # Create client with client-specific u_matrix
+    # (u_matrix=None triggers sampling from U_MIN/U_MAX in __init__)
     client = ClientAgent(
         initial_memory=initial_memory,
         entropy=entropy,
+        u_matrix=None,  # Will sample client-specific matrix
         random_state=random_state,
     )
     

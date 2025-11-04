@@ -3,11 +3,12 @@ Unit tests for ClientAgent.
 
 Run with: pytest tests/test_client_agent.py -v
 """
+# pyright: reportPrivateUsage=false
 
 import pytest
 import numpy as np
 from src.agents.client_agent import ClientAgent, create_client
-from src.config import MEMORY_SIZE, U_MATRIX, OCTANTS
+from src.config import MEMORY_SIZE, U_MATRIX
 
 
 class TestClientAgent:
