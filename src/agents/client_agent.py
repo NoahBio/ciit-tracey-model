@@ -318,7 +318,7 @@ class ClientAgent:
         
         # Define problematic octant pools
         if pattern_type == "cold_stuck":
-            problematic_octants = [5, 6, 7]  # CS, C, CD
+            problematic_octants = [5, 6]  # CS, C, CD
             
         elif pattern_type == "dominant_stuck":
             problematic_octants = [0, 1, 7]  # D, WD, CD
@@ -344,8 +344,9 @@ class ClientAgent:
                 # Random octant
                 client_action = rng.choice(8)
             
+            other_pool = [3, 4]  # Also cold → creates negative utilities
             # Other person responds randomly
-            other_action = rng.choice(8)
+            other_action = rng.choice(other_pool)  # TEST: Therapist uses cold octants
             
             # Store interaction
             memory.append((client_action, other_action))
