@@ -97,6 +97,10 @@ class ClientAgent:
         self.session_count = 0
         self.dropout_checked = False  # Track if we've already checked dropout
 
+        # Calculate client-specific success threshold
+        from src.config import calculate_success_threshold
+        self.success_threshold = calculate_success_threshold(self.u_matrix)
+
     def _calculate_relationship_satisfaction(self) -> float:
         """
         Calculate relationship satisfaction as weighted average of interaction utilities.
@@ -129,40 +133,83 @@ class ClientAgent:
             alpha=BOND_ALPHA  # Can still control steepness from config
         )
     
+    def _calculate_marginal_frequencies(self) -> NDArray[np.float64]:
+        """
+        Calculate P(therapist_j) from memory with recency weighting.
+        
+        Computes simple frequency distribution of therapist behaviors,
+        ignoring what client action preceded them (marginal probability).
+        No Bayesian smoothing - raw empirical frequencies only.
+        
+        Returns
+        -------
+        NDArray[np.float64]
+            Probability distribution P(therapist_j) for j=0..7
+        """
+        # Get memory weights (same recency scheme as RS calculation)
+        memory_weights = get_memory_weights(len(self.memory))
+        
+        # Count therapist actions with recency weights
+        weighted_counts = np.zeros(8)
+        
+        for idx, (client_oct, therapist_oct) in enumerate(self.memory):
+            weighted_counts[therapist_oct] += memory_weights[idx]
+        
+        # Calculate frequencies (no smoothing)
+        total_weight = sum(memory_weights)
+        if total_weight == 0:
+            return np.ones(8) / 8  # No memory = uniform
+        
+        frequencies = weighted_counts / total_weight
+        
+        return frequencies
+    
     def _calculate_expected_payoffs(self) -> NDArray[np.float64]:
         """
         Calculate expected payoff for each possible client action.
         
-        Uses trust-based percentile interpolation: clients with low bond expect
-        poor therapist responses (low percentile), while high bond clients expect
-        good responses (high percentile).
+        Mechanism:
+        1. History creates probability distribution over therapist actions: P(j)
+           - Raw empirical frequencies (no Bayesian smoothing)
+        2. Weight utilities by these probabilities: adjusted[i,j] = U[i,j] * P(j)
+        3. Bond selects percentile within probability-weighted distribution
+        
+        Softmax exploration handles uncertainty about unseen actions.
         
         Returns
         -------
         NDArray[np.float64]
             8-dimensional array of expected payoffs, one per octant
         """
+        # Calculate marginal therapist behavior frequencies
+        # No smoothing - raw empirical frequencies
+        therapist_frequencies = self._calculate_marginal_frequencies()
+        
         expected_payoffs = np.zeros(8)
         
         for client_action in range(8):
-            # Get all possible utilities for this client action
-            utilities_row = self.u_matrix[client_action, :]
+            # Get raw utilities for this client action
+            raw_utilities = self.u_matrix[client_action, :]
             
-            # Sort from worst to best outcome
-            sorted_utilities = np.sort(utilities_row)
+            # Weight utilities by probability of each therapist response
+            # "Accentuate" likely columns, diminish unlikely ones
+            adjusted_utilities = raw_utilities * therapist_frequencies
             
-            # Map bond (trust) to position in sorted list [0, 7]
+            # Sort probability-weighted utilities
+            sorted_adjusted = np.sort(adjusted_utilities)
+            
+            # Apply bond-based percentile interpolation
+            # High bond → expect good outcomes among likely responses
+            # Low bond → expect poor outcomes among likely responses
             position = self.bond * 7
             
-            # Interpolate between adjacent percentiles for smooth transitions
             lower_idx = int(position)
             upper_idx = min(lower_idx + 1, 7)
             interpolation_weight = position - lower_idx
             
-            # Calculate expected payoff
             expected_payoff = (
-                (1 - interpolation_weight) * sorted_utilities[lower_idx] +
-                interpolation_weight * sorted_utilities[upper_idx]
+                (1 - interpolation_weight) * sorted_adjusted[lower_idx] +
+                interpolation_weight * sorted_adjusted[upper_idx]
             )
             
             expected_payoffs[client_action] = expected_payoff
@@ -316,15 +363,33 @@ class ClientAgent:
         """
         rng = np.random.RandomState(random_state)
         
-        # Define problematic octant pools
+        # Define problematic octant pools and anticomplementary responses
         if pattern_type == "cold_stuck":
-            problematic_octants = [5, 6]  # CS, C, CD
+            problematic_octants = [5, 6, 7]  # CS, C, CD
+            # Anticomplementary: Warm responses (maximum communion violation)
+            anticomp_map = {
+                5: [1, 2, 3],  # CS → WD, W, WS (warm + agency mismatch)
+                6: [1, 2, 3],  # C → WD, W, WS (warm responses)
+                7: [1, 2, 3]   # CD → WD, W, WS (warm + agency conflict)
+            }
             
         elif pattern_type == "dominant_stuck":
             problematic_octants = [0, 1, 7]  # D, WD, CD
+            # Anticomplementary: Dominant responses (agency anticomplementarity)
+            anticomp_map = {
+                0: [0, 1, 7],  # D → D, WD, CD (power struggle)
+                1: [0, 1, 7],  # WD → D, WD, CD (power struggle)
+                7: [0, 1, 7]   # CD → D, WD, CD (power struggle)
+            }
             
         elif pattern_type == "submissive_stuck":
             problematic_octants = [3, 4, 5]  # WS, S, CS
+            # Anticomplementary: Submissive responses (leadership vacuum)
+            anticomp_map = {
+                3: [3, 4, 5],  # WS → WS, S, CS (no leadership)
+                4: [3, 4, 5],  # S → WS, S, CS (no leadership)
+                5: [3, 4, 5]   # CS → WS, S, CS (no leadership)
+            }
             
         else:
             raise ValueError(
@@ -336,17 +401,19 @@ class ClientAgent:
         memory: List[Tuple[int, int]] = []
         
         for _ in range(n_interactions):
-            # Problem client selects action (80% problematic, 20% random)
+            # Client action: mostly from problematic octants (80%), some random (20%)
             if rng.random() < 0.8:
-                # Sample from problematic octants
                 client_action = rng.choice(problematic_octants)
             else:
-                # Random octant
                 client_action = rng.choice(8)
             
-            other_pool = [3, 4]  # Also cold → creates negative utilities
-            # Other person responds randomly
-            other_action = rng.choice(other_pool)  # TEST: Therapist uses cold octants
+            # Other's response: ANTICOMPLEMENTARY if client action is problematic
+            if client_action in problematic_octants:
+                # Strongly anticomplementary response
+                other_action = rng.choice(anticomp_map[client_action])
+            else:
+                # Random response for non-problematic actions
+                other_action = rng.choice(8)
             
             # Store interaction
             memory.append((client_action, other_action))
