@@ -16,6 +16,7 @@ from typing import List, Tuple, Optional, Dict, Any
 from collections import deque
 
 from src.config import (
+    HISTORY_WEIGHT,
     U_MATRIX,
     sample_u_matrix,
     MEMORY_SIZE,
@@ -166,13 +167,18 @@ class ClientAgent:
     
     def _calculate_expected_payoffs(self) -> NDArray[np.float64]:
         """
-        Calculate expected payoff for each possible client action.
+            Calculate expected payoff for each possible client action.
         
         Mechanism:
         1. History creates probability distribution over therapist actions: P(j)
-           - Raw empirical frequencies (no Bayesian smoothing)
-        2. Weight utilities by these probabilities: adjusted[i,j] = U[i,j] * P(j)
-        3. Bond selects percentile within probability-weighted distribution
+        - Raw empirical frequencies (no Bayesian smoothing)
+        2. Amplify utilities based on frequency: 
+        adjusted[i,j] = U[i,j] + (U[i,j] * P(j) * k)
+        - Observed behaviors (P(j) > 0): utilities amplified proportionally
+        - Unobserved behaviors (P(j) = 0): utilities unchanged
+        3. Bond selects within amplified utilities via percentile interpolation
+        - High bond: expect good outcomes among likely responses (high percentiles)
+        - Low bond: expect poor outcomes among likely responses (low percentiles)
         
         Softmax exploration handles uncertainty about unseen actions.
         
@@ -193,7 +199,7 @@ class ClientAgent:
             
             # Weight utilities by probability of each therapist response
             # "Accentuate" likely columns, diminish unlikely ones
-            adjusted_utilities = raw_utilities * therapist_frequencies
+            adjusted_utilities = raw_utilities + (raw_utilities * therapist_frequencies * HISTORY_WEIGHT)
             
             # Sort probability-weighted utilities
             sorted_adjusted = np.sort(adjusted_utilities)

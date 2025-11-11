@@ -160,11 +160,13 @@ def get_memory_weights(n_interactions: int = MEMORY_SIZE) -> NDArray[np.float64]
 # BOND CALCULATION PARAMETERS
 # =============================================================================
 
+BOND_ALPHA = 3  # Steepness of sigmoid transformation; chosen based on plotting the sigmoid curve for various alpha values and selecting a values
+
 def rs_to_bond(
     rs: float, 
     rs_min: float, 
     rs_max: float, 
-    alpha: float = 3
+    alpha: float = BOND_ALPHA
 ) -> float:
     """
     Sigmoid transformation of RS for bond calculation with normalization.
@@ -199,8 +201,6 @@ def rs_to_bond(
 
     return float(bond)
 
-BOND_ALPHA = 3  # Steepness of sigmoid transformation; chosen based on plotting the sigmoid curve for various alpha values and selecting a values
-
 # =============================================================================
 # CLIENT PARAMETERS
 # =============================================================================
@@ -211,6 +211,8 @@ CLIENT_ENTROPY_MEAN = 0.5
 CLIENT_ENTROPY_STD = 0.15
 CLIENT_ENTROPY_MIN = 0.1
 CLIENT_ENTROPY_MAX = 2.0
+
+HISTORY_WEIGHT = 1 #Weighting factor for client history in utility calculation (used in client_agent.calculate_utilities)
 
 # =============================================================================
 # EPISODE PARAMETERS

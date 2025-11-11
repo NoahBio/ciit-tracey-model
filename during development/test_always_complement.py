@@ -370,11 +370,13 @@ def diagnose_payoff_calculation(client, session_num=0):
     Shows:
     - Raw utilities from u_matrix for each client action
     - Therapist frequency distribution
-    - Adjusted utilities (raw * frequencies)
+    - Adjusted utilities (amplified by frequency)
     - Sorted adjusted utilities
     - Bond value and percentile selection
     - Final expected payoff
     """
+    from src.config import HISTORY_WEIGHT
+    
     print(f"\n{'='*70}")
     print(f"PAYOFF CALCULATION DIAGNOSTIC - Session {session_num}")
     print(f"{'='*70}")
@@ -388,6 +390,7 @@ def diagnose_payoff_calculation(client, session_num=0):
     print(f"\nClient Bond: {client.bond:.4f}")
     print(f"Client RS: {client.relationship_satisfaction:.2f}")
     print(f"RS bounds: [{client.rs_min:.2f}, {client.rs_max:.2f}]")
+    print(f"HISTORY_WEIGHT: {HISTORY_WEIGHT}")
     
     # Analyze each client action
     print(f"\n{'Client Action Analysis':=^70}")
@@ -401,11 +404,12 @@ def diagnose_payoff_calculation(client, session_num=0):
         for j in range(8):
             print(f"    vs {OCTANTS[j]:3s}: {raw_utilities[j]:7.2f}")
         
-        # Adjusted utilities (weighted by frequency)
-        adjusted = raw_utilities * therapist_freq
-        print(f"\n  Adjusted utilities (raw × frequency):")
+        # Adjusted utilities (amplified by frequency)
+        adjusted = raw_utilities + (raw_utilities * therapist_freq * HISTORY_WEIGHT)
+        print(f"\n  Adjusted utilities (raw + raw × frequency × {HISTORY_WEIGHT}):")
         for j in range(8):
-            print(f"    vs {OCTANTS[j]:3s}: {raw_utilities[j]:7.2f} × {therapist_freq[j]:.4f} = {adjusted[j]:7.4f}")
+            amplification = raw_utilities[j] * therapist_freq[j] * HISTORY_WEIGHT
+            print(f"    vs {OCTANTS[j]:3s}: {raw_utilities[j]:7.2f} + ({raw_utilities[j]:7.2f} × {therapist_freq[j]:.4f} × {HISTORY_WEIGHT}) = {adjusted[j]:7.4f}")
         
         # Sorted adjusted utilities
         sorted_adjusted = np.sort(adjusted)
