@@ -13,7 +13,7 @@ project_root = Path(__file__).parent.parent  # Go up two levels to project root
 sys.path.insert(0, str(project_root))
 
 import numpy as np
-from src.agents.client_agent import create_client
+from src.agents.client_agents import create_problematic_client
 from src.config import MAX_SESSIONS, OCTANTS
 
 def always_complement(client_action: int) -> int:
@@ -222,7 +222,7 @@ def run_experiment(n_clients=100, pattern_type="cold_stuck"):
             print(f"  Simulating client {i + 1}/{n_clients}...")
         
         # Create client
-        client = create_client(pattern_type=pattern_type, random_state=i)
+        client = create_problematic_client(pattern_type=pattern_type, random_state=i)
         
         # Simulate therapy
         result = simulate_therapy_episode_detailed(client, always_complement)
@@ -441,7 +441,7 @@ if __name__ == "__main__":
     print("DETAILED PAYOFF DIAGNOSTIC FOR ONE CLIENT")
     print("="*70)
     
-    diagnostic_client = create_client(pattern_type="cold_stuck", random_state=0)
+    diagnostic_client = create_problematic_client(pattern_type="cold_stuck", random_state=0)
     
     print(f"\nInitial client state:")
     print(f"  Initial RS: {diagnostic_client.relationship_satisfaction:.2f}")

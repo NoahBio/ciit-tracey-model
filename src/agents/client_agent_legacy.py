@@ -1,4 +1,14 @@
 """
+LEGACY: Original client_agent.py before modular refactor.
+
+This file is kept for reference only. The code has been refactored into a modular
+structure in the client_agents/ module with separate implementations for different
+expectation mechanisms (bond_only, frequency_filter, frequency_amplifier).
+
+For new code, use: from src.agents.client_agents import create_client
+
+================================================================================
+
 Client Agent for CIIT-Tracey Computational Model.
 
 The client agent is reactive, optimizing immediate interpersonal motives without
