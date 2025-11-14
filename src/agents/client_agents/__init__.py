@@ -7,12 +7,16 @@ from .base_client import BaseClientAgent
 from .bond_only_client import BondOnlyClient
 from .frequency_filter_client import FrequencyFilterClient
 from .frequency_amplifier_client import FrequencyAmplifierClient
+from .conditional_filter_client import ConditionalFilterClient
+from .conditional_amplifier_client import ConditionalAmplifierClient
 
 __all__ = [
     'BaseClientAgent',
     'BondOnlyClient',
     'FrequencyFilterClient',
     'FrequencyAmplifierClient',
+    'ConditionalFilterClient',
+    'ConditionalAmplifierClient',
     'create_client',
     'create_problematic_client',
 ]
@@ -27,14 +31,17 @@ def create_client(mechanism='bond_only', **kwargs):
     mechanism : str
         Expectation mechanism to use:
         - 'bond_only': Original (no frequency tracking)
-        - 'frequency_filter': History filters via multiplication
-        - 'frequency_amplifier': History amplifies via addition
+        - 'frequency_filter': Marginal history filters via multiplication (BROKEN for consistent therapist)
+        - 'frequency_amplifier': Marginal history amplifies via addition
+        - 'conditional_filter': Conditional history filters via multiplication (robust)
+        - 'conditional_amplifier': Conditional history amplifies via addition (robust)
     **kwargs : dict
         Arguments passed to client constructor:
         - u_matrix : ndarray (required)
         - entropy : float (required)
         - initial_memory : list (required)
-        - history_weight : float (optional, only for amplifier)
+        - history_weight : float (optional, for amplifier variants)
+        - smoothing_alpha : float (optional, for conditional variants, default=0.1)
         - random_state : int or RandomState (optional)
 
     Returns
@@ -47,14 +54,16 @@ def create_client(mechanism='bond_only', **kwargs):
     >>> u = sample_u_matrix(random_state=42)
     >>> mem = [(0, 0)] * 50
     >>> client = create_client('bond_only', u_matrix=u, entropy=1.0, initial_memory=mem)
-    >>> client = create_client('frequency_filter', u_matrix=u, entropy=1.0, initial_memory=mem)
-    >>> client = create_client('frequency_amplifier', u_matrix=u, entropy=1.0,
-    ...                        initial_memory=mem, history_weight=1.5)
+    >>> client = create_client('conditional_amplifier', u_matrix=u, entropy=1.0, initial_memory=mem)
+    >>> client = create_client('conditional_filter', u_matrix=u, entropy=1.0,
+    ...                        initial_memory=mem, smoothing_alpha=0.05)
     """
     mechanisms = {
         'bond_only': BondOnlyClient,
         'frequency_filter': FrequencyFilterClient,
         'frequency_amplifier': FrequencyAmplifierClient,
+        'conditional_filter': ConditionalFilterClient,
+        'conditional_amplifier': ConditionalAmplifierClient,
     }
 
     if mechanism not in mechanisms:
@@ -97,8 +106,10 @@ def create_problematic_client(
     mechanism : str, default='frequency_amplifier'
         Expectation mechanism to use:
         - 'bond_only': Original (no frequency tracking)
-        - 'frequency_filter': History filters via multiplication
-        - 'frequency_amplifier': History amplifies via addition (default, matches legacy)
+        - 'frequency_filter': Marginal history filters (BROKEN for consistent therapist)
+        - 'frequency_amplifier': Marginal history amplifies (default, matches legacy)
+        - 'conditional_filter': Conditional history filters (robust)
+        - 'conditional_amplifier': Conditional history amplifies (robust)
     random_state : int, optional
         Random seed for reproducibility
 

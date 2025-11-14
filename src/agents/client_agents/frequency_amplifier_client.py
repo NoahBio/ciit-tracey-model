@@ -40,7 +40,7 @@ class FrequencyAmplifierClient(BaseClientAgent):
         u_matrix: NDArray[np.float64],
         entropy: float,
         initial_memory,
-        history_weight: float = None,
+        history_weight: float | None = None,
         random_state=None,
     ):
         super().__init__(u_matrix, entropy, initial_memory, random_state)

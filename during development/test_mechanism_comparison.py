@@ -29,7 +29,13 @@ def compare_mechanisms():
     u_matrix = sample_u_matrix(random_state=42)
     memory = generate_test_memory()
 
-    mechanisms = ['bond_only', 'frequency_filter', 'frequency_amplifier']
+    mechanisms = [
+        'bond_only',
+        'frequency_filter',
+        'frequency_amplifier',
+        'conditional_filter',
+        'conditional_amplifier'
+    ]
     results = {}
 
     print("MECHANISM COMPARISON")
@@ -77,7 +83,7 @@ def compare_mechanisms():
 
         # Most likely action
         most_likely = np.argmax(probs)
-        print(f"\nMost likely action: {OCTANTS[most_likely]} (prob={probs[most_likely]:.3f})")
+        print(f"\nMost likely action: {OCTANTS[int(most_likely)]} (prob={probs[most_likely]:.3f})")
 
         results[mech] = {
             'expected_payoffs': expected,
@@ -94,7 +100,7 @@ def compare_mechanisms():
     # Show differences in expected payoffs
     print("\nExpected Payoff Differences (relative to bond_only):")
     baseline = results['bond_only']['expected_payoffs']
-    for mech in ['frequency_filter', 'frequency_amplifier']:
+    for mech in ['frequency_filter', 'frequency_amplifier', 'conditional_filter', 'conditional_amplifier']:
         print(f"\n{mech}:")
         diffs = results[mech]['expected_payoffs'] - baseline
         for i in range(8):
@@ -104,7 +110,7 @@ def compare_mechanisms():
     # Show which action is most likely for each mechanism
     print("\nMost Likely Actions:")
     for mech in mechanisms:
-        most_likely = np.argmax(results[mech]['probabilities'])
+        most_likely = int(np.argmax(results[mech]['probabilities']))
         prob = results[mech]['probabilities'][most_likely]
         print(f"  {mech:20s}: {OCTANTS[most_likely]:3s} (prob={prob:.3f})")
 
@@ -126,7 +132,13 @@ def compare_with_varied_memories():
     }
 
     u_matrix = sample_u_matrix(random_state=42)
-    mechanisms = ['bond_only', 'frequency_filter', 'frequency_amplifier']
+    mechanisms = [
+        'bond_only',
+        'frequency_filter',
+        'frequency_amplifier',
+        'conditional_filter',
+        'conditional_amplifier'
+    ]
 
     for pattern_name, memory in patterns.items():
         print(f"\n{'='*80}")
@@ -148,7 +160,7 @@ def compare_with_varied_memories():
 
             print(f"\n{mech}:")
             print(f"  Bond: {client.bond:.3f}, RS: {client.relationship_satisfaction:.2f}")
-            print(f"  Most likely action: {OCTANTS[most_likely]} ({most_likely}) = {probs[most_likely]:.3f}")
+            print(f"  Most likely action: {OCTANTS[int(most_likely)]} ({most_likely}) = {probs[most_likely]:.3f}")
             print(f"  Expected payoff for that action: {expected[most_likely]:.2f}")
 
 
