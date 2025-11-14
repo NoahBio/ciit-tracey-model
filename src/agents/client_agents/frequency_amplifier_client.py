@@ -70,6 +70,20 @@ class FrequencyAmplifierClient(BaseClientAgent):
 
         return weighted_counts / total_weight
 
+    def _get_effective_history_weight(self) -> float:
+        """
+        Hook for subclasses to modify history weight based on bond.
+
+        Default implementation returns unmodified history_weight.
+        Subclasses can override to implement bond-weighted history influence.
+
+        Returns
+        -------
+        float
+            Effective history weight to use in calculations
+        """
+        return self.history_weight
+
     def _calculate_expected_payoffs(self) -> NDArray[np.float64]:
         """
         Calculate expected payoffs using frequency-amplified utilities.
@@ -81,6 +95,7 @@ class FrequencyAmplifierClient(BaseClientAgent):
         """
         # Calculate marginal therapist behavior frequencies
         therapist_frequencies = self._calculate_marginal_frequencies()
+        effective_weight = self._get_effective_history_weight()
 
         expected_payoffs = np.zeros(8)
 
@@ -90,7 +105,7 @@ class FrequencyAmplifierClient(BaseClientAgent):
             # Amplify: add frequency-weighted boost to raw utilities
             # Frequently observed responses get amplified (both positive and negative utilities)
             adjusted_utilities = raw_utilities + (
-                raw_utilities * therapist_frequencies * self.history_weight
+                raw_utilities * therapist_frequencies * effective_weight
             )
 
             # Sort amplified utilities

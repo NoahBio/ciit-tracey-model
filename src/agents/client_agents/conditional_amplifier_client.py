@@ -92,6 +92,20 @@ class ConditionalAmplifierClient(BaseClientAgent):
 
         return conditional_probs
 
+    def _get_effective_history_weight(self) -> float:
+        """
+        Hook for subclasses to modify history weight based on bond.
+
+        Default implementation returns unmodified history_weight.
+        Subclasses can override to implement bond-weighted history influence.
+
+        Returns
+        -------
+        float
+            Effective history weight to use in calculations
+        """
+        return self.history_weight
+
     def _calculate_expected_payoffs(self) -> NDArray[np.float64]:
         """
         Calculate expected payoffs using conditional frequency amplification.
@@ -102,6 +116,7 @@ class ConditionalAmplifierClient(BaseClientAgent):
             8-dimensional array of expected payoffs, one per octant
         """
         expected_payoffs = np.zeros(8)
+        effective_weight = self._get_effective_history_weight()
 
         for client_action in range(8):
             # Get conditional probabilities for this client action
@@ -113,7 +128,7 @@ class ConditionalAmplifierClient(BaseClientAgent):
             # Amplify: add frequency-weighted boost to raw utilities
             # Frequently observed responses get amplified (both positive and negative utilities)
             adjusted_utilities = raw_utilities + (
-                raw_utilities * conditional_freq * self.history_weight
+                raw_utilities * conditional_freq * effective_weight
             )
 
             # Sort amplified utilities

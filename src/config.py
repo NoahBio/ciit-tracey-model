@@ -160,7 +160,7 @@ def get_memory_weights(n_interactions: int = MEMORY_SIZE) -> NDArray[np.float64]
 # BOND CALCULATION PARAMETERS
 # =============================================================================
 
-BOND_ALPHA = 3  # Steepness of sigmoid transformation; chosen based on plotting the sigmoid curve for various alpha values and selecting a values
+BOND_ALPHA = 5  # Steepness of sigmoid transformation; chosen based on plotting the sigmoid curve for various alpha values and selecting a values
 
 def rs_to_bond(
     rs: float, 

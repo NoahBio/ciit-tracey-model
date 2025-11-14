@@ -9,6 +9,8 @@ from .frequency_filter_client import FrequencyFilterClient
 from .frequency_amplifier_client import FrequencyAmplifierClient
 from .conditional_filter_client import ConditionalFilterClient
 from .conditional_amplifier_client import ConditionalAmplifierClient
+from .bond_weighted_conditional_amplifier_client import BondWeightedConditionalAmplifier
+from .bond_weighted_frequency_amplifier_client import BondWeightedFrequencyAmplifier
 
 __all__ = [
     'BaseClientAgent',
@@ -17,6 +19,8 @@ __all__ = [
     'FrequencyAmplifierClient',
     'ConditionalFilterClient',
     'ConditionalAmplifierClient',
+    'BondWeightedConditionalAmplifier',
+    'BondWeightedFrequencyAmplifier',
     'create_client',
     'create_problematic_client',
 ]
@@ -35,6 +39,8 @@ def create_client(mechanism='bond_only', **kwargs):
         - 'frequency_amplifier': Marginal history amplifies via addition
         - 'conditional_filter': Conditional history filters via multiplication (robust)
         - 'conditional_amplifier': Conditional history amplifies via addition (robust)
+        - 'bond_weighted_conditional_amplifier': Conditional amplifier with bond-scaled history influence
+        - 'bond_weighted_frequency_amplifier': Marginal amplifier with bond-scaled history influence
     **kwargs : dict
         Arguments passed to client constructor:
         - u_matrix : ndarray (required)
@@ -42,6 +48,7 @@ def create_client(mechanism='bond_only', **kwargs):
         - initial_memory : list (required)
         - history_weight : float (optional, for amplifier variants)
         - smoothing_alpha : float (optional, for conditional variants, default=0.1)
+        - bond_power : float (optional, for bond_weighted variants, default=1.0)
         - random_state : int or RandomState (optional)
 
     Returns
@@ -64,6 +71,8 @@ def create_client(mechanism='bond_only', **kwargs):
         'frequency_amplifier': FrequencyAmplifierClient,
         'conditional_filter': ConditionalFilterClient,
         'conditional_amplifier': ConditionalAmplifierClient,
+        'bond_weighted_conditional_amplifier': BondWeightedConditionalAmplifier,
+        'bond_weighted_frequency_amplifier': BondWeightedFrequencyAmplifier,
     }
 
     if mechanism not in mechanisms:
@@ -110,6 +119,8 @@ def create_problematic_client(
         - 'frequency_amplifier': Marginal history amplifies (default, matches legacy)
         - 'conditional_filter': Conditional history filters (robust)
         - 'conditional_amplifier': Conditional history amplifies (robust)
+        - 'bond_weighted_conditional_amplifier': Conditional amplifier with bond-scaled history
+        - 'bond_weighted_frequency_amplifier': Marginal amplifier with bond-scaled history
     random_state : int, optional
         Random seed for reproducibility
 
