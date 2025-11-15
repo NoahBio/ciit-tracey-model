@@ -26,6 +26,7 @@ from src.config import (
     BOND_ALPHA,
     MEMORY_SIZE,
     HISTORY_WEIGHT,
+    calculate_success_threshold,
 )
 
 
@@ -105,7 +106,26 @@ def simulate_therapy_episode(
     max_sessions: int = MAX_SESSIONS,
     success_threshold: float = 0.5,
 ) -> Dict[str, Any]:
-    """Simulate a therapy episode and return outcome metrics."""
+    """
+    Simulate a therapy episode and return outcome metrics.
+
+    Parameters
+    ----------
+    client : BaseClientAgent
+        Client agent to simulate
+    therapist_strategy : callable
+        Function that takes client_action and returns therapist_action
+    max_sessions : int
+        Maximum number of therapy sessions
+    success_threshold : float (0-1)
+        Percentile of client's achievable RS range that must be reached
+        (0.5 = must reach 50th percentile, 0.8 = must reach 80th percentile)
+
+    Returns
+    -------
+    dict
+        Simulation results including success status and metrics
+    """
 
     initial_bond = client.bond
     initial_rs = client.relationship_satisfaction
@@ -132,8 +152,11 @@ def simulate_therapy_episode(
     final_bond = client.bond
     final_rs = client.relationship_satisfaction
 
-    # Success criteria: completed without dropout AND bond above threshold
-    success = (not dropped_out) and (final_bond >= success_threshold)
+    # Calculate client-specific RS threshold based on their u_matrix
+    rs_threshold = calculate_success_threshold(client.u_matrix, success_threshold)
+
+    # Success criteria: completed without dropout AND RS above client-specific threshold
+    success = (not dropped_out) and (final_rs >= rs_threshold)
 
     return {
         'success': success,
@@ -143,7 +166,9 @@ def simulate_therapy_episode(
         'final_bond': final_bond,
         'initial_rs': initial_rs,
         'final_rs': final_rs,
+        'rs_threshold': rs_threshold,
         'bond_change': final_bond - initial_bond,
+        'rs_change': final_rs - initial_rs,
     }
 
 
@@ -218,8 +243,8 @@ def run_parameter_configuration(
     # Aggregate results
     config.success_rate = sum(r['success'] for r in results) / n_trials
     config.dropout_rate = sum(r['dropped_out'] for r in results) / n_trials
-    config.avg_sessions_completed = np.mean([r['completed_sessions'] for r in results])
-    config.avg_final_bond = np.mean([r['final_bond'] for r in results])
+    config.avg_sessions_completed = float(np.mean([r['completed_sessions'] for r in results]))
+    config.avg_final_bond = float(np.mean([r['final_bond'] for r in results]))
 
     return config
 
@@ -392,9 +417,9 @@ def main():
 
     bond_powers = [1.0, 2.0]  # Linear, quadratic bond scaling (only for bond_weighted)
 
-    bond_alphas = [2.0, 4.0, 8.0]  # How RS maps to bond (default is ~4.0)
+    bond_alphas = [2.0, 5.0, 8.0]  # How RS maps to bond (default is 5.0)
 
-    memory_sizes = [25, 50, 100]  # Short, normal, long memory
+    memory_sizes = [50]  # Fixed at 50 (base_client requirement)
 
     success_thresholds = [0.3, 0.5, 0.7]  # Lenient, normal, strict
 

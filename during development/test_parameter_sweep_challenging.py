@@ -39,7 +39,7 @@ def main():
 
     bond_alphas = [2.0, 5.0, 10.0]  # Gentle, normal (default is 5), very steep
 
-    memory_sizes = [25, 50, 100]  # Short, normal, long
+    memory_sizes = [50]  # Fixed at 50 (base_client requirement)
 
     success_thresholds = [0.4, 0.6, 0.8]  # Lenient, moderate, strict
 

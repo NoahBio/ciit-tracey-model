@@ -221,27 +221,41 @@ HISTORY_WEIGHT = 1 #Weighting factor for client history in utility calculation (
 MAX_SESSIONS = 100  # Maximum therapy sessions per episode
 
 # Success threshold: 80th percentile of possible relationship satisfaction values
-def calculate_success_threshold(u_matrix: NDArray[np.float64]) -> float:
+def calculate_success_threshold(
+    u_matrix: NDArray[np.float64],
+    percentile: float = 0.8
+) -> float:
     """
-    Calculate success threshold as 80th percentile of theoretically possible
+    Calculate success threshold as a percentile of theoretically possible
     relationship satisfaction values for a specific client's utility matrix.
     
     Parameters
     ----------
     u_matrix : NDArray[np.float64]
         The client's 8x8 utility matrix
+    percentile : float, default=0.8
+        Percentile threshold for success (must be between 0 and 1)
+        Higher values = more stringent success criteria
         
     Returns
     -------
     float
         The RS value that represents successful therapy for this client
+        
+    Raises
+    ------
+    ValueError
+        If percentile is not between 0 and 1
     """
+    if not 0 <= percentile <= 1:
+        raise ValueError(f"percentile must be between 0 and 1, got {percentile}")
+    
     # All possible RS values are bounded by this client's matrix values
     max_possible_rs = u_matrix.max()
     min_possible_rs = u_matrix.min()
 
-    # 80th percentile: 80% of the way from min to max
-    threshold = min_possible_rs + 0.8 * (max_possible_rs - min_possible_rs)
+    # Calculate threshold at specified percentile
+    threshold = min_possible_rs + percentile * (max_possible_rs - min_possible_rs)
     
     return threshold
 
