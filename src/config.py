@@ -161,19 +161,21 @@ def get_memory_weights(n_interactions: int = MEMORY_SIZE) -> NDArray[np.float64]
 # =============================================================================
 
 BOND_ALPHA = 5  # Steepness of sigmoid transformation; chosen based on plotting the sigmoid curve for various alpha values and selecting a values
+BOND_OFFSET = 0.8  # Offset for sigmoid inflection point (0.7 = inflection at 70th percentile of RS range)
 
 def rs_to_bond(
-    rs: float, 
-    rs_min: float, 
-    rs_max: float, 
-    alpha: float = BOND_ALPHA
+    rs: float,
+    rs_min: float,
+    rs_max: float,
+    alpha: float = BOND_ALPHA,
+    offset: float = BOND_OFFSET
 ) -> float:
     """
     Sigmoid transformation of RS for bond calculation with normalization.
-    
-    Normalizes RS to [-1, 1] range based on client-specific matrix bounds,
-    then applies sigmoid.
-    
+
+    Normalizes RS to [0, 1] range based on client-specific matrix bounds,
+    applies offset shift, then applies sigmoid.
+
     Parameters
     ----------
     rs : float
@@ -183,9 +185,14 @@ def rs_to_bond(
     rs_max : float
         Maximum possible RS for this client (max of their U_MATRIX)
     alpha : float
-        Steepness parameter after normalization (default 3)
-        Higher values = steeper transition around midpoint
-        
+        Steepness parameter (default 5)
+        Higher values = steeper transition around inflection point
+    offset : float
+        Percentile of RS range where bond = 0.5 (default 0.7)
+        Higher values = lower initial bond for negative RS
+        offset=0.5 centers sigmoid at midpoint
+        offset=0.7 shifts inflection to 70th percentile
+
     Returns
     -------
     float
@@ -193,11 +200,14 @@ def rs_to_bond(
     """
     rs_range = rs_max - rs_min
 
-    # Normalize RS to [-1, 1] range
-    rs_normalized = 2 * (rs - rs_min) / rs_range - 1
+    # Normalize RS to [0, 1] range
+    rs_normalized = (rs - rs_min) / rs_range
+
+    # Apply offset shift to center sigmoid at desired percentile
+    rs_shifted = 2 * (rs_normalized - offset)
 
     # Apply sigmoid
-    bond = 1.0 / (1.0 + np.exp(-alpha * rs_normalized))
+    bond = 1.0 / (1.0 + np.exp(-alpha * rs_shifted))
 
     return float(bond)
 
@@ -207,10 +217,10 @@ def rs_to_bond(
 
 # Entropy (temperature) for client action selection
 # Higher entropy = more exploration/randomness
-CLIENT_ENTROPY_MEAN = 0.5
-CLIENT_ENTROPY_STD = 0.15
-CLIENT_ENTROPY_MIN = 0.1
-CLIENT_ENTROPY_MAX = 2.0
+CLIENT_ENTROPY_MEAN = 3
+CLIENT_ENTROPY_STD = 0.5
+CLIENT_ENTROPY_MIN = 1.5
+CLIENT_ENTROPY_MAX = 5
 
 HISTORY_WEIGHT = 1 #Weighting factor for client history in utility calculation (used in client_agent.calculate_utilities)
 

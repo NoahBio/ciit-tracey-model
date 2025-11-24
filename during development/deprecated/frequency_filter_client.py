@@ -1,6 +1,9 @@
 """Frequency-filter expectation mechanism."""
 
-from .base_client import BaseClientAgent
+### This file is deprecated because it allows for non-cold choices in lowest-bond-scenarios.
+### Retained for reference; not used in current simulations.
+
+from src.agents.client_agents.base_client import BaseClientAgent
 import numpy as np
 from numpy.typing import NDArray
 from src.config import get_memory_weights

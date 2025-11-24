@@ -17,11 +17,13 @@ sys.path.insert(0, str(project_root))
 
 import numpy as np
 from src.agents.client_agents import create_client
+from src import config
 from src.config import (
     sample_u_matrix,
     OCTANTS,
     calculate_success_threshold,
 )
+import argparse
 
 
 def always_complement(client_action: int) -> int:
@@ -73,6 +75,8 @@ def verbose_session_trace(
     entropy: float = 1.0,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
+    bond_alpha: float = 5.0,  
+    bond_offset: float = 0.8,  
     random_state: int = 42,
 ):
     """
@@ -100,6 +104,10 @@ def verbose_session_trace(
         History weight for amplifier mechanisms
     bond_power : float
         Bond power for bond_weighted mechanisms
+    bond_alpha : float
+        Bond alpha (sigmoid steepness parameter)
+    bond_offset : float
+        Bond offset for sigmoid inflection point (0.0-1.0)
     random_state : int
         Random seed
     """
@@ -113,6 +121,10 @@ def verbose_session_trace(
     rng = np.random.RandomState(random_state)
     u_matrix = sample_u_matrix(random_state=random_state)
     initial_memory = generate_memory_pattern(initial_memory_pattern, size=50, random_state=random_state)
+
+    # Set global bond parameters BEFORE creating client
+    config.BOND_ALPHA = bond_alpha
+    config.BOND_OFFSET = bond_offset
 
     # Create client
     client_kwargs = {
@@ -145,6 +157,8 @@ def verbose_session_trace(
         print(f"History weight: {history_weight:.2f}")
     if 'bond_weighted' in mechanism:
         print(f"Bond power: {bond_power:.2f}")
+    print(f"Bond alpha: {bond_alpha:.2f}")  
+    print(f"Bond offset: {bond_offset:.2f}")
     print()
 
     print("CLIENT U_MATRIX BOUNDS")
@@ -459,9 +473,143 @@ def run_comparison_tests():
 
 
 if __name__ == "__main__":
-    # Run comparison tests
-    run_comparison_tests()
-
-    print("\n" + "=" * 100)
-    print("VERBOSE SESSION TRACE COMPLETE")
-    print("=" * 100)
+    parser = argparse.ArgumentParser(
+        description="Verbose trace of client behavior across therapy sessions",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    
+    # Core configuration
+    parser.add_argument(
+        '--mechanism', '-m',
+        type=str,
+        default='conditional_amplifier',
+        choices=[
+            'bond_only',
+            'frequency_filter',
+            'frequency_amplifier',
+            'conditional_filter',
+            'conditional_amplifier',
+            'bond_weighted_frequency_amplifier',
+            'bond_weighted_conditional_amplifier'
+        ],
+        help='Client expectation mechanism'
+    )
+    
+    parser.add_argument(
+        '--pattern', '-p',
+        type=str,
+        default='cw_50_50',
+        choices=['cw_50_50', 'complementary_perfect', 'conflictual', 'mixed_random'],
+        help='Initial memory pattern'
+    )
+    
+    parser.add_argument(
+        '--threshold', '-t',
+        type=float,
+        default=0.8,
+        help='Success threshold percentile (0.0-1.0)'
+    )
+    
+    parser.add_argument(
+        '--entropy', '-e',
+        type=float,
+        default=1.0,
+        help='Client entropy (exploration parameter)'
+    )
+    
+    parser.add_argument(
+        '--history-weight', '-hw',
+        type=float,
+        default=1.0,
+        help='History weight for amplifier mechanisms'
+    )
+    
+    parser.add_argument(
+        '--bond-power', '-bp',
+        type=float,
+        default=1.0,
+        help='Bond power for bond_weighted mechanisms'
+    )
+    
+    parser.add_argument(
+        '--bond-alpha', '-ba',
+        type=float,
+        default=5.0,
+        help='Bond alpha (sigmoid steepness parameter)'
+    )
+    
+    parser.add_argument(
+        '--bond-offset', '-bo',
+        type=float,
+        default=0.8,
+        help='Bond offset for sigmoid inflection point (0.0-1.0)'
+    )
+    
+    parser.add_argument(
+        '--max-sessions', '-s',
+        type=int,
+        default=100,
+        help='Maximum number of therapy sessions'
+    )
+    
+    parser.add_argument(
+        '--verbose-start',
+        type=int,
+        default=1,
+        help='First session to show verbose output for'
+    )
+    
+    parser.add_argument(
+        '--verbose-end',
+        type=int,
+        default=5,
+        help='Last session to show verbose output for'
+    )
+    
+    parser.add_argument(
+        '--no-verbose',
+        action='store_true',
+        help='Suppress verbose output, show only summary'
+    )
+    
+    parser.add_argument(
+        '--seed', '-r',
+        type=int,
+        default=42,
+        help='Random seed for reproducibility'
+    )
+    
+    parser.add_argument(
+        '--compare',
+        action='store_true',
+        help='Run comparison tests instead of single trace'
+    )
+    
+    args = parser.parse_args()
+    
+    if args.compare:
+        # Run comparison tests
+        run_comparison_tests()
+    else:
+        # Run single trace with specified parameters
+        verbose_sessions = [] if args.no_verbose else range(args.verbose_start, args.verbose_end + 1)
+        
+        kwargs = {
+            'mechanism': args.mechanism,
+            'initial_memory_pattern': args.pattern,
+            'success_threshold_percentile': args.threshold,
+            'entropy': args.entropy,
+            'history_weight': args.history_weight,
+            'bond_power': args.bond_power,
+            'bond_alpha': args.bond_alpha,  
+            'bond_offset': args.bond_offset,
+            'verbose_sessions': verbose_sessions,
+            'max_sessions': args.max_sessions,
+            'random_state': args.seed,
+        }
+        
+        verbose_session_trace(**kwargs)
+        
+        print("\n" + "=" * 100)
+        print("VERBOSE SESSION TRACE COMPLETE")
+        print("=" * 100)

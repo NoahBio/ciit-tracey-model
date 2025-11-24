@@ -4,4 +4,5 @@
     "python.terminal.activateEnvInCurrentTerminal": true,
     "python.analysis.autoImportCompletions": true,
     "python.analysis.typeCheckingMode": "basic"
+    "terminal.integrated.scrollback": 5000
 }

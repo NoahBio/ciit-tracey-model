@@ -83,10 +83,6 @@ class ConditionalAmplifierClient(BaseClientAgent):
         smoothed_counts = weighted_counts + self.smoothing_alpha
         total_weight = np.sum(smoothed_counts)
 
-        if total_weight == 0:
-            # No observations of this client action, use uniform
-            return np.ones(8) / 8
-
         # Normalize to get conditional probabilities
         conditional_probs = smoothed_counts / total_weight
 

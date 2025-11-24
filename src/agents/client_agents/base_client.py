@@ -20,8 +20,8 @@ from src.config import (
     MEMORY_SIZE,
     get_memory_weights,
     rs_to_bond,
-    BOND_ALPHA,
 )
+from src import config
 
 
 class BaseClientAgent:
@@ -126,7 +126,8 @@ class BaseClientAgent:
             rs=self.relationship_satisfaction,
             rs_min=self.rs_min,
             rs_max=self.rs_max,
-            alpha=BOND_ALPHA  # Can still control steepness from config
+            alpha=config.BOND_ALPHA,  # Read dynamically from config
+            offset=config.BOND_OFFSET  # Read dynamically from config
         )
 
     def _calculate_expected_payoffs(self) -> NDArray[np.float64]:
@@ -284,6 +285,7 @@ class BaseClientAgent:
             - "cold_stuck": Client stuck in cold behaviors (CS, C, CD)
             - "dominant_stuck": Client stuck in dominant behaviors (D, WD, CD)
             - "submissive_stuck": Client stuck in submissive behaviors (S, WS, CS)
+            - "cold_warm": Client always cold (C), therapist always warm (W)
         n_interactions : int
             Number of interactions to generate
         random_state : int, optional
@@ -323,6 +325,11 @@ class BaseClientAgent:
                 4: [3, 4, 5],  # S → WS, S, CS (no leadership)
                 5: [3, 4, 5]   # CS → WS, S, CS (no leadership)
             }
+
+        elif pattern_type == "cold_warm":
+            # Client always C (6), therapist always W (2)
+            memory: List[tuple[int, int]] = [(6, 2)] * n_interactions
+            return memory
 
         else:
             raise ValueError(

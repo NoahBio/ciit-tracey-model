@@ -5,9 +5,7 @@ from typing import Optional
 
 from .base_client import BaseClientAgent
 from .bond_only_client import BondOnlyClient
-from .frequency_filter_client import FrequencyFilterClient
 from .frequency_amplifier_client import FrequencyAmplifierClient
-from .conditional_filter_client import ConditionalFilterClient
 from .conditional_amplifier_client import ConditionalAmplifierClient
 from .bond_weighted_conditional_amplifier_client import BondWeightedConditionalAmplifier
 from .bond_weighted_frequency_amplifier_client import BondWeightedFrequencyAmplifier
@@ -15,9 +13,7 @@ from .bond_weighted_frequency_amplifier_client import BondWeightedFrequencyAmpli
 __all__ = [
     'BaseClientAgent',
     'BondOnlyClient',
-    'FrequencyFilterClient',
     'FrequencyAmplifierClient',
-    'ConditionalFilterClient',
     'ConditionalAmplifierClient',
     'BondWeightedConditionalAmplifier',
     'BondWeightedFrequencyAmplifier',
@@ -67,9 +63,7 @@ def create_client(mechanism='bond_only', **kwargs):
     """
     mechanisms = {
         'bond_only': BondOnlyClient,
-        'frequency_filter': FrequencyFilterClient,
         'frequency_amplifier': FrequencyAmplifierClient,
-        'conditional_filter': ConditionalFilterClient,
         'conditional_amplifier': ConditionalAmplifierClient,
         'bond_weighted_conditional_amplifier': BondWeightedConditionalAmplifier,
         'bond_weighted_frequency_amplifier': BondWeightedFrequencyAmplifier,

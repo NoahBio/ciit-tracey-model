@@ -1,0 +1,4840 @@
+{
+  "metadata": {
+    "timestamp": "2025-11-19T14:56:40.356479",
+    "n_configurations": 300,
+    "n_trials_per_config": 20,
+    "total_simulations": 6000,
+    "parameter_ranges": {
+      "bond_power": [
+        1.0,
+        10.0
+      ],
+      "history_weight": [
+        0.5,
+        15.0
+      ],
+      "entropy": [
+        0.1,
+        0.5
+      ],
+      "bond_alpha": [
+        2.0,
+        15.0
+      ],
+      "bond_offset": [
+        0.4,
+        0.7
+      ],
+      "success_threshold": 0.9
+    }
+  },
+  "results": [
+    {
+      "config": {
+        "bond_power": 4.370861069626263,
+        "history_weight": 14.285357442943784,
+        "entropy": 0.39279757672456206,
+        "bond_alpha": 9.782560294561476,
+        "bond_offset": 0.44680559213273097,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.884905519294094,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.403950683025824,
+        "history_weight": 1.3422123764388922,
+        "entropy": 0.4464704583099741,
+        "bond_alpha": 9.814495152661713,
+        "bond_offset": 0.6124217733388136,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 58.31570073231226,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.185260448662222,
+        "history_weight": 14.563692856348919,
+        "entropy": 0.4329770563201687,
+        "bond_alpha": 4.76040843881759,
+        "bond_offset": 0.4545474901621302,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 53.9975806629612,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 3.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.650640588680904,
+        "history_weight": 4.911512522913297,
+        "entropy": 0.3099025726528951,
+        "bond_alpha": 7.615285242347505,
+        "bond_offset": 0.4873687420594126,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.67555674686014,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.506676052501415,
+        "history_weight": 2.5226609794546064,
+        "entropy": 0.21685785941408728,
+        "bond_alpha": 6.762703962817993,
+        "bond_offset": 0.5368209952651107,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 58.18264014643597,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.066583652537123,
+        "history_weight": 3.395269841296216,
+        "entropy": 0.3056937753654446,
+        "bond_alpha": 9.70138939520655,
+        "bond_offset": 0.41393512381599934,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 53.92973808109563,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.45,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.467903667112945,
+        "history_weight": 2.972599793465727,
+        "entropy": 0.12602063719411183,
+        "bond_alpha": 14.335511984293332,
+        "bond_offset": 0.6896896099223677,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.45,
+      "mean_final_rs": 47.23447444990161,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.275576133048151,
+        "history_weight": 4.916899653013875,
+        "entropy": 0.13906884560255356,
+        "bond_alpha": 10.89502934465804,
+        "bond_offset": 0.5320457481218803,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.52148127627913,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.0983441136030097,
+        "history_weight": 7.680065196613418,
+        "entropy": 0.11375540844608736,
+        "bond_alpha": 13.821165227024167,
+        "bond_offset": 0.4776339944800051,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.962700559185838,
+        "history_weight": 5.019810603296459,
+        "entropy": 0.3080272084711243,
+        "bond_alpha": 9.107233631462636,
+        "bond_offset": 0.4554563366576581,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.68564006806146,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.726261649881026,
+        "history_weight": 11.739425938736161,
+        "entropy": 0.4757995766256756,
+        "bond_alpha": 13.632755555559434,
+        "bond_offset": 0.5793699936433255,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 50.9337826299626,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.296868115208051,
+        "history_weight": 1.7831412797528328,
+        "entropy": 0.1783931449676581,
+        "bond_alpha": 2.5879547558369946,
+        "bond_offset": 0.49759909922897927,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.897224980477326,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.498095607205338,
+        "history_weight": 4.434560960721491,
+        "entropy": 0.43149500366077176,
+        "bond_alpha": 6.637793247016661,
+        "bond_offset": 0.48428035290621424,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 58.66016667151983,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.884264748424236,
+        "history_weight": 2.5434012621340583,
+        "entropy": 0.42087879230161584,
+        "bond_alpha": 2.9691583678370206,
+        "bond_offset": 0.6960660809801551,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.45,
+      "mean_final_rs": 46.22355106253222,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.9502029236699165,
+        "history_weight": 3.3813773822454998,
+        "entropy": 0.10220884684944097,
+        "bond_alpha": 12.600998569912845,
+        "bond_offset": 0.6120572031542851,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 55.687902309256685,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.561064512368886,
+        "history_weight": 11.683420026946214,
+        "entropy": 0.12961786069363615,
+        "bond_alpha": 6.660054471075544,
+        "bond_offset": 0.43476071785753895,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 55.2176220324964,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.767930832880342,
+        "history_weight": 9.53782283899959,
+        "entropy": 0.23235920994105969,
+        "bond_alpha": 2.8262585537183074,
+        "bond_offset": 0.49329469651469865,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 59.44875311627985,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.9266498982407234,
+        "history_weight": 11.079289585901929,
+        "entropy": 0.35502298854208525,
+        "bond_alpha": 13.533765653492246,
+        "bond_offset": 0.5416644775485848,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.76591468359926,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.0763482134447155,
+        "history_weight": 10.842049414733427,
+        "entropy": 0.40431401944675904,
+        "bond_alpha": 9.296603568403452,
+        "bond_offset": 0.6312901539863682,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.5,
+      "mean_final_rs": 46.73474446017777,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.444160367279517,
+        "history_weight": 8.079626026038913,
+        "entropy": 0.27101640734341986,
+        "bond_alpha": 2.3304486476732373,
+        "bond_offset": 0.43236742809799134,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.51592179659858,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 3.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.2828626711806081,
+        "history_weight": 9.727950963324815,
+        "entropy": 0.22574239243053068,
+        "bond_alpha": 8.611418985141135,
+        "bond_offset": 0.6722699421778279,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.5,
+      "mean_final_rs": 47.738898932038595,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.2436300623398746,
+        "history_weight": 6.450552384016631,
+        "entropy": 0.4022204554172195,
+        "bond_alpha": 4.974376151391092,
+        "bond_offset": 0.42309397294863793,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.79017030754443,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.6077630762239123,
+        "history_weight": 2.8377086651830643,
+        "entropy": 0.47187906093702925,
+        "bond_alpha": 12.505564934337421,
+        "bond_offset": 0.590021126953127,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 56.70233373393479,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.84314531168946,
+        "history_weight": 12.15324511503716,
+        "entropy": 0.17462802355441434,
+        "bond_alpha": 13.60326698036971,
+        "bond_offset": 0.5618026725746952,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.52181667056509,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.266961396476564,
+        "history_weight": 13.493323848890652,
+        "entropy": 0.22720138998874556,
+        "bond_alpha": 3.430675018859798,
+        "bond_offset": 0.4683805487625825,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 59.09752559594109,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.843970097636307,
+        "history_weight": 12.36121410587615,
+        "entropy": 0.4442922333025374,
+        "bond_alpha": 2.0903776969054793,
+        "bond_offset": 0.5532241907732697,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.07901095827958,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.7566990283390105,
+        "history_weight": 3.7205632518255887,
+        "entropy": 0.14794614693347313,
+        "bond_alpha": 6.388997228247163,
+        "bond_offset": 0.6828729111737557,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 55.10380784238646,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.25,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.908826388186797,
+        "history_weight": 8.022464015278809,
+        "entropy": 0.38120758355807116,
+        "bond_alpha": 6.727184830930822,
+        "bond_offset": 0.6915346248162881,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.6,
+      "mean_final_rs": 50.47094475919475,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.662025654479,
+        "history_weight": 4.1508432894677805,
+        "entropy": 0.2988994023569542,
+        "bond_alpha": 5.911418027618005,
+        "bond_offset": 0.4854521483132403,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.948489632850546,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.3319825261907952,
+        "history_weight": 9.338682842708504,
+        "entropy": 0.30107160929154464,
+        "bond_alpha": 2.6692237662498615,
+        "bond_offset": 0.48359393927098343,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.05720353444305,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.174392973699883,
+        "history_weight": 3.9736474146711003,
+        "entropy": 0.15795794883648925,
+        "bond_alpha": 8.36288588360832,
+        "bond_offset": 0.6956951362331802,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 52.335062233838826,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.178497443603504,
+        "history_weight": 10.24596543738524,
+        "entropy": 0.4046478461314871,
+        "bond_alpha": 5.089288071901196,
+        "bond_offset": 0.6184649045835579,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 53.41745364537601,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.3100481944732785,
+        "history_weight": 9.668434543606903,
+        "entropy": 0.3534118843043579,
+        "bond_alpha": 8.965070892971859,
+        "bond_offset": 0.4270869310163225,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.884905519294094,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.51772246030314,
+        "history_weight": 5.15131094209017,
+        "entropy": 0.1746074041599417,
+        "bond_alpha": 2.530076840211931,
+        "bond_offset": 0.5772678829564726,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 54.50957621556288,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.098079256580542,
+        "history_weight": 0.7405235194539141,
+        "entropy": 0.3048372233197124,
+        "bond_alpha": 4.944445077573193,
+        "bond_offset": 0.593551837122835,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.89136105129323,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.569297861044923,
+        "history_weight": 10.518597202485756,
+        "entropy": 0.25469413852021494,
+        "bond_alpha": 14.17748985357755,
+        "bond_offset": 0.441256283243798,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.069597159452327,
+        "history_weight": 2.1453660579885416,
+        "entropy": 0.4698774473114251,
+        "bond_alpha": 13.405411593952753,
+        "bond_offset": 0.47738248831454666,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 53.92973808109563,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.939856414307611,
+        "history_weight": 12.34972190291763,
+        "entropy": 0.322080324639785,
+        "bond_alpha": 8.885457518628083,
+        "bond_offset": 0.4725556872701355,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 53.25379033555591,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.837924910253093,
+        "history_weight": 13.509628490323237,
+        "entropy": 0.4601672228653322,
+        "bond_alpha": 10.230318944552483,
+        "bond_offset": 0.5017089373146102,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 53.436414685647115,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.142886171513948,
+        "history_weight": 11.026357343618471,
+        "entropy": 0.4588441039810308,
+        "bond_alpha": 13.532123515446525,
+        "bond_offset": 0.6339626637572872,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.3,
+      "mean_final_rs": 43.18537898968762,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.77828481538859,
+        "history_weight": 1.720029492428208,
+        "entropy": 0.1646514856378455,
+        "bond_alpha": 13.68120445085203,
+        "bond_offset": 0.5819287178978769,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 56.70233373393479,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.0827734645496667,
+        "history_weight": 1.9713373715574656,
+        "entropy": 0.3654007076432223,
+        "bond_alpha": 2.065800590000843,
+        "bond_offset": 0.4482424154252496,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 57.79764696856644,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.938604104299275,
+        "history_weight": 10.532480366544052,
+        "entropy": 0.3607845038010402,
+        "bond_alpha": 4.915501022987277,
+        "bond_offset": 0.6136537664042607,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 56.02507123206203,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.135241787471201,
+        "history_weight": 5.218295623309382,
+        "entropy": 0.3985965620472097,
+        "bond_alpha": 10.44522768761379,
+        "bond_offset": 0.6547670231482534,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.55,
+      "mean_final_rs": 50.28293197466577,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.91851603070309,
+        "history_weight": 8.740474748364338,
+        "entropy": 0.137469907131237,
+        "bond_alpha": 6.7803054397726354,
+        "bond_offset": 0.47956071030451763,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.94449849792941,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.195906790411752,
+        "history_weight": 14.608653043910461,
+        "entropy": 0.2572390898667042,
+        "bond_alpha": 13.596605217302473,
+        "bond_offset": 0.5893415877991788,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.55,
+      "mean_final_rs": 47.77848542806998,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.153301731874835,
+        "history_weight": 7.788237850025285,
+        "entropy": 0.3307615538505436,
+        "bond_alpha": 8.40273001964523,
+        "bond_offset": 0.45857289633941334,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.9780088283179,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.502069037353548,
+        "history_weight": 4.5711992553924095,
+        "entropy": 0.10972638657258155,
+        "bond_alpha": 10.391139846793182,
+        "bond_offset": 0.4531332038221147,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 53.53696203975861,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.464127259176228,
+        "history_weight": 14.331964366537516,
+        "entropy": 0.46594575608817945,
+        "bond_alpha": 6.812063103320777,
+        "bond_offset": 0.40463698495866024,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.50801006046453,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.354867063289529,
+        "history_weight": 6.7086701506010575,
+        "entropy": 0.48666192761746785,
+        "bond_alpha": 14.527059702160287,
+        "bond_offset": 0.655902836640208,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.25,
+      "mean_final_rs": 44.24273784877876,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.6500400286262713,
+        "history_weight": 6.083917064727916,
+        "entropy": 0.44045466860674276,
+        "bond_alpha": 6.1199860670316095,
+        "bond_offset": 0.45084782400582774,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.6892710389096,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.35,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.0112113621251515,
+        "history_weight": 14.074244225331324,
+        "entropy": 0.37841191866998924,
+        "bond_alpha": 9.410795211161744,
+        "bond_offset": 0.42915294813123056,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.45,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.535065040292528,
+        "history_weight": 14.855780826511818,
+        "entropy": 0.15603360609460962,
+        "bond_alpha": 8.738285480728578,
+        "bond_offset": 0.6632119215783866,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.55,
+      "mean_final_rs": 49.63303898203223,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.66691755978784,
+        "history_weight": 10.606728244431386,
+        "entropy": 0.38099363359484373,
+        "bond_alpha": 6.673384965856817,
+        "bond_offset": 0.488077553279348,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 58.22207157071889,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.284250399306622,
+        "history_weight": 12.24664422284812,
+        "entropy": 0.4468289274320415,
+        "bond_alpha": 13.872127183234127,
+        "bond_offset": 0.5534027196582814,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.52181667056509,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.513646652184796,
+        "history_weight": 12.07528009501824,
+        "entropy": 0.35998557231110606,
+        "bond_alpha": 11.125569404350143,
+        "bond_offset": 0.6387378008308303,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.4,
+      "mean_final_rs": 46.473244393934216,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.010048076358096,
+        "history_weight": 5.4009297743472695,
+        "entropy": 0.2502331810559776,
+        "bond_alpha": 3.221765217931297,
+        "bond_offset": 0.5734840422988522,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.03611102121774,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.3234804641706788,
+        "history_weight": 7.251171262920672,
+        "entropy": 0.31705785388303065,
+        "bond_alpha": 5.725036277667697,
+        "bond_offset": 0.5772499781707032,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 55.60073818188131,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.2745022494514449,
+        "history_weight": 1.041548736863609,
+        "entropy": 0.42904022426386335,
+        "bond_alpha": 6.682478338346417,
+        "bond_offset": 0.43811815379556546,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.887427347680116,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.700189340493239,
+        "history_weight": 11.664906519929858,
+        "entropy": 0.1863284109987373,
+        "bond_alpha": 10.097576185647004,
+        "bond_offset": 0.4256042394981304,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.35,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.4651354905174694,
+        "history_weight": 8.204642157738146,
+        "entropy": 0.3162540486440426,
+        "bond_alpha": 10.286588719476685,
+        "bond_offset": 0.6178274001167985,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.5,
+      "mean_final_rs": 48.37873201003081,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.782668715162812,
+        "history_weight": 7.986355050367332,
+        "entropy": 0.2291825891764984,
+        "bond_alpha": 12.337420531993148,
+        "bond_offset": 0.4812496753786223,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.78106005279277,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.950742786350725,
+        "history_weight": 1.6376175294628563,
+        "entropy": 0.11014029736618301,
+        "bond_alpha": 14.514429390813026,
+        "bond_offset": 0.6507940361536617,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 56.52509383708734,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.263767854843282,
+        "history_weight": 6.429817694006913,
+        "entropy": 0.16931772802833833,
+        "bond_alpha": 4.033681554724119,
+        "bond_offset": 0.4750728694493786,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 59.984264454383414,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.943039982355084,
+        "history_weight": 10.861640879150904,
+        "entropy": 0.3640789506870925,
+        "bond_alpha": 5.639140660297257,
+        "bond_offset": 0.6864595841989583,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 50.87472540142348,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.641072250261916,
+        "history_weight": 8.53813376141531,
+        "entropy": 0.34468829849374094,
+        "bond_alpha": 7.4548008115612685,
+        "bond_offset": 0.47431929685034724,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 55.76413685635515,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.2037541078613545,
+        "history_weight": 11.488768601733351,
+        "entropy": 0.10575739545190235,
+        "bond_alpha": 3.508944326589911,
+        "bond_offset": 0.41380079260652586,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 58.87049641469762,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 3.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.3665592208707311,
+        "history_weight": 12.904178468159605,
+        "entropy": 0.3814631437520095,
+        "bond_alpha": 8.164259778135229,
+        "bond_offset": 0.42935024819530043,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.43149400445915,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.4245428760514915,
+        "history_weight": 7.365340676318202,
+        "entropy": 0.16928074796400608,
+        "bond_alpha": 7.640071440093649,
+        "bond_offset": 0.519551420319212,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 58.66016667151983,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.542650882469948,
+        "history_weight": 9.708857937580834,
+        "entropy": 0.11812160390881782,
+        "bond_alpha": 6.869963990144126,
+        "bond_offset": 0.5877579747142709,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 55.260271480867615,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.528226327220789,
+        "history_weight": 12.919102697230674,
+        "entropy": 0.363477452647578,
+        "bond_alpha": 4.118147552058586,
+        "bond_offset": 0.42117062422012896,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.80641017836477,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 3.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.78177350385684,
+        "history_weight": 0.8844140028535163,
+        "entropy": 0.3343102325093853,
+        "bond_alpha": 14.22299313852445,
+        "bond_offset": 0.5726422533627636,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 59.53354230196381,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.493529335858697,
+        "history_weight": 9.827679167414122,
+        "entropy": 0.2833011561966067,
+        "bond_alpha": 9.093018261107154,
+        "bond_offset": 0.6824394426329575,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.5,
+      "mean_final_rs": 48.91603758843218,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.474923740206968,
+        "history_weight": 14.437263175446756,
+        "entropy": 0.46214025678242554,
+        "bond_alpha": 4.545284752260853,
+        "bond_offset": 0.4208083902625497,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.79017030754443,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.9070020123968399,
+        "history_weight": 0.7642164719474711,
+        "entropy": 0.13777718430237137,
+        "bond_alpha": 10.87908805441264,
+        "bond_offset": 0.42135659453806873,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.17229519052,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.35,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.8707806726438516,
+        "history_weight": 12.750692009057092,
+        "entropy": 0.10930877429433035,
+        "bond_alpha": 12.588090273656166,
+        "bond_offset": 0.48455643243201996,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.0634834485949063,
+        "history_weight": 10.602688897780185,
+        "entropy": 0.3515771387119536,
+        "bond_alpha": 13.407136175851688,
+        "bond_offset": 0.6205213131411658,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.45,
+      "mean_final_rs": 44.9979118911553,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.231328373463636,
+        "history_weight": 4.589501302283944,
+        "entropy": 0.17097581751188912,
+        "bond_alpha": 11.757991771331158,
+        "bond_offset": 0.6420504217801792,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.6,
+      "mean_final_rs": 52.39869295745556,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.91454627800606,
+        "history_weight": 6.482956315215684,
+        "entropy": 0.24880723431711327,
+        "bond_alpha": 12.09336848964596,
+        "bond_offset": 0.5022410620759054,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.68564006806146,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.376815930432082,
+        "history_weight": 12.94698490172367,
+        "entropy": 0.27159761095000734,
+        "bond_alpha": 11.761323881289465,
+        "bond_offset": 0.6263628622254047,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.35,
+      "mean_final_rs": 45.34391931572703,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.9281148195233935,
+        "history_weight": 13.587017146853716,
+        "entropy": 0.30210094897914286,
+        "bond_alpha": 12.743947059400641,
+        "bond_offset": 0.4960148803091835,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 52.05373008254652,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.059709056465804,
+        "history_weight": 6.143424341645365,
+        "entropy": 0.10433506059211935,
+        "bond_alpha": 13.769965693450427,
+        "bond_offset": 0.42738600303584007,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.4,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.873822738313734,
+        "history_weight": 14.275898522236671,
+        "entropy": 0.4802428587750225,
+        "bond_alpha": 9.454692545602718,
+        "bond_offset": 0.5895511636509397,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.2423344387656,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.036009697804878,
+        "history_weight": 4.751556189621936,
+        "entropy": 0.2314658181479664,
+        "bond_alpha": 10.7427399290015,
+        "bond_offset": 0.6257123588313039,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.55,
+      "mean_final_rs": 51.70798467550579,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.124211393532637,
+        "history_weight": 11.94946307052103,
+        "entropy": 0.13648244121947617,
+        "bond_alpha": 8.427463961133558,
+        "bond_offset": 0.4172676280049933,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.884905519294094,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.35,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.94575994091362,
+        "history_weight": 6.902192269913967,
+        "entropy": 0.45508167310331993,
+        "bond_alpha": 6.561895163177023,
+        "bond_offset": 0.4351201049282818,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.99466518292307,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.2869251384755227,
+        "history_weight": 11.541904159903348,
+        "entropy": 0.34728722532650447,
+        "bond_alpha": 3.3145947895962733,
+        "bond_offset": 0.42523204183449925,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.25072014619449,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 3.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.30872218313208,
+        "history_weight": 1.5550635922808063,
+        "entropy": 0.4287440237161425,
+        "bond_alpha": 11.18114895303445,
+        "bond_offset": 0.42440463419256996,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 55.7067812315223,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.4,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.7635394267667273,
+        "history_weight": 14.806273888267045,
+        "entropy": 0.24970831830244813,
+        "bond_alpha": 6.818347911869582,
+        "bond_offset": 0.6438398701772508,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.5,
+      "mean_final_rs": 47.56166798788523,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.525237196454729,
+        "history_weight": 14.797015425431628,
+        "entropy": 0.4013512741035766,
+        "bond_alpha": 6.891374611901905,
+        "bond_offset": 0.42505021500960066,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.00969232252176,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.4,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.994322243346931,
+        "history_weight": 8.596861621169174,
+        "entropy": 0.26968880369879056,
+        "bond_alpha": 13.782607006231569,
+        "bond_offset": 0.4333592446918454,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.433625938617732,
+        "history_weight": 0.6646278491275766,
+        "entropy": 0.28746425679765053,
+        "bond_alpha": 2.7319425838638853,
+        "bond_offset": 0.4356453748804216,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.37580521927811,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.25,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.057736220993944,
+        "history_weight": 9.913549380682921,
+        "entropy": 0.39841795170616934,
+        "bond_alpha": 9.583793946263075,
+        "bond_offset": 0.6886517645423625,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.3,
+      "mean_final_rs": 43.881979553712576,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.373835215713337,
+        "history_weight": 4.642825251086981,
+        "entropy": 0.4474396512757841,
+        "bond_alpha": 4.906745900752885,
+        "bond_offset": 0.6889667618321833,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 50.895244511159206,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.109390272208347,
+        "history_weight": 14.563242987260766,
+        "entropy": 0.11726396478023045,
+        "bond_alpha": 13.584860478074924,
+        "bond_offset": 0.5583103327258899,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.545240955739985,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.936683165073703,
+        "history_weight": 1.5700501886632834,
+        "entropy": 0.3215417137605283,
+        "bond_alpha": 14.600932963048287,
+        "bond_offset": 0.5569293532510446,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.17229519052,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.664587743217362,
+        "history_weight": 10.588355990276948,
+        "entropy": 0.2818164259071093,
+        "bond_alpha": 10.158255041092826,
+        "bond_offset": 0.5752942935769301,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.09332071661335,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.110422094418901,
+        "history_weight": 1.1589725149511392,
+        "entropy": 0.21238527583689215,
+        "bond_alpha": 14.355349292995264,
+        "bond_offset": 0.6670791351672749,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.35666812250653,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.100910775071417,
+        "history_weight": 9.491922668122283,
+        "entropy": 0.21095247319245308,
+        "bond_alpha": 4.445575076408897,
+        "bond_offset": 0.5391095214819946,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.641539644932074,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.180170052234475,
+        "history_weight": 8.963013621837645,
+        "entropy": 0.13109385478599395,
+        "bond_alpha": 14.667132499660164,
+        "bond_offset": 0.6958632233438808,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.2,
+      "mean_final_rs": 40.60555653955454,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.45,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.2834554261777065,
+        "history_weight": 8.273397311989745,
+        "entropy": 0.2238110465145311,
+        "bond_alpha": 12.579335256190333,
+        "bond_offset": 0.6054193517661638,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.6,
+      "mean_final_rs": 50.6123371876938,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.463552454104022,
+        "history_weight": 13.708444175160716,
+        "entropy": 0.42901489716926766,
+        "bond_alpha": 14.347398872795013,
+        "bond_offset": 0.617715852516508,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.3,
+      "mean_final_rs": 43.70924555204326,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.520736763422109,
+        "history_weight": 6.564524026213974,
+        "entropy": 0.4730913933416053,
+        "bond_alpha": 13.258830563505308,
+        "bond_offset": 0.41356560103185686,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.2373027704752682,
+        "history_weight": 5.958718819731719,
+        "entropy": 0.4242213323127332,
+        "bond_alpha": 14.834589681094277,
+        "bond_offset": 0.44512506733105844,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.347176438169216,
+        "history_weight": 6.0229174211498115,
+        "entropy": 0.4879657591258413,
+        "bond_alpha": 12.947546000764213,
+        "bond_offset": 0.6514986114133413,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.3,
+      "mean_final_rs": 44.92506286917424,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.218238438154732,
+        "history_weight": 6.514882783896145,
+        "entropy": 0.20936282877228252,
+        "bond_alpha": 2.7328814564620525,
+        "bond_offset": 0.6594167128765159,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.6,
+      "mean_final_rs": 48.63701432308803,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.316109082170698,
+        "history_weight": 14.995906262648894,
+        "entropy": 0.49865473482956213,
+        "bond_alpha": 9.220612172834157,
+        "bond_offset": 0.6306962245541531,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.5,
+      "mean_final_rs": 49.6223814905852,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.502891568941852,
+        "history_weight": 12.819887164822466,
+        "entropy": 0.19893924069727908,
+        "bond_alpha": 7.857073759031215,
+        "bond_offset": 0.43874782454544853,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.8610142942189,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.586459245328502,
+        "history_weight": 9.28953219953776,
+        "entropy": 0.1914571222013851,
+        "bond_alpha": 10.732108897276138,
+        "bond_offset": 0.5854384721373688,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 53.784962169091635,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.223464462295564,
+        "history_weight": 2.146585086894621,
+        "entropy": 0.3686292782371199,
+        "bond_alpha": 8.764000111749313,
+        "bond_offset": 0.6316955175206918,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 55.92752483792773,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.68147151000794,
+        "history_weight": 12.856631754618832,
+        "entropy": 0.32076273550979423,
+        "bond_alpha": 9.292193629960021,
+        "bond_offset": 0.6629960807975035,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.6,
+      "mean_final_rs": 50.099157767595585,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.631345795911574,
+        "history_weight": 2.4432208125342907,
+        "entropy": 0.1115130705253356,
+        "bond_alpha": 11.816784323757046,
+        "bond_offset": 0.5860928654060393,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 56.70233373393479,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.336717912893012,
+        "history_weight": 3.587980341879206,
+        "entropy": 0.1545485902347079,
+        "bond_alpha": 2.189080653682465,
+        "bond_offset": 0.5051762676419791,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 56.59169262008696,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.309259181691698,
+        "history_weight": 6.187538653946119,
+        "entropy": 0.27498996880949167,
+        "bond_alpha": 13.754063028418729,
+        "bond_offset": 0.5044766401069901,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.78106005279277,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.625905402438297,
+        "history_weight": 11.862968684746575,
+        "entropy": 0.2586171129285081,
+        "bond_alpha": 10.087127102962356,
+        "bond_offset": 0.6587091126240235,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.55,
+      "mean_final_rs": 49.614054339664804,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.54568561291878,
+        "history_weight": 2.63256547347105,
+        "entropy": 0.4706350500645978,
+        "bond_alpha": 8.397511810033997,
+        "bond_offset": 0.4774733164896875,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.57595661643519,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.132221806144352,
+        "history_weight": 14.710472341639417,
+        "entropy": 0.29704723759714785,
+        "bond_alpha": 6.273770933737607,
+        "bond_offset": 0.5900202562950176,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.76041786543753,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.1613105690037377,
+        "history_weight": 1.6000182575756268,
+        "entropy": 0.1515518887642597,
+        "bond_alpha": 3.6645959064510416,
+        "bond_offset": 0.4455708080536883,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.3259196362374,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.2494445538446914,
+        "history_weight": 9.792683799646612,
+        "entropy": 0.17275203375965792,
+        "bond_alpha": 6.493674683210221,
+        "bond_offset": 0.6690365229718035,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 52.68139232055588,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.265654762365851,
+        "history_weight": 10.179587208554894,
+        "entropy": 0.16892794848065196,
+        "bond_alpha": 4.49975724451272,
+        "bond_offset": 0.41226058487994366,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.79017030754443,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 3.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.520415567649481,
+        "history_weight": 4.5395599159634,
+        "entropy": 0.17080419371069872,
+        "bond_alpha": 3.153132938841723,
+        "bond_offset": 0.43619076133018025,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 58.96033211822636,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 3.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.147008912294532,
+        "history_weight": 3.4918389168839914,
+        "entropy": 0.2457079444192302,
+        "bond_alpha": 8.54442452111314,
+        "bond_offset": 0.6071184485888096,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 57.06567162490812,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.3538092585698904,
+        "history_weight": 12.091450784181118,
+        "entropy": 0.35116015579636317,
+        "bond_alpha": 3.062867415335335,
+        "bond_offset": 0.6620735872320331,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.6,
+      "mean_final_rs": 48.02840122151433,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.287851604786319,
+        "history_weight": 1.3856304178955243,
+        "entropy": 0.2107510592588815,
+        "bond_alpha": 12.480616637309797,
+        "bond_offset": 0.6244779071150974,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.059394042182625,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.6606891742073957,
+        "history_weight": 3.535565188382299,
+        "entropy": 0.24818884111655282,
+        "bond_alpha": 8.298798807483276,
+        "bond_offset": 0.5854764314590888,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 57.43751578768217,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.320222756127952,
+        "history_weight": 7.206753383930645,
+        "entropy": 0.3989883752535026,
+        "bond_alpha": 2.4768816375777725,
+        "bond_offset": 0.47573108330320624,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.0283425560891,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.420146272960972,
+        "history_weight": 13.48049914646439,
+        "entropy": 0.30467097684626643,
+        "bond_alpha": 8.917475308449102,
+        "bond_offset": 0.4321516034019328,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.884905519294094,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.026711301411092,
+        "history_weight": 8.222950363597835,
+        "entropy": 0.19698820145389187,
+        "bond_alpha": 5.500162002341952,
+        "bond_offset": 0.5131852489313868,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 59.19397795481427,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.1806407799995373,
+        "history_weight": 5.170147900956085,
+        "entropy": 0.18457920279861786,
+        "bond_alpha": 6.257465578312891,
+        "bond_offset": 0.4359286395457754,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.65449442925624,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.2,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.014745526659055,
+        "history_weight": 9.107090576533706,
+        "entropy": 0.3716409276577959,
+        "bond_alpha": 12.259226101895397,
+        "bond_offset": 0.5495326596787171,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.19414751196475,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.2,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.7822825927868133,
+        "history_weight": 8.288044856368943,
+        "entropy": 0.33473644720835166,
+        "bond_alpha": 11.69071316439629,
+        "bond_offset": 0.5294978638689039,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.75170425127074,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.148222725160074,
+        "history_weight": 4.6147506340815045,
+        "entropy": 0.24523291855945406,
+        "bond_alpha": 10.396924137310815,
+        "bond_offset": 0.5712334914006736,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.01807184498049,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.204870533080616,
+        "history_weight": 14.804471107498205,
+        "entropy": 0.34230992774275487,
+        "bond_alpha": 5.0839482925679285,
+        "bond_offset": 0.43053474178612117,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.79017030754443,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.25,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.375732252658988,
+        "history_weight": 4.066387061575368,
+        "entropy": 0.1642725493038223,
+        "bond_alpha": 4.425371312666975,
+        "bond_offset": 0.48552855060815414,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 58.984590791707184,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.25,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.560362357652793,
+        "history_weight": 13.503098657083164,
+        "entropy": 0.13209349826465688,
+        "bond_alpha": 8.81864806441331,
+        "bond_offset": 0.5231190480968985,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 55.473792735646704,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.841407552177458,
+        "history_weight": 2.124564081436759,
+        "entropy": 0.25914223961829663,
+        "bond_alpha": 14.603115632579796,
+        "bond_offset": 0.6596521377681941,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 56.319659437341635,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.353648638543518,
+        "history_weight": 4.239590992151628,
+        "entropy": 0.16835503495602633,
+        "bond_alpha": 10.692361859017602,
+        "bond_offset": 0.6788127967382758,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 53.50240875393771,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.010866037125368,
+        "history_weight": 8.788383997313549,
+        "entropy": 0.21199163746411367,
+        "bond_alpha": 12.00340813149518,
+        "bond_offset": 0.456113124567257,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.913113127638193,
+        "history_weight": 6.668828359938043,
+        "entropy": 0.30304415147378205,
+        "bond_alpha": 5.151326521396043,
+        "bond_offset": 0.4344510474217611,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.79017030754443,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.2,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.495580381974693,
+        "history_weight": 4.685143021983709,
+        "entropy": 0.3324952885690449,
+        "bond_alpha": 4.006715298564631,
+        "bond_offset": 0.5443420305564453,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 57.6410914709605,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.793304892964272,
+        "history_weight": 1.2514412839251903,
+        "entropy": 0.23464171127756825,
+        "bond_alpha": 3.747390800206665,
+        "bond_offset": 0.41901249114183037,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.3259196362374,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.909642091509507,
+        "history_weight": 5.174130752133483,
+        "entropy": 0.423949778341854,
+        "bond_alpha": 5.31032851192893,
+        "bond_offset": 0.6044508166671787,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 57.67480437369845,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.842050739007179,
+        "history_weight": 9.136761738813743,
+        "entropy": 0.28863047542006337,
+        "bond_alpha": 7.353931883914491,
+        "bond_offset": 0.5046604799628986,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.54118000678183,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.365762298230432,
+        "history_weight": 12.543981412922072,
+        "entropy": 0.48601076426660506,
+        "bond_alpha": 3.6158639053120814,
+        "bond_offset": 0.6192602425610932,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 57.07815901298194,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.44506411138934,
+        "history_weight": 3.127879459402072,
+        "entropy": 0.12659850694671101,
+        "bond_alpha": 11.634568440770767,
+        "bond_offset": 0.5723419339539736,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 56.299015242787206,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.576458990824449,
+        "history_weight": 2.526699461081198,
+        "entropy": 0.41810692474395605,
+        "bond_alpha": 4.621155160620679,
+        "bond_offset": 0.4490967828597114,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.07000795659968,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.4783921813789362,
+        "history_weight": 12.311333443355041,
+        "entropy": 0.3660788882784801,
+        "bond_alpha": 8.79985052199855,
+        "bond_offset": 0.5076491452370507,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 55.986089289079,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.894804867317974,
+        "history_weight": 6.190454057628213,
+        "entropy": 0.4266397757886309,
+        "bond_alpha": 7.70875381141284,
+        "bond_offset": 0.5130833288274723,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.54118000678183,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.164118071026458,
+        "history_weight": 4.8699791753800605,
+        "entropy": 0.39904375207050047,
+        "bond_alpha": 8.535365071202229,
+        "bond_offset": 0.4696638085440452,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 55.05452488432328,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.096171159471115,
+        "history_weight": 6.066422709911565,
+        "entropy": 0.31742114444559544,
+        "bond_alpha": 13.78413744253911,
+        "bond_offset": 0.5872713987741977,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.12767673238873,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.0520823663752767,
+        "history_weight": 14.127565792395389,
+        "entropy": 0.35108322122856717,
+        "bond_alpha": 6.35377299054212,
+        "bond_offset": 0.4417816217990162,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.881779426453896,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.25,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.146226703432664,
+        "history_weight": 9.491054960963446,
+        "entropy": 0.31338443679052863,
+        "bond_alpha": 13.620603579662449,
+        "bond_offset": 0.6365791633673592,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.35,
+      "mean_final_rs": 46.20296875071187,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.365073917594761,
+        "history_weight": 5.019969983035449,
+        "entropy": 0.1993956559257863,
+        "bond_alpha": 11.6713018034448,
+        "bond_offset": 0.41005973042073385,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.129007163841849,
+        "history_weight": 11.555650943240012,
+        "entropy": 0.4507062547046998,
+        "bond_alpha": 6.447062733306797,
+        "bond_offset": 0.6463771914016039,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 53.962943142056034,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.995685632596865,
+        "history_weight": 12.773558230150513,
+        "entropy": 0.15099546493279298,
+        "bond_alpha": 7.1647347772847745,
+        "bond_offset": 0.639188609733866,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.55,
+      "mean_final_rs": 48.96671689737863,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.349256846138964,
+        "history_weight": 3.8241452308733015,
+        "entropy": 0.38890102735722654,
+        "bond_alpha": 11.360474975098967,
+        "bond_offset": 0.5923442898655892,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 56.02436318087199,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.2455360002039,
+        "history_weight": 8.369504428540145,
+        "entropy": 0.2007196235627811,
+        "bond_alpha": 6.4940479155509525,
+        "bond_offset": 0.4544793150404277,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.78519917395905,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.176055052002654,
+        "history_weight": 8.959181024108746,
+        "entropy": 0.26034056670545597,
+        "bond_alpha": 8.006075447373725,
+        "bond_offset": 0.6841850018835445,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 53.63632795170613,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.380162628044722,
+        "history_weight": 9.00033256424356,
+        "entropy": 0.3023554715537864,
+        "bond_alpha": 9.948905060650421,
+        "bond_offset": 0.40543305514625216,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.884905519294094,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 3.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.849115180497364,
+        "history_weight": 14.01571509601238,
+        "entropy": 0.3260532734356836,
+        "bond_alpha": 11.0564607103996,
+        "bond_offset": 0.6767498143531887,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.3,
+      "mean_final_rs": 45.736364737228186,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.3651477088205874,
+        "history_weight": 2.7118161222567894,
+        "entropy": 0.3305153440667253,
+        "bond_alpha": 9.887295602977126,
+        "bond_offset": 0.5272392013907158,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.54118000678183,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.627998120622506,
+        "history_weight": 14.048321714150715,
+        "entropy": 0.47022740516271055,
+        "bond_alpha": 7.860911828253718,
+        "bond_offset": 0.4339714137522266,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 53.64080750625993,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.863570790661012,
+        "history_weight": 12.664022253466044,
+        "entropy": 0.14986507248130676,
+        "bond_alpha": 13.97094447402584,
+        "bond_offset": 0.6609689086186384,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.15,
+      "mean_final_rs": 41.26102641730505,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.669542514134649,
+        "history_weight": 9.073493818301474,
+        "entropy": 0.2596010815480521,
+        "bond_alpha": 2.7119013046864073,
+        "bond_offset": 0.5005591724937702,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.63983435046704,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.4,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.225681037382103,
+        "history_weight": 0.5671643335667415,
+        "entropy": 0.23339966867645767,
+        "bond_alpha": 7.176193016682263,
+        "bond_offset": 0.5612186808813768,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.895621903068864,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.278700547714845,
+        "history_weight": 5.522016918306438,
+        "entropy": 0.2387812807584911,
+        "bond_alpha": 11.587516225426729,
+        "bond_offset": 0.5356653822669422,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.38437336551183,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.021443406459838,
+        "history_weight": 7.060372983924054,
+        "entropy": 0.15634280815191995,
+        "bond_alpha": 4.293030824580903,
+        "bond_offset": 0.549510331821844,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.25225245574277,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.770329045540931,
+        "history_weight": 13.76526556548745,
+        "entropy": 0.24495755964665325,
+        "bond_alpha": 9.547648553614565,
+        "bond_offset": 0.5896792863758591,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 52.03825061410849,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.1178501092950026,
+        "history_weight": 10.121291894242304,
+        "entropy": 0.17121438674790057,
+        "bond_alpha": 14.493914127102917,
+        "bond_offset": 0.4445988183259339,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.731617113543214,
+        "history_weight": 1.737570187140336,
+        "entropy": 0.498749700738379,
+        "bond_alpha": 8.528535134306154,
+        "bond_offset": 0.5786155051960131,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 57.706048344992766,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.6036882964958474,
+        "history_weight": 11.374426820788077,
+        "entropy": 0.18396223723823432,
+        "bond_alpha": 13.674705762729278,
+        "bond_offset": 0.4615418921446022,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.716189485972999,
+        "history_weight": 1.0299701837973758,
+        "entropy": 0.2888267780439997,
+        "bond_alpha": 9.342934732414014,
+        "bond_offset": 0.41971259182850573,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.17229519052,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.45,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.9797485502550956,
+        "history_weight": 7.0726881038464,
+        "entropy": 0.309756107731032,
+        "bond_alpha": 7.729915710196966,
+        "bond_offset": 0.5202289182625978,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.351808123998126,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.036762981773961,
+        "history_weight": 2.7509835659953312,
+        "entropy": 0.17277125219810846,
+        "bond_alpha": 13.203213073175725,
+        "bond_offset": 0.6838346386400898,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.5,
+      "mean_final_rs": 48.78631974300412,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.359783846517777,
+        "history_weight": 4.4257977605815295,
+        "entropy": 0.3575998172956063,
+        "bond_alpha": 7.313544224275253,
+        "bond_offset": 0.4076159066981035,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 55.76413685635515,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.25,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.4053733762957132,
+        "history_weight": 10.881597318287264,
+        "entropy": 0.36356957676406054,
+        "bond_alpha": 2.3522479025452854,
+        "bond_offset": 0.46659164857988483,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 53.99042478102301,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.0796731692926427,
+        "history_weight": 10.242444782181561,
+        "entropy": 0.10788421510174567,
+        "bond_alpha": 3.35341156579946,
+        "bond_offset": 0.6399748256119568,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 51.66221643424849,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.6069019584890025,
+        "history_weight": 9.964818563852184,
+        "entropy": 0.1952731124186906,
+        "bond_alpha": 3.292738105871487,
+        "bond_offset": 0.47295165729983624,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.562782144807294,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.4,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.500402386700932,
+        "history_weight": 12.907598787541144,
+        "entropy": 0.43208794582679666,
+        "bond_alpha": 7.163385885039912,
+        "bond_offset": 0.6004255409711938,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 54.32222797252481,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.844858658742389,
+        "history_weight": 4.7506420887846925,
+        "entropy": 0.4585343274084479,
+        "bond_alpha": 2.1690250056395683,
+        "bond_offset": 0.42565255925634043,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.03764643175064,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.870976296314246,
+        "history_weight": 0.8847169561703858,
+        "entropy": 0.17257417403591893,
+        "bond_alpha": 9.579540292605998,
+        "bond_offset": 0.5264273651777494,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.887427347680116,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.034045399692774,
+        "history_weight": 12.352931645207393,
+        "entropy": 0.2367269406791504,
+        "bond_alpha": 5.372504634606802,
+        "bond_offset": 0.51390772245018,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 58.90977147618685,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.31265448263327,
+        "history_weight": 4.386922791931706,
+        "entropy": 0.34965956313965363,
+        "bond_alpha": 7.322351478486126,
+        "bond_offset": 0.565614154255594,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 57.95303943507183,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.92513876221785,
+        "history_weight": 4.769753513357807,
+        "entropy": 0.4793813227848627,
+        "bond_alpha": 11.92687532407689,
+        "bond_offset": 0.4420339527299358,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.78106005279277,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.816211783081215,
+        "history_weight": 7.567752374617948,
+        "entropy": 0.45782089075763654,
+        "bond_alpha": 12.398118327315098,
+        "bond_offset": 0.52756405134077,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.80963206951235,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.2022237748810567,
+        "history_weight": 4.395821711081718,
+        "entropy": 0.3166536858643468,
+        "bond_alpha": 10.235216857739914,
+        "bond_offset": 0.4773663056299607,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.13912524420272,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.254204666655417,
+        "history_weight": 12.606488433589837,
+        "entropy": 0.49376087228142085,
+        "bond_alpha": 8.833972369934916,
+        "bond_offset": 0.45150378575449107,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.13912524420272,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.4507659386743206,
+        "history_weight": 0.7666648099382676,
+        "entropy": 0.4657195226241996,
+        "bond_alpha": 3.5307640775718347,
+        "bond_offset": 0.572954942654276,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 58.44888470807753,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.466496986184854,
+        "history_weight": 8.535581036479005,
+        "entropy": 0.3605681553407457,
+        "bond_alpha": 12.78664344819362,
+        "bond_offset": 0.461926381528181,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.0989624579263242,
+        "history_weight": 2.4848416359977055,
+        "entropy": 0.46000745673924204,
+        "bond_alpha": 13.360571008312698,
+        "bond_offset": 0.5792239306510925,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 56.299015242787206,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.40465174390288,
+        "history_weight": 10.143031780920705,
+        "entropy": 0.17014851144937984,
+        "bond_alpha": 13.887355297024477,
+        "bond_offset": 0.5256311574676219,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 53.20240811084936,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.448246754245477,
+        "history_weight": 8.024306726601145,
+        "entropy": 0.11878638671002202,
+        "bond_alpha": 4.161683793829033,
+        "bond_offset": 0.6214100849279112,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 55.6314778033896,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.7451880113261382,
+        "history_weight": 9.245705587262629,
+        "entropy": 0.1981396438725284,
+        "bond_alpha": 7.0608429825456955,
+        "bond_offset": 0.48660812103121,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.74207012190177,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.201054448184542,
+        "history_weight": 10.92616562517156,
+        "entropy": 0.21884868624927,
+        "bond_alpha": 9.363260323859663,
+        "bond_offset": 0.5428151206597299,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.644787110941685,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.973040488263833,
+        "history_weight": 14.08403122020899,
+        "entropy": 0.3930288388841001,
+        "bond_alpha": 4.794224921679838,
+        "bond_offset": 0.40935494051838545,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.79017030754443,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.360376398698426,
+        "history_weight": 9.128629995153695,
+        "entropy": 0.12057032539370015,
+        "bond_alpha": 8.452761213616071,
+        "bond_offset": 0.5790528546750667,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.34614703309195,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.008195017352648,
+        "history_weight": 11.678226954314418,
+        "entropy": 0.14263930125350874,
+        "bond_alpha": 2.976791162565514,
+        "bond_offset": 0.6184566268610809,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 52.2614560610308,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.459421845855786,
+        "history_weight": 10.481834748202173,
+        "entropy": 0.2739309354414985,
+        "bond_alpha": 5.203226432108389,
+        "bond_offset": 0.6457306953022599,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 55.55651149442607,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.194742910720812,
+        "history_weight": 10.573098827389188,
+        "entropy": 0.20885805489198508,
+        "bond_alpha": 9.672998669298131,
+        "bond_offset": 0.508292169082008,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.615458828052304,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.8242386599397074,
+        "history_weight": 13.80104684420252,
+        "entropy": 0.15472745236758456,
+        "bond_alpha": 14.353085599670433,
+        "bond_offset": 0.5338017318873867,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.75662493245871,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.666196359547577,
+        "history_weight": 8.357563736986194,
+        "entropy": 0.4491783343505633,
+        "bond_alpha": 11.518923523324295,
+        "bond_offset": 0.6419683443584349,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.45,
+      "mean_final_rs": 47.308433937270195,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.929050300396456,
+        "history_weight": 10.538010185508861,
+        "entropy": 0.4396782606261277,
+        "bond_alpha": 5.245684115169418,
+        "bond_offset": 0.5468274890929421,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.57813987091557,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.99088497637642,
+        "history_weight": 14.821186115951381,
+        "entropy": 0.47762373587464535,
+        "bond_alpha": 2.5125485477905767,
+        "bond_offset": 0.6116725517547066,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 50.98328242923554,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.327234856740992,
+        "history_weight": 3.1183425043463364,
+        "entropy": 0.32717809222105176,
+        "bond_alpha": 13.901347868644544,
+        "bond_offset": 0.4101837935757397,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.35,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.276782405221559,
+        "history_weight": 4.8115606069019865,
+        "entropy": 0.4697584781506122,
+        "bond_alpha": 14.623757187149781,
+        "bond_offset": 0.6832799467340301,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.25,
+      "mean_final_rs": 42.90696326311731,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.267927949917174,
+        "history_weight": 12.999618439345046,
+        "entropy": 0.4378197594140282,
+        "bond_alpha": 6.1483061521623235,
+        "bond_offset": 0.6486746422452032,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 53.55439202200074,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.3330687124394336,
+        "history_weight": 9.145913237989769,
+        "entropy": 0.19200353491508124,
+        "bond_alpha": 3.5673695151046245,
+        "bond_offset": 0.4230859604887628,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 57.56341480665473,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 3.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.266598982903258,
+        "history_weight": 5.428186974636959,
+        "entropy": 0.38990670861150456,
+        "bond_alpha": 2.849632430386251,
+        "bond_offset": 0.4945871013491831,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.01425903128761,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.855421631378035,
+        "history_weight": 11.965485890164972,
+        "entropy": 0.22750100117282798,
+        "bond_alpha": 10.136587893681119,
+        "bond_offset": 0.665793324470856,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.5,
+      "mean_final_rs": 48.902236846637706,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.542768693640741,
+        "history_weight": 3.8779123839276894,
+        "entropy": 0.10976031262261521,
+        "bond_alpha": 13.311285360712088,
+        "bond_offset": 0.40638082325511615,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.872315054157795,
+        "history_weight": 8.169588443394574,
+        "entropy": 0.47562707940515847,
+        "bond_alpha": 12.38418206505765,
+        "bond_offset": 0.6993802331600012,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.2,
+      "mean_final_rs": 41.24659913021829,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.156406339065391,
+        "history_weight": 11.62423018950134,
+        "entropy": 0.26077236544369686,
+        "bond_alpha": 8.238383063950815,
+        "bond_offset": 0.588251638965511,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 53.65359367249905,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.863094027677048,
+        "history_weight": 14.76921030338978,
+        "entropy": 0.4073093655458073,
+        "bond_alpha": 7.430968168175339,
+        "bond_offset": 0.526407100683121,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.94449849792941,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.638240714300023,
+        "history_weight": 3.9622686136403837,
+        "entropy": 0.14418964525255787,
+        "bond_alpha": 6.610088049330095,
+        "bond_offset": 0.4861716974962245,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.948489632850546,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.6667730841039106,
+        "history_weight": 3.887312390223694,
+        "entropy": 0.11683727585454476,
+        "bond_alpha": 2.2323611515343798,
+        "bond_offset": 0.6963167169208094,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.4,
+      "mean_final_rs": 43.81558728706358,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.849958203622761,
+        "history_weight": 6.072736383815385,
+        "entropy": 0.37185891307722796,
+        "bond_alpha": 4.837300542245834,
+        "bond_offset": 0.6849883551850675,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.55,
+      "mean_final_rs": 50.053055784583236,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.07710512973997,
+        "history_weight": 1.7964595335277629,
+        "entropy": 0.26703231031397134,
+        "bond_alpha": 13.42853799830814,
+        "bond_offset": 0.683419606687423,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.19243764103443,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.2066136012488275,
+        "history_weight": 9.394465143555262,
+        "entropy": 0.1668135784368301,
+        "bond_alpha": 14.885192139780695,
+        "bond_offset": 0.469501510415033,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.48458596721613,
+        "history_weight": 9.919876410389342,
+        "entropy": 0.34309471795154367,
+        "bond_alpha": 8.664950643214612,
+        "bond_offset": 0.4692009435153276,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 55.05452488432328,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.5887522880495744,
+        "history_weight": 3.6970500315175427,
+        "entropy": 0.1745753048577018,
+        "bond_alpha": 12.134598156367794,
+        "bond_offset": 0.505037577750019,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.68564006806146,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.5205840890705673,
+        "history_weight": 14.551988137041764,
+        "entropy": 0.4535143539853703,
+        "bond_alpha": 14.060779681537769,
+        "bond_offset": 0.6984723467939306,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.1,
+      "mean_final_rs": 37.983236040435386,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.35,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.5650572429753855,
+        "history_weight": 6.245509274088552,
+        "entropy": 0.4032953902816365,
+        "bond_alpha": 11.0482680346993,
+        "bond_offset": 0.44616877190195653,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.884905519294094,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.34249812491556,
+        "history_weight": 3.75438829163158,
+        "entropy": 0.18952704592904923,
+        "bond_alpha": 8.980667497614377,
+        "bond_offset": 0.5778819804525109,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 56.9878485123912,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.220775870540301,
+        "history_weight": 1.8265591422674456,
+        "entropy": 0.4509843450521521,
+        "bond_alpha": 5.452800553653178,
+        "bond_offset": 0.43885447638484126,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.13107024177011,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.998732718820794,
+        "history_weight": 14.356946724331424,
+        "entropy": 0.44485104690618027,
+        "bond_alpha": 12.523708971423416,
+        "bond_offset": 0.5965725941917065,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.55,
+      "mean_final_rs": 49.01212659148287,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.957716335482254,
+        "history_weight": 1.761308018715447,
+        "entropy": 0.2633812852282795,
+        "bond_alpha": 6.844950721160082,
+        "bond_offset": 0.4779261351280979,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.948489632850546,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.510781023197264,
+        "history_weight": 7.690198158642176,
+        "entropy": 0.1324184863630592,
+        "bond_alpha": 4.862381625347547,
+        "bond_offset": 0.6049776290978788,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 56.73321758369123,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.6851777354127018,
+        "history_weight": 12.842500253707145,
+        "entropy": 0.2980586108055897,
+        "bond_alpha": 8.247625505246424,
+        "bond_offset": 0.5777223353978552,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.739247243476676,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.422128693326343,
+        "history_weight": 5.543233514581799,
+        "entropy": 0.3712064610236254,
+        "bond_alpha": 9.354515531945284,
+        "bond_offset": 0.4801084810508264,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.68564006806146,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.907669877196422,
+        "history_weight": 12.062677313300458,
+        "entropy": 0.3633807338633702,
+        "bond_alpha": 13.057562478225144,
+        "bond_offset": 0.6601882602879408,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.15,
+      "mean_final_rs": 41.8637887115452,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.3752667904353135,
+        "history_weight": 12.636693261273244,
+        "entropy": 0.37898858466771346,
+        "bond_alpha": 10.841830032883905,
+        "bond_offset": 0.5855834134645552,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.41274929580626,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.774449756018771,
+        "history_weight": 2.7997740267495685,
+        "entropy": 0.45234830367957135,
+        "bond_alpha": 13.333965860688016,
+        "bond_offset": 0.40877418491036777,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.78106005279277,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.25,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.432350755082865,
+        "history_weight": 2.3686130783649553,
+        "entropy": 0.23404754170365677,
+        "bond_alpha": 11.665607331790902,
+        "bond_offset": 0.44822796881449245,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 53.92973808109563,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.36170321707156,
+        "history_weight": 12.565945580387258,
+        "entropy": 0.3029870935043345,
+        "bond_alpha": 2.0830163323188366,
+        "bond_offset": 0.48611143995247386,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 55.72939431555945,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.55234226538168,
+        "history_weight": 14.72719958139764,
+        "entropy": 0.3527254108066674,
+        "bond_alpha": 5.377446553834077,
+        "bond_offset": 0.5902017109298834,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.92519567462402,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.8598684174427,
+        "history_weight": 11.807758229691583,
+        "entropy": 0.14279225553078337,
+        "bond_alpha": 11.893362732526365,
+        "bond_offset": 0.5623799736028331,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 53.09843091941998,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.666928034730951,
+        "history_weight": 5.457146407560948,
+        "entropy": 0.3530487572535793,
+        "bond_alpha": 14.116365371630227,
+        "bond_offset": 0.4307529183972038,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.43505638512806,
+        "history_weight": 10.474342973361793,
+        "entropy": 0.12713482364206877,
+        "bond_alpha": 5.912526370308611,
+        "bond_offset": 0.6124516265935844,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 55.81023284268529,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.6061554132189453,
+        "history_weight": 8.941471672555963,
+        "entropy": 0.2383532227811827,
+        "bond_alpha": 10.071901730977203,
+        "bond_offset": 0.4137226101437539,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.884905519294094,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.15,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.843831255371386,
+        "history_weight": 14.615590053072255,
+        "entropy": 0.48755114211427664,
+        "bond_alpha": 11.745473812658021,
+        "bond_offset": 0.43902587203918964,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.5,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.824368763361203,
+        "history_weight": 0.8565102886526219,
+        "entropy": 0.10884942061159891,
+        "bond_alpha": 6.206932848944036,
+        "bond_offset": 0.5465929571213997,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.28596951574938,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.933666760270139,
+        "history_weight": 10.407782960794325,
+        "entropy": 0.27836108255069936,
+        "bond_alpha": 5.5571466616616565,
+        "bond_offset": 0.6991373500473133,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 49.36452756528984,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.835631720123756,
+        "history_weight": 7.045111852780295,
+        "entropy": 0.16544952847666766,
+        "bond_alpha": 12.332524133749082,
+        "bond_offset": 0.6081046677344466,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.55,
+      "mean_final_rs": 49.78658766358602,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.9869265150988435,
+        "history_weight": 1.694525161429719,
+        "entropy": 0.3721997208298853,
+        "bond_alpha": 10.508645785654759,
+        "bond_offset": 0.4819778580994628,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.17229519052,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.557772060253694,
+        "history_weight": 2.6903394308230535,
+        "entropy": 0.2729339204170408,
+        "bond_alpha": 14.267006962178785,
+        "bond_offset": 0.5259181950778367,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 55.70670238566536,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.74673352897677,
+        "history_weight": 6.265118770460517,
+        "entropy": 0.20968608093946803,
+        "bond_alpha": 14.791709423477768,
+        "bond_offset": 0.5228002018945129,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 52.05373008254652,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.04689283311221,
+        "history_weight": 3.8343417854207495,
+        "entropy": 0.18524188161003333,
+        "bond_alpha": 2.404743077498648,
+        "bond_offset": 0.5955000476127654,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.276035909836445,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.316737093513851,
+        "history_weight": 13.033194622674737,
+        "entropy": 0.2892839626766229,
+        "bond_alpha": 14.586514562891383,
+        "bond_offset": 0.45565765471093633,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.817608511600497,
+        "history_weight": 11.760654365480255,
+        "entropy": 0.40836873785762084,
+        "bond_alpha": 12.98218196551954,
+        "bond_offset": 0.6283071972828996,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.4,
+      "mean_final_rs": 46.09244168419824,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.635982894682739,
+        "history_weight": 2.40305072639462,
+        "entropy": 0.11301047179650077,
+        "bond_alpha": 13.971022021603929,
+        "bond_offset": 0.5849950943562214,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 56.70233373393479,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.95,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.168835618785586,
+        "history_weight": 7.482074096931976,
+        "entropy": 0.1469232755849578,
+        "bond_alpha": 3.6274152986331556,
+        "bond_offset": 0.6056695861686914,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 57.2677518473835,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.872753054095164,
+        "history_weight": 3.4076085371548825,
+        "entropy": 0.2966378186965748,
+        "bond_alpha": 2.8347161819767432,
+        "bond_offset": 0.5745914205743197,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.998637581815025,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.4209406399158793,
+        "history_weight": 12.064606959239228,
+        "entropy": 0.22414478356942952,
+        "bond_alpha": 7.917861938063416,
+        "bond_offset": 0.4034861619724302,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.884905519294094,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.65202199015103,
+        "history_weight": 6.19115656789693,
+        "entropy": 0.2919755338868494,
+        "bond_alpha": 9.800267125550949,
+        "bond_offset": 0.487498773612791,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.43149400445915,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.254836975138883,
+        "history_weight": 12.971774759243466,
+        "entropy": 0.41194039555733997,
+        "bond_alpha": 2.515044729528643,
+        "bond_offset": 0.5441520841773486,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 54.57360608792878,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.9443716057635738,
+        "history_weight": 4.009652730006648,
+        "entropy": 0.4946650373068586,
+        "bond_alpha": 3.852442057719672,
+        "bond_offset": 0.5496664460354068,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.33335123652053,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.563401608863072,
+        "history_weight": 10.685742072889507,
+        "entropy": 0.3238594733947656,
+        "bond_alpha": 2.1270210164493877,
+        "bond_offset": 0.4979383924731976,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.50804231349957,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.6594047904624025,
+        "history_weight": 1.7740642376000837,
+        "entropy": 0.24025077248367233,
+        "bond_alpha": 2.4316404142877652,
+        "bond_offset": 0.42357354914650625,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.3259196362374,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.5723094858143645,
+        "history_weight": 2.424378433624375,
+        "entropy": 0.32701633930462326,
+        "bond_alpha": 10.963044598784455,
+        "bond_offset": 0.6401760097327248,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 57.23517207859493,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.8013521982032907,
+        "history_weight": 2.9284974427565116,
+        "entropy": 0.1418271361337601,
+        "bond_alpha": 10.273593244067277,
+        "bond_offset": 0.6119427179460704,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 56.790607592850925,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.2842753034307783,
+        "history_weight": 14.075077570533502,
+        "entropy": 0.12078851346058897,
+        "bond_alpha": 9.036852358913915,
+        "bond_offset": 0.6127181558352749,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.3,
+      "mean_final_rs": 42.64152209837678,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.6,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.83872211371477,
+        "history_weight": 10.854260515920203,
+        "entropy": 0.4206912332279168,
+        "bond_alpha": 6.412852503056479,
+        "bond_offset": 0.6444475341239536,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 54.06722070477048,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.7210336174620764,
+        "history_weight": 13.474841512877651,
+        "entropy": 0.3190369504614945,
+        "bond_alpha": 12.624871009512418,
+        "bond_offset": 0.53569548535549,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.75170425127074,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.792199256768725,
+        "history_weight": 8.13283858357364,
+        "entropy": 0.39263580870213277,
+        "bond_alpha": 3.0611897663976646,
+        "bond_offset": 0.41810562519716915,
+        "success_threshold": 0.9
+      },
+      "success_rate": 1.0,
+      "mean_final_rs": 59.71853081851059,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.2,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.223929106091318,
+        "history_weight": 2.813397861641231,
+        "entropy": 0.44871342663688074,
+        "bond_alpha": 4.849781835654576,
+        "bond_offset": 0.6927595767457393,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 50.10477365507482,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.032062125939961,
+        "history_weight": 3.1407097774861397,
+        "entropy": 0.41587940285699165,
+        "bond_alpha": 10.563201081511389,
+        "bond_offset": 0.5494587149359417,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.31703151434476,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.998271958438681,
+        "history_weight": 10.928425784947825,
+        "entropy": 0.1913818965325195,
+        "bond_alpha": 14.952340908737645,
+        "bond_offset": 0.6924379486440349,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.25,
+      "mean_final_rs": 41.64189716654379,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.4,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.852931177122432,
+        "history_weight": 3.3933655384726045,
+        "entropy": 0.3720912969725165,
+        "bond_alpha": 2.938579316729286,
+        "bond_offset": 0.40919575066174185,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 59.3259196362374,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.2,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.3191459966009234,
+        "history_weight": 7.208032872720087,
+        "entropy": 0.44730900216335223,
+        "bond_alpha": 11.453197906962004,
+        "bond_offset": 0.6228119563599943,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.45,
+      "mean_final_rs": 47.26669928123409,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.829440010032679,
+        "history_weight": 5.516057391930962,
+        "entropy": 0.2484155051938411,
+        "bond_alpha": 14.839444328568751,
+        "bond_offset": 0.4120327574237448,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.25,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.803283465102037,
+        "history_weight": 8.890793424299705,
+        "entropy": 0.2754461676758362,
+        "bond_alpha": 11.428349585396775,
+        "bond_offset": 0.5460006824274108,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 54.56303232822656,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.860809142734945,
+        "history_weight": 13.560177028163249,
+        "entropy": 0.2686883707493822,
+        "bond_alpha": 5.598761364055671,
+        "bond_offset": 0.5777050985780087,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 57.269781323393865,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.211270110550219,
+        "history_weight": 3.5546017405821653,
+        "entropy": 0.34918663342539313,
+        "bond_alpha": 10.210282861202767,
+        "bond_offset": 0.6199339067245843,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 57.09452344132027,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.1841091661453382,
+        "history_weight": 10.879461987890284,
+        "entropy": 0.4636130082662564,
+        "bond_alpha": 4.335880415313145,
+        "bond_offset": 0.47126299747716327,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 57.34109186255381,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.45,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.742555846374756,
+        "history_weight": 3.1241658142876014,
+        "entropy": 0.4417540373478317,
+        "bond_alpha": 8.399612133824451,
+        "bond_offset": 0.4741693223209531,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.755051978744575,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.836749111452603,
+        "history_weight": 6.95692619753865,
+        "entropy": 0.30592694157187605,
+        "bond_alpha": 6.670033802196954,
+        "bond_offset": 0.5778852554304782,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 57.29903655875478,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.4717148532652047,
+        "history_weight": 6.170682281450531,
+        "entropy": 0.48776492893411505,
+        "bond_alpha": 5.355734625114658,
+        "bond_offset": 0.5970209993623876,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 56.50199063266807,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.926710578022254,
+        "history_weight": 11.715360322455709,
+        "entropy": 0.15234946428733995,
+        "bond_alpha": 14.60767358602108,
+        "bond_offset": 0.5361368624150917,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 53.20240811084936,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.1244541701181756,
+        "history_weight": 1.5657028362851835,
+        "entropy": 0.16790316203501632,
+        "bond_alpha": 8.757061331228229,
+        "bond_offset": 0.501100952929386,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 58.31703151434476,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.459950292943486,
+        "history_weight": 6.747869093096186,
+        "entropy": 0.19948570903505197,
+        "bond_alpha": 10.02288482585239,
+        "bond_offset": 0.6120331650656337,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 53.606756043141765,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.25,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.5033771711085486,
+        "history_weight": 2.930478636180606,
+        "entropy": 0.11466857077341719,
+        "bond_alpha": 11.573226195853326,
+        "bond_offset": 0.5991413582865415,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.75,
+      "mean_final_rs": 56.01208910760696,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.2716778817483245,
+        "history_weight": 12.740471510053359,
+        "entropy": 0.42226806118002125,
+        "bond_alpha": 9.609606737157778,
+        "bond_offset": 0.6604813841539776,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.5,
+      "mean_final_rs": 48.57560042164984,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.05,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.8525708903309144,
+        "history_weight": 2.1228344812670543,
+        "entropy": 0.20789984460679586,
+        "bond_alpha": 2.742129129161093,
+        "bond_offset": 0.5593508584003096,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.32532651265842,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.429451230654653,
+        "history_weight": 1.0704813396933899,
+        "entropy": 0.14884396560401073,
+        "bond_alpha": 7.878587367684658,
+        "bond_offset": 0.6801625052583714,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 57.07265993844462,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.1,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.8454049447907543,
+        "history_weight": 7.85490472598169,
+        "entropy": 0.11662914362015685,
+        "bond_alpha": 3.928461612507155,
+        "bond_offset": 0.695989036887654,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.55,
+      "mean_final_rs": 46.18526586009044,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.68606826792441,
+        "history_weight": 0.5716297235489394,
+        "entropy": 0.48072471416929563,
+        "bond_alpha": 10.308559191601505,
+        "bond_offset": 0.6603754883560067,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 59.67381724277745,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.2,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.092658700704732,
+        "history_weight": 7.976142414399129,
+        "entropy": 0.2955386321027681,
+        "bond_alpha": 10.669235348099356,
+        "bond_offset": 0.44189537642689386,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 51.73622749099125,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.2697623088541015,
+        "history_weight": 4.964984153072268,
+        "entropy": 0.38187230509465875,
+        "bond_alpha": 4.624094877598329,
+        "bond_offset": 0.6020297299974752,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 56.048838689851095,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.75,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.729208414965434,
+        "history_weight": 1.8615603789465667,
+        "entropy": 0.3690408472900505,
+        "bond_alpha": 7.768752850959425,
+        "bond_offset": 0.6604426763132516,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 57.48360542308866,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.0,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 2.594348105026473,
+        "history_weight": 10.543076307279385,
+        "entropy": 0.4352461158592441,
+        "bond_alpha": 14.279984853162302,
+        "bond_offset": 0.6049744084868938,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.5,
+      "mean_final_rs": 46.95020058872062,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 5.474572876075846,
+        "history_weight": 9.458784982917601,
+        "entropy": 0.4475619937914873,
+        "bond_alpha": 9.417926706304787,
+        "bond_offset": 0.40911611790905106,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 52.884905519294094,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.25,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 9.3785382595628,
+        "history_weight": 10.498137889957636,
+        "entropy": 0.3706053543108986,
+        "bond_alpha": 4.803776981170323,
+        "bond_offset": 0.5976656410697971,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 57.00732841561884,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 5.3,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.544779650887426,
+        "history_weight": 9.942878167101636,
+        "entropy": 0.1426372121231963,
+        "bond_alpha": 10.551988959839468,
+        "bond_offset": 0.6998241177311999,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.3,
+      "mean_final_rs": 42.75951178311935,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.7,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 1.4339083497450043,
+        "history_weight": 14.6690256712091,
+        "entropy": 0.26276318428914824,
+        "bond_alpha": 13.31979485438437,
+        "bond_offset": 0.634715645217482,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.2,
+      "mean_final_rs": 40.292724361562165,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 6.10314634888001,
+        "history_weight": 11.207513534144235,
+        "entropy": 0.45140622452053913,
+        "bond_alpha": 7.253824181463429,
+        "bond_offset": 0.4981099484689716,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.9,
+      "mean_final_rs": 57.05781292040382,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.85,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.0083404700722625,
+        "history_weight": 12.21376615814825,
+        "entropy": 0.4049140539106463,
+        "bond_alpha": 12.371577435162248,
+        "bond_offset": 0.5306749944438799,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.65,
+      "mean_final_rs": 52.05373008254652,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 8.360507945575193,
+        "history_weight": 2.2430313028738222,
+        "entropy": 0.31779563918433984,
+        "bond_alpha": 2.0748625864755805,
+        "bond_offset": 0.4973757489700811,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.8,
+      "mean_final_rs": 54.89245897390244,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.55,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 4.298153813842581,
+        "history_weight": 6.2445040283342035,
+        "entropy": 0.3781868826759449,
+        "bond_alpha": 7.051255316514495,
+        "bond_offset": 0.5346080867867592,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.95,
+      "mean_final_rs": 57.90426468455399,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.8,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 3.1378971778689473,
+        "history_weight": 5.912150978625431,
+        "entropy": 0.1909078509052606,
+        "bond_alpha": 2.9515470089897673,
+        "bond_offset": 0.5810345780144134,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.85,
+      "mean_final_rs": 54.80096729092232,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.65,
+      "n_trials": 20
+    },
+    {
+      "config": {
+        "bond_power": 7.013915186995146,
+        "history_weight": 9.482610017139411,
+        "entropy": 0.28539761752022896,
+        "bond_alpha": 6.937215142329988,
+        "bond_offset": 0.6590000948715475,
+        "success_threshold": 0.9
+      },
+      "success_rate": 0.7,
+      "mean_final_rs": 54.12095456124814,
+      "mean_sessions": 100.0,
+      "dropout_rate": 0.0,
+      "mean_unique_actions": 4.9,
+      "n_trials": 20
+    }
+  ],
+  "summary": {
+    "mean_success_rate": 0.7470000000000001,
+    "median_success_rate": 0.75,
+    "std_success_rate": 0.18993244413036264,
+    "n_interesting": 180,
+    "n_failures": 26
+  }
+}
