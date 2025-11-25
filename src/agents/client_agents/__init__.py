@@ -9,6 +9,14 @@ from .frequency_amplifier_client import FrequencyAmplifierClient
 from .conditional_amplifier_client import ConditionalAmplifierClient
 from .bond_weighted_conditional_amplifier_client import BondWeightedConditionalAmplifier
 from .bond_weighted_frequency_amplifier_client import BondWeightedFrequencyAmplifier
+from .perceptual_distortion import (
+    PerceptionRecord,
+    PerceptualClientMixin,
+    with_perception,
+)
+
+# Create pre-composed perceptual variant
+PerceptualBondOnlyClient = with_perception(BondOnlyClient)
 
 __all__ = [
     'BaseClientAgent',
@@ -17,6 +25,10 @@ __all__ = [
     'ConditionalAmplifierClient',
     'BondWeightedConditionalAmplifier',
     'BondWeightedFrequencyAmplifier',
+    'PerceptionRecord',
+    'PerceptualClientMixin',
+    'with_perception',
+    'PerceptualBondOnlyClient',
     'create_client',
     'create_problematic_client',
 ]

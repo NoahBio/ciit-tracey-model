@@ -225,6 +225,16 @@ CLIENT_ENTROPY_MAX = 5
 HISTORY_WEIGHT = 1 #Weighting factor for client history in utility calculation (used in client_agent.calculate_utilities)
 
 # =============================================================================
+# PERCEPTION PARAMETERS
+# =============================================================================
+
+# Imperfect perception system for client agents
+PERCEPTION_WINDOW = 15                    # Number of recent interactions to consider for perception
+PERCEPTION_BASELINE_ACCURACY = 0.2        # Base probability of correct perception (20%)
+PERCEPTION_HISTORY_WEIGHT = 0.8           # Weight of history-based perception (80%)
+PERCEPTION_ADJACENCY_NOISE = 0.1          # Probability of ±1 octant shift (10%)
+
+# =============================================================================
 # EPISODE PARAMETERS
 # =============================================================================
 
