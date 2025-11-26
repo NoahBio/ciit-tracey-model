@@ -116,6 +116,7 @@ def create_problematic_client(
         - "cold_stuck": Stuck in cold behaviors
         - "dominant_stuck": Stuck in dominant behaviors
         - "submissive_stuck": Stuck in submissive behaviors
+        - "cold_warm": Client always cold (C), therapist always warm (W)
     entropy : float, optional
         Temperature parameter. If None, samples from distribution.
     mechanism : str, default='frequency_amplifier'

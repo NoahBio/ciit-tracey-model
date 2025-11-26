@@ -222,7 +222,7 @@ CLIENT_ENTROPY_STD = 0.5
 CLIENT_ENTROPY_MIN = 1.5
 CLIENT_ENTROPY_MAX = 5
 
-HISTORY_WEIGHT = 1 #Weighting factor for client history in utility calculation (used in client_agent.calculate_utilities)
+HISTORY_WEIGHT = 1.0  # Weighting factor for client history in utility calculation (used in amplifier mechanisms)
 
 # =============================================================================
 # PERCEPTION PARAMETERS

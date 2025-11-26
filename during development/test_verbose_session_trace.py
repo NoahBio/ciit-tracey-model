@@ -16,12 +16,21 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 import numpy as np
-from src.agents.client_agents import create_client
+from src.agents.client_agents import (
+    with_perception,
+    BondOnlyClient,
+    FrequencyAmplifierClient,
+    ConditionalAmplifierClient,
+    BondWeightedConditionalAmplifier,
+    BondWeightedFrequencyAmplifier,
+)
 from src import config
 from src.config import (
     sample_u_matrix,
     OCTANTS,
     calculate_success_threshold,
+    PERCEPTION_BASELINE_ACCURACY,
+    PERCEPTION_ADJACENCY_NOISE,
 )
 import argparse
 
@@ -70,9 +79,11 @@ def verbose_session_trace(
     mechanism: str,
     initial_memory_pattern: str,
     success_threshold_percentile: float,
+    enable_perception: bool = False,
+    baseline_accuracy: float = 0.2,
     verbose_sessions: range = range(1, 6),
     max_sessions: int = 100,
-    entropy: float = 1.0,
+    entropy: float = 3.0,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
     bond_alpha: float = 5.0,  
@@ -128,7 +139,6 @@ def verbose_session_trace(
 
     # Create client
     client_kwargs = {
-        'mechanism': mechanism,
         'u_matrix': u_matrix,
         'entropy': entropy,
         'initial_memory': initial_memory,
@@ -141,7 +151,25 @@ def verbose_session_trace(
     if 'bond_weighted' in mechanism:
         client_kwargs['bond_power'] = bond_power
 
-    client = create_client(**client_kwargs)
+    if enable_perception:
+        client_kwargs['baseline_accuracy'] = baseline_accuracy
+        client_kwargs['enable_perception'] = True
+    
+    mechanisms = {
+        'bond_only': BondOnlyClient,
+        'frequency_amplifier': FrequencyAmplifierClient,
+        'conditional_amplifier': ConditionalAmplifierClient,
+        'bond_weighted_conditional_amplifier': BondWeightedConditionalAmplifier,
+        'bond_weighted_frequency_amplifier': BondWeightedFrequencyAmplifier,
+    }
+
+    ClientClass = mechanisms[mechanism]
+
+    if enable_perception:
+        ClientClass = with_perception(ClientClass)
+
+    # Create client directly with the class (not create_client)
+    client = ClientClass(**client_kwargs)
 
     # Calculate RS threshold
     rs_threshold = calculate_success_threshold(u_matrix, success_threshold_percentile)
@@ -157,8 +185,13 @@ def verbose_session_trace(
         print(f"History weight: {history_weight:.2f}")
     if 'bond_weighted' in mechanism:
         print(f"Bond power: {bond_power:.2f}")
-    print(f"Bond alpha: {bond_alpha:.2f}")  
+    print(f"Bond alpha: {bond_alpha:.2f}")
     print(f"Bond offset: {bond_offset:.2f}")
+    if enable_perception:
+        print(f"Perception enabled: Yes")
+        print(f"Baseline accuracy: {baseline_accuracy:.1%}")
+    else:
+        print(f"Perception enabled: No (perfect perception)")
     print()
 
     print("CLIENT U_MATRIX BOUNDS")
@@ -252,6 +285,35 @@ def verbose_session_trace(
 
         # Update memory
         client.update_memory(client_action, therapist_action)
+
+        # Show perception details if enabled
+        if is_verbose and enable_perception:
+            if hasattr(client, 'perception_history') and client.perception_history:
+                record = client.perception_history[-1]
+
+                print("Perception Details:")
+                print(f"  Actual therapist action: {OCTANTS[record.actual_therapist_action]:3s} ({record.actual_therapist_action})")
+                print(f"  Perceived by client:     {OCTANTS[record.perceived_therapist_action]:3s} ({record.perceived_therapist_action})", end="")
+
+                if record.perceived_therapist_action != record.actual_therapist_action:
+                    print(" ⚠ MISPERCEPTION")
+                else:
+                    print(" ✓ Correct")
+
+                # Show perception stages
+                print(f"  Stage 1 (history-based): {OCTANTS[record.stage1_result]:3s} ({record.stage1_result})", end="")
+                if record.baseline_path_succeeded:
+                    print(f" [baseline path: {PERCEPTION_BASELINE_ACCURACY:.0%}]")
+                else:
+                    print(f" [frequency path: {record.computed_accuracy:.2%}]")
+
+                if record.stage1_changed_from_actual:
+                    print(f"    → Changed from actual (history override)")
+
+                if record.stage2_shifted:
+                    print(f"  Stage 2 (adjacency):     Shifted ±1 ({PERCEPTION_ADJACENCY_NOISE:.0%} chance)")
+
+                print()
 
         # Get new state
         new_rs = client.relationship_satisfaction
@@ -354,6 +416,19 @@ def verbose_session_trace(
     print(f"Total change: {total_bond_change:+.4f}")
     print(f"Average per session: {total_bond_change/session:+.4f}")
     print()
+
+    # Perception summary
+    if enable_perception and hasattr(client, 'get_perception_stats'):
+        print("PERCEPTION SUMMARY")
+        print("-" * 100)
+        pstats = client.get_perception_stats()
+        print(f"Total interactions: {pstats['total_interactions']}")
+        print(f"Overall misperception rate: {pstats['overall_misperception_rate']:.1%}")
+        print(f"Stage 1 override rate: {pstats['stage1_override_rate']:.1%} (history-based changes)")
+        print(f"Stage 2 shift rate: {pstats['stage2_shift_rate']:.1%} (adjacency noise)")
+        print(f"Mean computed accuracy: {pstats['mean_computed_accuracy']:.3f}")
+        print(f"Baseline path successes: {pstats['baseline_correct_count']} times")
+        print()
 
     # Action distribution
     print("ACTION DISTRIBUTION")
@@ -494,7 +569,19 @@ if __name__ == "__main__":
         ],
         help='Client expectation mechanism'
     )
-    
+
+    parser.add_argument(
+    '--enable-perception',
+    action='store_true',
+    help='Enable perceptual distortion (imperfect client perception of therapist actions)'
+    )
+
+    parser.add_argument(
+        '--baseline-accuracy',
+        type=float,
+        default=0.2,
+        help='Baseline perception accuracy (default: 0.2 = 20%% chance of correct perception via baseline path)'
+    )
     parser.add_argument(
         '--pattern', '-p',
         type=str,
@@ -513,7 +600,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--entropy', '-e',
         type=float,
-        default=1.0,
+        default=3.0,
         help='Client entropy (exploration parameter)'
     )
     
@@ -596,6 +683,8 @@ if __name__ == "__main__":
         
         kwargs = {
             'mechanism': args.mechanism,
+            'enable_perception': args.enable_perception,
+            'baseline_accuracy': args.baseline_accuracy,  
             'initial_memory_pattern': args.pattern,
             'success_threshold_percentile': args.threshold,
             'entropy': args.entropy,

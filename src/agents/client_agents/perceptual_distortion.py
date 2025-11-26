@@ -6,9 +6,10 @@ therapist actions based on their interaction history.
 """
 
 from dataclasses import dataclass
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Protocol
 import numpy as np
 from numpy.typing import NDArray
+from collections import deque
 
 from src.config import (
     PERCEPTION_WINDOW,
@@ -52,6 +53,15 @@ class PerceptionRecord:
     computed_accuracy: float
 
 
+class ClientAgentProtocol(Protocol):
+    """Protocol defining the interface expected from base client classes."""
+    memory: deque
+    rng: np.random.RandomState
+    
+    def update_memory(self, client_action: int, therapist_action: int) -> None:
+        ...
+
+
 class PerceptualClientMixin:
     """
     Mixin class that adds imperfect perception to any client agent.
@@ -82,6 +92,10 @@ class PerceptualClientMixin:
     perception_history : List[PerceptionRecord]
         Complete history of all perception events for analysis
     """
+
+    # Type hints for attributes provided by base client class
+    memory: deque
+    rng: np.random.RandomState
 
     def __init__(
         self,
@@ -184,7 +198,7 @@ class PerceptualClientMixin:
         """
         if not self.enable_perception:
             # Perfect perception: store actual action
-            super().update_memory(client_action, therapist_action)
+            super().update_memory(client_action, therapist_action)  # type: ignore[misc]
         else:
             # Imperfect perception: apply distortion
             perceived_action, record = self._perceive_therapist_action(therapist_action)
@@ -196,7 +210,7 @@ class PerceptualClientMixin:
             self.perception_history.append(record)
 
             # Update memory with PERCEIVED action (client's subjective reality)
-            super().update_memory(client_action, perceived_action)
+            super().update_memory(client_action, perceived_action)  # type: ignore[misc]
 
     def get_perception_stats(self) -> Dict[str, Any]:
         """

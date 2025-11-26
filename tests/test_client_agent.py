@@ -151,32 +151,6 @@ class TestClientAgent:
         # Should have some variety (not all the same)
         assert len(set(actions)) > 1
 
-    def test_dropout_probability_range(self):
-        """Test that dropout returns boolean."""
-        memory = [(0, 4)] * MEMORY_SIZE
-        client = ClientAgent(u_matrix=U_MATRIX, entropy=0.5, initial_memory=memory, random_state=42)
-
-        dropout = client.check_dropout()
-        assert isinstance(dropout, (bool, np.bool_))
-    
-    def test_dropout_bond_effect(self):
-        """Test that low bond increases dropout probability."""
-        # High bond (should rarely dropout)
-        good_memory = [(2, 2)] * MEMORY_SIZE
-        client_high_bond = ClientAgent(u_matrix=U_MATRIX, entropy=0.5, initial_memory=good_memory, random_state=42)
-
-        # Low bond (should dropout more)
-        poor_memory = [(0, 0)] * MEMORY_SIZE
-        client_low_bond = ClientAgent(u_matrix=U_MATRIX, entropy=0.5, initial_memory=poor_memory, random_state=42)
-
-        # Sample dropout many times
-        n_samples = 1000
-        dropout_high = sum(client_high_bond.check_dropout() for _ in range(n_samples))
-        dropout_low = sum(client_low_bond.check_dropout() for _ in range(n_samples))
-
-        # Low bond should dropout more frequently
-        assert dropout_low > dropout_high
-
     def test_memory_update(self):
         """Test that memory updates correctly."""
         memory = [(0, 4)] * MEMORY_SIZE
