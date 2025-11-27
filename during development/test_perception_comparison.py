@@ -175,7 +175,7 @@ def run_single_trial(
 
     # Get perception statistics if available
     if hasattr(client, 'get_perception_stats'):
-        results['perception_stats'] = client.get_perception_stats()
+        results['perception_stats'] = client.get_perception_stats()  # type: ignore[attr-defined]
 
     return results
 

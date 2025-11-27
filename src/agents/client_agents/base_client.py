@@ -56,7 +56,7 @@ class BaseClientAgent:
         u_matrix: NDArray[np.float64],
         entropy: float,
         initial_memory: List[Tuple[int, int]],
-        random_state: Optional[int] = None,
+        random_state: Optional[int | np.random.RandomState] = None,
     ):
         # Validate inputs
         if len(initial_memory) != MEMORY_SIZE:
