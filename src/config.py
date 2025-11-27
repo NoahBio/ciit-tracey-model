@@ -104,15 +104,15 @@ assert U_MIN.shape == (8, 8), f"U_MIN must be 8x8, got {U_MIN.shape}"
 assert U_MAX.shape == (8, 8), f"U_MAX must be 8x8, got {U_MAX.shape}"
 assert np.all(U_MIN <= U_MAX), "U_MIN must be <= U_MAX for all entries"
 
-def sample_u_matrix(random_state: Optional[int] = None) -> NDArray[np.float64]:
+def sample_u_matrix(random_state: Optional[int | np.random.RandomState] = None) -> NDArray[np.float64]:
     """
     Sample a client-specific utility matrix from the defined ranges.
-    
+
     Parameters
     ----------
-    random_state : int, optional
+    random_state : int or np.random.RandomState, optional
         Random seed or RandomState instance for reproducibility
-        
+
     Returns
     -------
     NDArray[np.float64]
