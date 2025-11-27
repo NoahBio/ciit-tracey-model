@@ -23,6 +23,7 @@ from src.agents.client_agents import (
     ConditionalAmplifierClient,
     BondWeightedConditionalAmplifier,
     BondWeightedFrequencyAmplifier,
+    BaseClientAgent,
 )
 from src import config
 from src.config import (
@@ -55,24 +56,10 @@ def always_complement(client_action: int) -> int:
     return complement_map[client_action]
 
 
-def generate_memory_pattern(pattern_name: str, size: int = 50, random_state=None):
-    """Generate different initial memory patterns."""
-    rng = np.random.RandomState(random_state)
-
-    if pattern_name == "cw_50_50":
-        # 50/50 C→W anticomplementary
-        return [(6, 2)] * size
-    elif pattern_name == "complementary_perfect":
-        # Perfect complementarity: D→S
-        return [(0, 4)] * size
-    elif pattern_name == "conflictual":
-        # Conflictual: D→D
-        return [(0, 0)] * size
-    elif pattern_name == "mixed_random":
-        # Random interactions
-        return [(rng.randint(0, 8), rng.randint(0, 8)) for _ in range(size)]
-    else:
-        raise ValueError(f"Unknown pattern: {pattern_name}")
+# Map legacy pattern names to BaseClientAgent names
+PATTERN_ALIASES = {
+    'cw_50_50': 'cold_warm',
+}
 
 
 def verbose_session_trace(
@@ -131,7 +118,14 @@ def verbose_session_trace(
     # Setup
     rng = np.random.RandomState(random_state)
     u_matrix = sample_u_matrix(random_state=random_state)
-    initial_memory = generate_memory_pattern(initial_memory_pattern, size=50, random_state=random_state)
+
+    # Map legacy pattern names and generate memory
+    pattern_type = PATTERN_ALIASES.get(initial_memory_pattern, initial_memory_pattern)
+    initial_memory = BaseClientAgent.generate_problematic_memory(
+        pattern_type=pattern_type,
+        n_interactions=50,
+        random_state=random_state,
+    )
 
     # Set global bond parameters BEFORE creating client
     config.BOND_ALPHA = bond_alpha
@@ -586,7 +580,8 @@ if __name__ == "__main__":
         '--pattern', '-p',
         type=str,
         default='cw_50_50',
-        choices=['cw_50_50', 'complementary_perfect', 'conflictual', 'mixed_random'],
+        choices=['cw_50_50', 'cold_warm', 'complementary_perfect', 'conflictual',
+                 'mixed_random', 'cold_stuck', 'dominant_stuck', 'submissive_stuck'],
         help='Initial memory pattern'
     )
     

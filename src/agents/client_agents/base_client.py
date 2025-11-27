@@ -286,6 +286,9 @@ class BaseClientAgent:
             - "dominant_stuck": Client stuck in dominant behaviors (D, WD, CD)
             - "submissive_stuck": Client stuck in submissive behaviors (S, WS, CS)
             - "cold_warm": Client always cold (C), therapist always warm (W)
+            - "complementary_perfect": 70% warm, 20% D/S, 10% cold with complementary responses
+            - "conflictual": D→D conflictual pattern (all identical)
+            - "mixed_random": Fully random interactions
         n_interactions : int
             Number of interactions to generate
         random_state : int, optional
@@ -331,10 +334,56 @@ class BaseClientAgent:
             memory: List[tuple[int, int]] = [(6, 2)] * n_interactions
             return memory
 
+        elif pattern_type == "complementary_perfect":
+            # 70% warm side, 20% D/S, 10% cold side, all complementary
+            # Complementary mapping
+            complement_map = {
+                0: 4,  # D → S
+                1: 3,  # WD → WS
+                2: 2,  # W → W
+                3: 1,  # WS → WD
+                4: 0,  # S → D
+                5: 7,  # CS → CD
+                6: 6,  # C → C
+                7: 5,  # CD → CS
+            }
+
+            memory: List[Tuple[int, int]] = []
+            for _ in range(n_interactions):
+                rand_val = rng.random()
+                if rand_val < 0.70:
+                    # 70% warm side: WD, W, WS (octants 1, 2, 3)
+                    client_action = rng.choice([1, 2, 3])
+                elif rand_val < 0.90:
+                    # 20% D or S (octants 0, 4)
+                    client_action = rng.choice([0, 4])
+                else:
+                    # 10% cold side: CD, C, CS (octants 5, 6, 7)
+                    client_action = rng.choice([5, 6, 7])
+
+                therapist_action = complement_map[client_action]
+                memory.append((client_action, therapist_action))
+
+            return memory
+
+        elif pattern_type == "conflictual":
+            # Conflictual: D→D
+            memory: List[Tuple[int, int]] = [(0, 0)] * n_interactions
+            return memory
+
+        elif pattern_type == "mixed_random":
+            # Fully random interactions
+            memory: List[Tuple[int, int]] = [
+                (rng.randint(0, 8), rng.randint(0, 8))
+                for _ in range(n_interactions)
+            ]
+            return memory
+
         else:
             raise ValueError(
                 f"Unknown pattern_type: {pattern_type}. "
-                f"Must be one of: cold_stuck, dominant_stuck, submissive_stuck"
+                f"Must be one of: cold_stuck, dominant_stuck, submissive_stuck, "
+                f"cold_warm, complementary_perfect, conflictual, mixed_random"
             )
 
         # Generate interactions

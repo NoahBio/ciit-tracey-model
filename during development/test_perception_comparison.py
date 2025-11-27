@@ -17,7 +17,7 @@ from collections import Counter
 from tqdm import tqdm
 from typing import Dict, List, Tuple, Optional
 
-from src.agents.client_agents import BondOnlyClient
+from src.agents.client_agents import BondOnlyClient, BaseClientAgent
 from src.agents.client_agents.perceptual_distortion import with_perception
 from src.config import (
     sample_u_matrix,
@@ -69,24 +69,10 @@ def always_complement(client_action: int) -> int:
     return complement_map[client_action]
 
 
-def generate_memory_pattern(pattern_name: str, size: int = 50, random_state=None):
-    """Generate different initial memory patterns."""
-    rng = np.random.RandomState(random_state)
-
-    if pattern_name == "cw_50_50":
-        # 50/50 C→W anticomplementary
-        return [(6, 2)] * size
-    elif pattern_name == "complementary_perfect":
-        # Perfect complementarity: D→S
-        return [(0, 4)] * size
-    elif pattern_name == "conflictual":
-        # Conflictual: D→D
-        return [(0, 0)] * size
-    elif pattern_name == "mixed_random":
-        # Random interactions
-        return [(rng.randint(0, 8), rng.randint(0, 8)) for _ in range(size)]
-    else:
-        raise ValueError(f"Unknown pattern: {pattern_name}")
+# Map legacy pattern names to BaseClientAgent names
+PATTERN_ALIASES = {
+    'cw_50_50': 'cold_warm',
+}
 
 
 def run_single_trial(
@@ -120,7 +106,14 @@ def run_single_trial(
     # Setup
     rng = np.random.RandomState(random_state)
     u_matrix = sample_u_matrix(random_state=rng)
-    initial_memory = generate_memory_pattern(pattern, size=50, random_state=random_state)
+
+    # Map legacy pattern names and generate memory
+    pattern_type = PATTERN_ALIASES.get(pattern, pattern)
+    initial_memory = BaseClientAgent.generate_problematic_memory(
+        pattern_type=pattern_type,
+        n_interactions=50,
+        random_state=random_state,
+    )
     rs_threshold = calculate_success_threshold(u_matrix, threshold_percentile)
 
     # Create client
