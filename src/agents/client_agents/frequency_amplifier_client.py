@@ -66,9 +66,20 @@ class FrequencyAmplifierClient(BaseClientAgent):
 
         total_weight = sum(memory_weights)
         if total_weight == 0:
-            return np.ones(8) / 8  # No memory = uniform
+            return np.ones(8) / 8  # No memory = uniform (but all clients are initialized with a memory)
 
-        return weighted_counts / total_weight
+        frequencies = weighted_counts / total_weight
+
+        # Validate that frequencies form a proper probability distribution
+        if not np.isclose(np.sum(frequencies), 1.0, atol=1e-6):
+            raise ValueError(
+                f"Marginal frequencies do not sum to 1.0: sum={np.sum(frequencies):.10f}"
+            )
+
+        if np.any(frequencies < 0):
+            raise ValueError(f"Negative frequencies detected: {frequencies}")
+
+        return frequencies
 
     def _get_effective_history_weight(self) -> float:
         """
