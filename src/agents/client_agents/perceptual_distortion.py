@@ -72,8 +72,9 @@ class PerceptualClientMixin:
 
     Stage 1: History-based perception
     - baseline_accuracy chance: perceive correctly (baseline path)
-    - (1 - baseline_accuracy) chance: accuracy based on frequency of this
-      action in recent history
+    - (1 - baseline_accuracy) chance: perceive the most common therapist action
+      in recent history. If multiple actions tie for most common, choose the
+      most recently enacted one.
 
     Stage 2: Adjacency noise
     - PERCEPTION_ADJACENCY_NOISE chance: shift perceived octant by ±1
@@ -113,6 +114,15 @@ class PerceptualClientMixin:
         """
         Apply two-stage perceptual distortion to therapist action.
 
+        Stage 1: History-based perception
+        - baseline_accuracy chance: perceive correctly (baseline path)
+        - (1 - baseline_accuracy) chance: perceive the most common therapist action
+          in recent history. If multiple actions tie for most common, choose the
+          most recently enacted one.
+
+        Stage 2: Adjacency noise
+        - PERCEPTION_ADJACENCY_NOISE chance: shift perceived octant by ±1
+
         Parameters
         ----------
         actual_action : int
@@ -147,16 +157,27 @@ class PerceptualClientMixin:
             baseline_path_succeeded = True
             computed_accuracy = self.baseline_accuracy
         else:
-            # History-based path: accuracy depends on frequency
-            computed_accuracy = frequency[actual_action]
-
-            if self.rng.random() < computed_accuracy:
-                # Frequency-based accuracy check passed
-                stage1_result = actual_action
+            # History-based path: perceive most common action
+            computed_accuracy = frequency[actual_action]  # For record-keeping only
+            
+            # Find the maximum frequency
+            max_freq = frequency.max()
+            
+            # Find all actions with maximum frequency
+            most_common_actions = np.where(frequency == max_freq)[0]
+            
+            # If tie, choose the most recently enacted one
+            if len(most_common_actions) > 1:
+                # Search backwards through recent memory to find most recent
+                for action in reversed(therapist_actions):
+                    if action in most_common_actions:
+                        stage1_result = action
+                        break
             else:
-                # Misperception: sample from frequency distribution
-                stage1_result = self.rng.choice(8, p=frequency)
-                stage1_changed_from_actual = True
+                stage1_result = most_common_actions[0]
+            
+            # Only mark as changed if we actually perceived something different
+            stage1_changed_from_actual = (stage1_result != actual_action)
 
         # Stage 2: Adjacency noise (applies to ALL perceptions)
         stage2_shifted = False
