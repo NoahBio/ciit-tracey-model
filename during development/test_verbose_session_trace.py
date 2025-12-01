@@ -31,7 +31,6 @@ from src.config import (
     OCTANTS,
     calculate_success_threshold,
     PERCEPTION_BASELINE_ACCURACY,
-    PERCEPTION_ADJACENCY_NOISE,
 )
 import argparse
 
@@ -313,9 +312,6 @@ def verbose_session_trace(
                 if record.stage1_changed_from_actual:
                     print(f"    → Changed from actual (history override)")
 
-                if record.stage2_shifted:
-                    print(f"  Stage 2 (adjacency):     Shifted ±1 ({PERCEPTION_ADJACENCY_NOISE:.0%} chance)")
-
                 print()
 
         # Get new state
@@ -453,7 +449,6 @@ def verbose_session_trace(
         print(f"Total interactions: {pstats['total_interactions']}")
         print(f"Overall misperception rate: {pstats['overall_misperception_rate']:.1%}")
         print(f"Stage 1 override rate: {pstats['stage1_override_rate']:.1%} (history-based changes)")
-        print(f"Stage 2 shift rate: {pstats['stage2_shift_rate']:.1%} (adjacency noise)")
         print(f"Mean computed accuracy: {pstats['mean_computed_accuracy']:.3f}")
         print(f"Baseline path successes: {pstats['baseline_correct_count']} times")
         print()

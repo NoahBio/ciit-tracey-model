@@ -15,7 +15,6 @@ from src.config import (
     PERCEPTION_WINDOW,
     PERCEPTION_BASELINE_ACCURACY,
     PERCEPTION_HISTORY_WEIGHT,
-    PERCEPTION_ADJACENCY_NOISE,
 )
 
 
@@ -38,8 +37,6 @@ class PerceptionRecord:
         Whether the baseline accuracy path (20%) was successful
     stage1_changed_from_actual : bool
         Whether Stage 1 changed the perception from actual
-    stage2_shifted : bool
-        Whether Stage 2 applied adjacency noise (±1 shift)
     computed_accuracy : float
         The frequency-based accuracy value used in Stage 1
     """
@@ -49,7 +46,6 @@ class PerceptionRecord:
     stage1_result: int
     baseline_path_succeeded: bool
     stage1_changed_from_actual: bool
-    stage2_shifted: bool
     computed_accuracy: float
 
 
@@ -75,9 +71,6 @@ class PerceptualClientMixin:
     - (1 - baseline_accuracy) chance: perceive the most common therapist action
       in recent history. If multiple actions tie for most common, choose the
       most recently enacted one.
-
-    Stage 2: Adjacency noise
-    - PERCEPTION_ADJACENCY_NOISE chance: shift perceived octant by ±1
 
     Parameters
     ----------
@@ -112,16 +105,13 @@ class PerceptualClientMixin:
 
     def _perceive_therapist_action(self, actual_action: int) -> Tuple[int, PerceptionRecord]:
         """
-        Apply two-stage perceptual distortion to therapist action.
+        Apply history-based perceptual distortion to therapist action.
 
         Stage 1: History-based perception
         - baseline_accuracy chance: perceive correctly (baseline path)
         - (1 - baseline_accuracy) chance: perceive the most common therapist action
           in recent history. If multiple actions tie for most common, choose the
           most recently enacted one.
-
-        Stage 2: Adjacency noise
-        - PERCEPTION_ADJACENCY_NOISE chance: shift perceived octant by ±1
 
         Parameters
         ----------
@@ -131,7 +121,7 @@ class PerceptualClientMixin:
         Returns
         -------
         perceived_action : int
-            The final perceived action after both stages
+            The final perceived action after Stage 1
         record : PerceptionRecord
             Metadata about the perception process for this interaction
         """
@@ -179,15 +169,8 @@ class PerceptualClientMixin:
             # Only mark as changed if we actually perceived something different
             stage1_changed_from_actual = (stage1_result != actual_action)
 
-        # Stage 2: Adjacency noise (applies to ALL perceptions)
-        stage2_shifted = False
-        if self.rng.random() < PERCEPTION_ADJACENCY_NOISE:
-            # Apply ±1 shift with equal probability
-            shift = self.rng.choice([-1, 1])
-            perceived_action = (stage1_result + shift) % 8  # Wrap around (0↔7)
-            stage2_shifted = True
-        else:
-            perceived_action = stage1_result
+        # Perception is now only Stage 1 result (no Stage 2 adjacency noise)
+        perceived_action = stage1_result
 
         # Create perception record
         record = PerceptionRecord(
@@ -197,7 +180,6 @@ class PerceptualClientMixin:
             stage1_result=stage1_result,
             baseline_path_succeeded=baseline_path_succeeded,
             stage1_changed_from_actual=stage1_changed_from_actual,
-            stage2_shifted=stage2_shifted,
             computed_accuracy=computed_accuracy,
         )
 
@@ -246,8 +228,6 @@ class PerceptualClientMixin:
             - overall_misperception_rate: Proportion of misperceptions
             - stage1_overridden_count: Times Stage 1 changed perception
             - stage1_override_rate: Proportion of Stage 1 changes
-            - stage2_shifted_count: Times Stage 2 applied shift
-            - stage2_shift_rate: Proportion of Stage 2 shifts
             - mean_computed_accuracy: Average frequency-based accuracy
             - baseline_correct_count: Times baseline path succeeded
         """
@@ -258,8 +238,6 @@ class PerceptualClientMixin:
                 'overall_misperception_rate': 0.0,
                 'stage1_overridden_count': 0,
                 'stage1_override_rate': 0.0,
-                'stage2_shifted_count': 0,
-                'stage2_shift_rate': 0.0,
                 'mean_computed_accuracy': 0.0,
                 'baseline_correct_count': 0,
             }
@@ -276,12 +254,6 @@ class PerceptualClientMixin:
         stage1_overridden_count = sum(
             1 for r in self.perception_history
             if r.stage1_changed_from_actual
-        )
-
-        # Count Stage 2 shifts
-        stage2_shifted_count = sum(
-            1 for r in self.perception_history
-            if r.stage2_shifted
         )
 
         # Count baseline path successes
@@ -301,8 +273,6 @@ class PerceptualClientMixin:
             'overall_misperception_rate': total_misperceptions / total if total > 0 else 0.0,
             'stage1_overridden_count': stage1_overridden_count,
             'stage1_override_rate': stage1_overridden_count / total if total > 0 else 0.0,
-            'stage2_shifted_count': stage2_shifted_count,
-            'stage2_shift_rate': stage2_shifted_count / total if total > 0 else 0.0,
             'mean_computed_accuracy': float(mean_computed_accuracy),
             'baseline_correct_count': baseline_correct_count,
         }

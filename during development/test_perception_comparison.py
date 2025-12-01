@@ -24,7 +24,6 @@ from src.config import (
     calculate_success_threshold,
     OCTANTS,
     PERCEPTION_BASELINE_ACCURACY,
-    PERCEPTION_ADJACENCY_NOISE,
     PERCEPTION_WINDOW,
     CLIENT_ENTROPY_MEAN,
     MAX_SESSIONS,
@@ -41,7 +40,6 @@ def display_configuration():
     print("-" * 100)
     print("Standard Config Values:")
     print(f"  PERCEPTION_BASELINE_ACCURACY: {PERCEPTION_BASELINE_ACCURACY:.2f}")
-    print(f"  PERCEPTION_ADJACENCY_NOISE: {PERCEPTION_ADJACENCY_NOISE:.2f}")
     print(f"  PERCEPTION_WINDOW: {PERCEPTION_WINDOW}")
     print(f"  CLIENT_ENTROPY: {CLIENT_ENTROPY_MEAN:.2f}")
     print(f"  MAX_SESSIONS: {MAX_SESSIONS}")
@@ -257,8 +255,6 @@ def run_condition(
             'overall_misperception_rate_std': np.std([p['overall_misperception_rate'] for p in perception_stats_list]),
             'stage1_override_rate': np.mean([p['stage1_override_rate'] for p in perception_stats_list]),
             'stage1_override_rate_std': np.std([p['stage1_override_rate'] for p in perception_stats_list]),
-            'stage2_shift_rate': np.mean([p['stage2_shift_rate'] for p in perception_stats_list]),
-            'stage2_shift_rate_std': np.std([p['stage2_shift_rate'] for p in perception_stats_list]),
             'mean_computed_accuracy': np.mean([p['mean_computed_accuracy'] for p in perception_stats_list]),
             'mean_computed_accuracy_std': np.std([p['mean_computed_accuracy'] for p in perception_stats_list]),
             'baseline_correct_count': np.mean([p['baseline_correct_count'] for p in perception_stats_list]),
@@ -414,7 +410,6 @@ def compare_conditions(
             print("-" * 100)
             print(f"{'Overall Misperception Rate':<40} {pstats['overall_misperception_rate']*100:>5.1f}% ± {pstats['overall_misperception_rate_std']*100:<4.1f}%")
             print(f"{'Stage 1 Override Rate':<40} {pstats['stage1_override_rate']*100:>5.1f}% ± {pstats['stage1_override_rate_std']*100:<4.1f}%")
-            print(f"{'Stage 2 Shift Rate':<40} {pstats['stage2_shift_rate']*100:>5.1f}% ± {pstats['stage2_shift_rate_std']*100:<4.1f}%")
             print(f"{'Mean Computed Accuracy':<40} {pstats['mean_computed_accuracy']:>6.3f} ± {pstats['mean_computed_accuracy_std']:<5.3f}")
             print(f"{'Baseline Correct Count':<40} {pstats['baseline_correct_count']:>6.1f} ± {pstats['baseline_correct_count_std']:<5.1f}")
             print()

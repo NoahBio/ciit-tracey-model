@@ -260,27 +260,12 @@ This diagram shows EVERYTHING that happens in one therapy session:
 │  │                                                                 │   │
 │  │  Intuition: Since therapist has been Warm 47% of recent time,  │   │
 │  │  it's relatively easy to perceive Warm actions correctly.      │   │
-│  └────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-│  ┌────────────────────────────────────────────────────────────────┐   │
-│  │ Sub-step 3C: STAGE 2 - Adjacency Noise                         │   │
 │  │                                                                 │   │
-│  │  PERCEPTION_ADJACENCY_NOISE = 0.1 (10% chance)                 │   │
-│  │                                                                 │   │
-│  │  Roll 3: Adjacency shift check                                 │   │
-│  │    if random() < 0.1:                                          │   │
-│  │      shift = random_choice([-1, +1])                           │   │
-│  │      perceived_action = (stage1_result + shift) % 8            │   │
-│  │                                                                 │   │
-│  │  Let's say random() = 0.87 > 0.1 → NO SHIFT                    │   │
 │  │  perceived_action = stage1_result = 2                          │   │
-│  │                                                                 │   │
-│  │  (If shift had occurred with stage1_result=2:                  │   │
-│  │   shift=-1 → perceived=1 (WD), or shift=+1 → perceived=3 (WS)) │   │
 │  └────────────────────────────────────────────────────────────────┘   │
 │                                                                         │
 │  ┌────────────────────────────────────────────────────────────────┐   │
-│  │ Sub-step 3D: Create Perception Record                          │   │
+│  │ Sub-step 3C: Create Perception Record                          │   │
 │  │                                                                 │   │
 │  │  record = PerceptionRecord(                                    │   │
 │  │    client_action = 2,                                          │   │
@@ -289,7 +274,6 @@ This diagram shows EVERYTHING that happens in one therapy session:
 │  │    stage1_result = 2,                                          │   │
 │  │    baseline_path_succeeded = False,                            │   │
 │  │    stage1_changed_from_actual = False,                         │   │
-│  │    stage2_shifted = False,                                     │   │
 │  │    computed_accuracy = 0.467                                   │   │
 │  │  )                                                              │   │
 │  │                                                                 │   │
@@ -554,23 +538,9 @@ Actual Therapist Action (Ground Truth)
 └──────────────────┬───────────────────────────────────────┘
                    │ stage1_result
                    ↓
-┌─────────────────────────────────────────────────────────┐
-│          STAGE 2: Adjacency Noise                       │
-│                                                          │
-│  if random() < 0.1:  (10% chance)                       │
-│    shift = random_choice([-1, +1])                      │
-│    perceived = (stage1_result + shift) % 8              │
-│  else:                                                   │
-│    perceived = stage1_result                            │
-│                                                          │
-│  Models: Confusion between adjacent octants             │
-│          W (2) ↔ WD (1) or WS (3)                       │
-│                                                          │
-└──────────────────┬───────────────────────────────────────┘
-                   │
-                   ↓
-         Perceived Action
+         Perceived Action = Stage 1 Result
     (Stored in memory instead of actual)
+    (No Stage 2 adjacency noise applied)
 ```
 
 ---
@@ -812,11 +782,11 @@ class PerceptualClientMixin:
         self.perception_history: List[PerceptionRecord] = []
 ```
 
-### The Two-Stage Perception Process
+### The History-Based Perception Process
 
 When the therapist does action X, the client might perceive action Y:
 
-#### **Stage 1: History-Based Perception**
+#### **History-Based Perception**
 
 ```python
 def _perceive_therapist_action(self, actual_action: int) -> Tuple[int, PerceptionRecord]:
@@ -841,22 +811,7 @@ def _perceive_therapist_action(self, actual_action: int) -> Tuple[int, Perceptio
 
 **Key insight:** If therapist has been consistently warm (action 2) for 15 sessions, and suddenly acts cold (action 6), the client might *misperceive* it as warm because that's what they expect.
 
-#### **Stage 2: Adjacency Noise**
-
-```python
-    # Stage 2: Apply random ±1 shift with 10% probability
-    if random() < 0.1:
-        shift = choice([-1, +1])
-        perceived_action = (stage1_result + shift) % 8  # Wraps around
-    else:
-        perceived_action = stage1_result
-
-    return perceived_action
-```
-
-**What this models:** Even if you generally perceive correctly, you might confuse adjacent behaviors:
-- Warm-Dominant (1) might be seen as Warm (2)
-- Cold (6) might be seen as Cold-Submissive (5) or Cold-Dominant (7)
+The perceived action from Stage 1 is what gets stored in the client's memory, forming their subjective reality.
 
 ### How It Integrates: Overriding `update_memory`
 
@@ -1112,11 +1067,8 @@ else:  # 80% chance, frequency-based
 
 # Let's say: stage1_result = 2 (perceived correctly)
 
-# Stage 2: Adjacency noise
-if random() < 0.1:  # 10% chance
-    stage1_result += choice([-1, +1])  # Might become 1 or 3
-
-# Let's say: perceived_action = 2 (no shift)
+# Perceived action is the Stage 1 result (no Stage 2 applied)
+perceived_action = stage1_result  # = 2
 ```
 
 ### Step 4: Update Memory
@@ -1261,7 +1213,7 @@ from src.config import (
 
 3. **Perception** (if perceptual client) (`_perceive_therapist_action`)
    - Input: Actual therapist action, recent memory
-   - Process: Stage 1 (history-based) → Stage 2 (adjacency noise)
+   - Process: History-based perception (baseline path or frequency-weighted path)
    - Output: Perceived therapist action
 
 4. **Memory Update** (`update_memory`)

@@ -5,7 +5,6 @@ Tests verify:
 - Consistent therapist → high accuracy
 - Novel behavior → low accuracy (~20% baseline)
 - Misperception samples from history distribution
-- Adjacency noise wraps (0↔7)
 - Disabled perception = perfect
 - Memory stores perceived, perception_history stores actual
 - Reproducible with same random_state
@@ -66,24 +65,20 @@ def test_consistent_therapist_high_accuracy(base_client_params):
     # Get perception statistics
     stats = client.get_perception_stats()
 
-    # With consistent therapist, we might expect near-perfect perception, BUT:
-    # Memory stores PERCEIVED actions, not actual actions, creating a feedback loop:
-    # 1. Stage 2 noise causes some misperceptions (~10%)
-    # 2. These misperceptions go into memory
-    # 3. Frequency distribution gets distorted
-    # 4. This reduces Stage 1 accuracy, causing more misperceptions
-    # 5. The effect compounds over time
+    # With consistent therapist and memory pre-filled with the same action:
+    # - Baseline path (20%): Perceives correctly
+    # - History path (80%): Chooses most common action (which is the actual action)
+    # Result: Nearly perfect perception because both paths converge to correct action!
+    # Memory stores PERCEIVED actions, reinforcing the pattern.
     #
-    # This is psychologically realistic - distorted perceptions compound!
-    # Empirically, misperception rate stabilizes around 15-20%
-    assert stats['overall_misperception_rate'] < 0.25, \
-        f"Expected <25% errors for consistent therapist, got {stats['overall_misperception_rate']:.2%}"
+    # This is psychologically realistic - consistent behavior is easy to perceive correctly!
+    # We expect very low misperception rate (only from random baseline failures or edge cases)
+    assert stats['overall_misperception_rate'] < 0.05, \
+        f"Expected <5% errors for consistent therapist, got {stats['overall_misperception_rate']:.2%}"
 
-    # Verify both stages contribute to errors (due to feedback loop)
-    assert stats['stage1_override_rate'] > 0, \
-        "Stage 1 should have some overrides due to memory feedback"
-    assert stats['stage2_shift_rate'] > 0, \
-        "Stage 2 should have some shifts"
+    # Stage 1 should use history path 80% of the time (when baseline path fails)
+    # But since history converges to the correct action, stage1_changed_from_actual should be 0
+    # (or very low due to initialization effects)
 
 
 def test_novel_behavior_baseline_accuracy(base_client_params):
@@ -158,46 +153,6 @@ def test_misperception_samples_from_frequency_distribution(base_client_params):
     # Early on, novel action shouldn't be perceived often (frequency near 0)
     assert novel_in_early < 10, \
         f"Novel action shouldn't be perceived often early, got {novel_in_early}/20"
-
-
-def test_adjacency_noise_wraps_correctly(base_client_params):
-    """Adjacency noise should wrap around the circumplex (0↔7)."""
-    client = PerceptualBondOnlyClient(
-        **base_client_params,
-        baseline_accuracy=1.0,  # Perfect Stage 1 accuracy
-        enable_perception=True,
-        random_state=789,
-    )
-
-    # Test wrapping at boundaries
-    # Action 0 with +1 shift → 1 (no wrap)
-    # Action 0 with -1 shift → 7 (wrap)
-    # Action 7 with +1 shift → 0 (wrap)
-    # Action 7 with -1 shift → 6 (no wrap)
-
-    # Do many interactions with actions 0 and 7
-    test_actions = [0, 7] * 100
-
-    for therapist_action in test_actions:
-        client_action = client.select_action()
-        client.update_memory(client_action, therapist_action)
-
-    # Check for wrapping in perception records
-    wraps_found = False
-    for record in client.perception_history:
-        if record.stage2_shifted:
-            actual = record.actual_therapist_action
-            perceived = record.perceived_therapist_action
-
-            # Check for wrap cases
-            if actual == 0 and perceived == 7:
-                wraps_found = True  # 0 - 1 = -1 → 7 (wrap)
-            elif actual == 7 and perceived == 0:
-                wraps_found = True  # 7 + 1 = 8 → 0 (wrap)
-
-    # With 200 interactions and 10% shift rate, expect ~20 shifts
-    # Some of those should hit wrap cases
-    assert wraps_found, "Should observe wrap-around cases (0↔7) with adjacency noise"
 
 
 def test_disabled_perception_is_perfect(base_client_params):
@@ -328,7 +283,6 @@ def test_reproducible_with_same_random_state(base_client_params):
         assert r1.stage1_result == r2.stage1_result
         assert r1.baseline_path_succeeded == r2.baseline_path_succeeded
         assert r1.stage1_changed_from_actual == r2.stage1_changed_from_actual
-        assert r1.stage2_shifted == r2.stage2_shifted
         assert r1.computed_accuracy == r2.computed_accuracy
 
 
@@ -439,8 +393,6 @@ def test_perception_stats_structure():
         'overall_misperception_rate',
         'stage1_overridden_count',
         'stage1_override_rate',
-        'stage2_shifted_count',
-        'stage2_shift_rate',
         'mean_computed_accuracy',
         'baseline_correct_count',
     }
@@ -456,7 +408,6 @@ def test_perception_stats_structure():
     assert stats['total_interactions'] == 50
     assert 0 <= stats['overall_misperception_rate'] <= 1
     assert 0 <= stats['stage1_override_rate'] <= 1
-    assert 0 <= stats['stage2_shift_rate'] <= 1
     assert 0 <= stats['mean_computed_accuracy'] <= 1
     assert isinstance(stats['baseline_correct_count'], (int, np.integer))
 
