@@ -83,6 +83,11 @@ def verbose_session_trace(
     Runs all sessions to completion (or dropout), but only shows detailed
     verbose output for sessions in the verbose_sessions range.
 
+    Success is determined by whether the client reaches the success threshold
+    AT ANY POINT during therapy, consistent with the criterion used in
+    test_perception_comparison.py. Even if RS later declines below threshold,
+    reaching it indicates successful therapeutic progress.
+
     Parameters
     ----------
     mechanism : str
@@ -216,6 +221,10 @@ def verbose_session_trace(
     initial_rs = client.relationship_satisfaction
     initial_bond = client.bond
 
+    # Track if threshold is ever reached (matching comparison test criterion)
+    threshold_ever_reached = False
+    first_threshold_session = None
+
     # Run sessions
     print("=" * 100)
     print("THERAPY SESSIONS")
@@ -315,6 +324,14 @@ def verbose_session_trace(
         rs_change = new_rs - current_rs
         bond_change = new_bond - current_bond
 
+        # Check if threshold reached this session
+        reached_threshold_this_session = new_rs >= rs_threshold
+
+        # Track first time threshold is reached (matching comparison test criterion)
+        if reached_threshold_this_session and not threshold_ever_reached:
+            threshold_ever_reached = True
+            first_threshold_session = session
+
         # Record session data
         session_history.append({
             'session': session,
@@ -327,7 +344,7 @@ def verbose_session_trace(
             'bond_before': current_bond,
             'bond_after': new_bond,
             'bond_change': bond_change,
-            'reached_threshold': new_rs >= rs_threshold,
+            'reached_threshold': reached_threshold_this_session,
         })
 
         if is_verbose:
@@ -336,11 +353,17 @@ def verbose_session_trace(
             print(f"  Bond: {new_bond:.4f} (change: {bond_change:+.4f})")
             print(f"  Gap to threshold: {rs_threshold - new_rs:7.2f}")
 
-            if new_rs >= rs_threshold:
-                print(f"  ✓ SUCCESS THRESHOLD REACHED!")
+            if reached_threshold_this_session:
+                if first_threshold_session == session:
+                    print(f"  ✓ SUCCESS THRESHOLD REACHED FOR THE FIRST TIME!")
+                else:
+                    print(f"  ✓ Threshold still met (first reached at session {first_threshold_session})")
             else:
-                remaining_gap = rs_threshold - new_rs
-                print(f"  → Still need {remaining_gap:7.2f} more RS to reach threshold")
+                if threshold_ever_reached:
+                    print(f"  ⚠ Below threshold (previously reached at session {first_threshold_session})")
+                else:
+                    remaining_gap = rs_threshold - new_rs
+                    print(f"  → Still need {remaining_gap:7.2f} more RS to reach threshold")
 
             print()
 
@@ -392,15 +415,26 @@ def verbose_session_trace(
     print(f"Final gap to threshold: {rs_threshold - final_rs:7.2f}")
     print()
 
-    if final_rs >= rs_threshold:
+    # Success based on "ever reached" criterion (matching comparison test)
+    if threshold_ever_reached:
         print(f"✓ SUCCESS: Client reached {success_threshold_percentile:.0%} percentile of their RS range")
-        # Find when threshold was first reached
-        threshold_session = next((h['session'] for h in session_history if h['reached_threshold']), None)
-        if threshold_session:
-            print(f"  Threshold first reached at session {threshold_session}")
+        print(f"  Threshold first reached at session {first_threshold_session}")
+
+        # Also report final state for trajectory understanding
+        if final_rs >= rs_threshold:
+            print(f"  Final state: Above threshold (RS = {final_rs:.2f})")
+        else:
+            decline = rs_threshold - final_rs
+            print(f"  Final state: Below threshold (RS = {final_rs:.2f}, declined by {decline:.2f})")
+            print(f"  Note: Despite later decline, therapy successfully reached target at session {first_threshold_session}")
     else:
         shortfall = rs_threshold - final_rs
-        print(f"✗ FAILURE: Client fell short by {shortfall:7.2f} RS")
+        closest_rs = max([h['rs_after'] for h in session_history]) if session_history else final_rs
+        print(f"✗ FAILURE: Client never reached threshold")
+        print(f"  Final RS: {final_rs:.2f}")
+        print(f"  Fell short by: {shortfall:7.2f}")
+        if closest_rs > final_rs:
+            print(f"  Closest approach: {closest_rs:.2f} (still {rs_threshold - closest_rs:.2f} below threshold)")
     print()
 
     print("BOND DEVELOPMENT")
