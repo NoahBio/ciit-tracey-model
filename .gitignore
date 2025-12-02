@@ -207,3 +207,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Optuna
+# Optuna study databases can be large
+optuna_studies/*.db
+optuna_studies/*.db-journal
+optuna_studies/*.db-shm
+optuna_studies/*.db-wal
