@@ -8,3 +8,6 @@ torch>=2.0.0
 tianshou>=1.0.0,<2.0.0
 tensorboard>=2.13.0
 pytest>=7.4.0
+optuna>=4.6.0
+optuna-dashboard>=0.20.0
+plotly>=5.0.0
