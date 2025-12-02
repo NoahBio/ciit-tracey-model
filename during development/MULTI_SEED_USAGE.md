@@ -58,6 +58,18 @@ python run_multi_seed_simulation.py \
     --no-actions
 ```
 
+**Test strategic therapist with plateau-triggered interventions:**
+```bash
+python run_multi_seed_simulation.py \
+    --n-seeds 20 \
+    --mechanism conditional_amplifier \
+    --pattern cold_warm \
+    --enable-strategic-therapist \
+    --rs-plateau-threshold 5.0 \
+    --plateau-window 15 \
+    --intervention-duration 10
+```
+
 ## Command-Line Arguments
 
 ### Required Arguments
@@ -93,6 +105,16 @@ python run_multi_seed_simulation.py \
 - `--bond-alpha, -ba` : Bond sigmoid steepness (default: `5.0`)
 
 - `--bond-offset, -bo` : Bond sigmoid inflection point (default: `0.8`)
+
+### Strategic Therapist Arguments
+
+- `--enable-strategic-therapist` : Enable strategic therapist with plateau-triggered optimal interventions (default: disabled)
+
+- `--rs-plateau-threshold` : RS range threshold to detect plateau (default: `5.0` RS points)
+
+- `--plateau-window` : Number of consecutive sessions to check for plateau (default: `15`)
+
+- `--intervention-duration` : Number of sessions to enact optimal action during intervention (default: `10`)
 
 ### Display Arguments
 
@@ -143,6 +165,68 @@ The script provides comprehensive statistics including:
 - Shows which octants are most commonly chosen
 - Useful for understanding behavioral patterns
 
+### 9. Intervention Analysis (if strategic therapist enabled)
+- **Intervention Rate**: Percentage of runs that triggered at least one intervention
+- **Intervention Count**: Mean, median, and max interventions per run
+- **RS During Intervention**: Descriptive statistics of relationship satisfaction during intervention periods
+- **Bond During Intervention**: Descriptive statistics of bond during intervention periods
+- Shows effectiveness of plateau-triggered optimal action interventions
+
+## Strategic Therapist Feature
+
+### Overview
+
+The strategic therapist feature implements a sophisticated intervention strategy that monitors client relationship satisfaction (RS) for stability and triggers optimal action interventions when RS has plateaued.
+
+### How It Works
+
+1. **Normal Behavior**: By default, the therapist uses complementary responses (matching the client's interpersonal style)
+
+2. **Plateau Detection**: The system continuously monitors RS values across a sliding window of sessions
+   - Default window: 15 consecutive sessions
+   - Plateau threshold: RS range ≤ 5.0 points
+   - When `max(RS history) - min(RS history) ≤ threshold`, a plateau is detected
+
+3. **Intervention Trigger**: When a plateau is detected:
+   - The therapist identifies the globally optimal action (maximum utility in client's u_matrix)
+   - Switches from complementary to optimal action for a fixed duration (default: 10 sessions)
+   - Once triggered, the intervention completes regardless of RS/bond changes
+
+4. **Return to Normal**: After intervention completes, therapist returns to complementary behavior and resumes plateau monitoring
+
+5. **Multiple Interventions**: Can trigger multiple times in a single simulation if RS plateaus again after an intervention
+
+### Key Parameters
+
+- `--rs-plateau-threshold`: How much RS can vary to still be considered "stable" (default: 5.0)
+- `--plateau-window`: How many sessions to check for stability (default: 15)
+- `--intervention-duration`: How many sessions to enact optimal action (default: 10)
+
+### Use Cases
+
+- **Expectation Building**: Works synergistically with perceptual distortion to build client expectations
+- **Breaking Through Stagnation**: When therapy has reached a stable but suboptimal state
+- **Testing Optimal Action Effects**: Compare outcomes with and without strategic interventions
+
+### Example Comparison
+
+```bash
+# Baseline: complementary therapist only
+python run_multi_seed_simulation.py \
+    --n-seeds 50 \
+    --mechanism conditional_amplifier \
+    --pattern cold_warm \
+    --enable-perception
+
+# Strategic therapist with interventions
+python run_multi_seed_simulation.py \
+    --n-seeds 50 \
+    --mechanism conditional_amplifier \
+    --pattern cold_warm \
+    --enable-perception \
+    --enable-strategic-therapist
+```
+
 ## Tips and Best Practices
 
 ### Choosing Number of Seeds
@@ -166,6 +250,14 @@ Use `--quiet`, `--no-trajectories`, and `--no-actions` flags to reduce output wh
 python run_multi_seed_simulation.py --n-seeds 100 --quiet --no-actions
 ```
 
+### Using Strategic Therapist
+
+- **Combine with Perception**: The strategic therapist works best with `--enable-perception` to build client expectations
+- **Longer Sessions**: Consider using higher `--max-sessions` (e.g., 150-200) to allow multiple interventions
+- **Pattern Selection**: Some patterns (e.g., `complementary_perfect`) may plateau faster than others
+- **Tuning Sensitivity**: Adjust `--rs-plateau-threshold` if interventions trigger too often (increase) or not at all (decrease)
+- **Window Size**: Shorter `--plateau-window` triggers interventions sooner but may respond to temporary fluctuations
+
 ### Comparing Configurations
 
 To compare different configurations, run the script multiple times with different parameters and redirect output to files:
@@ -182,6 +274,10 @@ python run_multi_seed_simulation.py --n-seeds 50 --pattern conflictual > results
 # Test perception vs no perception
 python run_multi_seed_simulation.py --n-seeds 50 > results_no_perception.txt
 python run_multi_seed_simulation.py --n-seeds 50 --enable-perception > results_with_perception.txt
+
+# Test strategic therapist vs complementary
+python run_multi_seed_simulation.py --n-seeds 50 --enable-perception > results_complementary.txt
+python run_multi_seed_simulation.py --n-seeds 50 --enable-perception --enable-strategic-therapist > results_strategic.txt
 ```
 
 ## Integration with Existing Tools

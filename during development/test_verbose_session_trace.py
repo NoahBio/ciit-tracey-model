@@ -39,7 +39,7 @@ def always_complement(client_action: int) -> int:
     """
     Simple complementary strategy:
     - Dominant ↔ Submissive (0↔4, 1↔3, 7↔5)
-    - Warm ↔ Warm (2↔2)
+    - Warm ↔
     - Cold ↔ Cold (6↔6)
     """
     complement_map = {
@@ -61,6 +61,24 @@ PATTERN_ALIASES = {
 }
 
 
+def get_optimal_therapist_action(u_matrix: np.ndarray) -> int:
+    """
+    Find the therapist action that corresponds to the global maximum utility in the u_matrix.
+
+    Parameters
+    ----------
+    u_matrix : np.ndarray
+        Client's utility matrix (8x8)
+
+    Returns
+    -------
+    int
+        Therapist action (0-7) corresponding to global maximum
+    """
+    max_idx = np.unravel_index(np.argmax(u_matrix), u_matrix.shape)
+    return int(max_idx[1])
+
+
 def verbose_session_trace(
     mechanism: str,
     initial_memory_pattern: str,
@@ -72,9 +90,14 @@ def verbose_session_trace(
     entropy: float = 3.0,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
-    bond_alpha: float = 5.0,  
-    bond_offset: float = 0.8,  
+    bond_alpha: float = 5.0,
+    bond_offset: float = 0.8,
     random_state: int = 42,
+    # Strategic therapist parameters
+    enable_strategic_therapist: bool = False,
+    rs_plateau_threshold: float = 5.0,
+    plateau_window: int = 15,
+    intervention_duration: int = 10,
 ):
     """
     Run therapy sessions with verbose diagnostic output for specified sessions.
@@ -112,6 +135,14 @@ def verbose_session_trace(
         Bond offset for sigmoid inflection point (0.0-1.0)
     random_state : int
         Random seed
+    enable_strategic_therapist : bool, default=False
+        Enable strategic therapist with plateau-triggered optimal interventions
+    rs_plateau_threshold : float, default=5.0
+        RS range threshold to detect plateau (default: 5.0 RS points)
+    plateau_window : int, default=15
+        Number of consecutive sessions to check for plateau
+    intervention_duration : int, default=10
+        Number of sessions to enact optimal action during intervention
     """
 
     print("=" * 100)
@@ -190,6 +221,14 @@ def verbose_session_trace(
         print(f"Baseline accuracy: {baseline_accuracy:.1%}")
     else:
         print(f"Perception enabled: No (perfect perception)")
+
+    if enable_strategic_therapist:
+        print(f"Strategic therapist: Enabled")
+        print(f"  RS plateau threshold: {rs_plateau_threshold:.1f} points")
+        print(f"  Plateau window: {plateau_window} sessions")
+        print(f"  Intervention duration: {intervention_duration} sessions")
+    else:
+        print(f"Strategic therapist: Disabled (complementary only)")
     print()
 
     print("CLIENT U_MATRIX BOUNDS")
@@ -223,6 +262,16 @@ def verbose_session_trace(
     # Track if threshold is ever reached (matching comparison test criterion)
     threshold_ever_reached = False
     first_threshold_session = None
+
+    # Track intervention state (strategic therapist)
+    intervention_active = False
+    intervention_session_count = 0
+    intervention_count = 0
+    optimal_action = None
+    rs_history = []  # For plateau detection
+    intervention_sessions = []
+    intervention_rs_values = []
+    intervention_bond_values = []
 
     # Run sessions
     print("=" * 100)
@@ -274,14 +323,51 @@ def verbose_session_trace(
 
         # Select action
         client_action = client.select_action()
-        therapist_action = always_complement(client_action)
+
+        # Determine therapist action based on strategy
+        if enable_strategic_therapist:
+            # Check if we should trigger intervention (only if not already active)
+            if not intervention_active:
+                if len(rs_history) >= plateau_window:
+                    # Check if RS has plateaued (range within threshold)
+                    rs_range = max(rs_history) - min(rs_history)
+                    if rs_range <= rs_plateau_threshold:
+                        # Trigger intervention
+                        intervention_active = True
+                        intervention_session_count = 0
+                        intervention_count += 1
+                        optimal_action = get_optimal_therapist_action(u_matrix)
+                        # Clear RS history to prevent immediate re-triggering
+                        rs_history.clear()
+
+            # Execute intervention or complementary
+            if intervention_active:
+                if optimal_action is None:
+                    optimal_action = get_optimal_therapist_action(u_matrix)
+                therapist_action: int = int(optimal_action)
+                intervention_session_count += 1
+                intervention_sessions.append(session)
+
+                if intervention_session_count >= intervention_duration:
+                    intervention_active = False
+            else:
+                therapist_action = always_complement(client_action)
+        else:
+            therapist_action = always_complement(client_action)
 
         # Get utility of this interaction
         interaction_utility = u_matrix[client_action, therapist_action]
 
         if is_verbose:
             print(f"Client selects: {OCTANTS[client_action]:3s} ({client_action})")
-            print(f"Therapist responds: {OCTANTS[therapist_action]:3s} ({therapist_action}) [complementary]")
+
+            # Show intervention status
+            if enable_strategic_therapist and intervention_active:
+                print(f"Therapist responds: {OCTANTS[therapist_action]:3s} ({therapist_action}) [INTERVENTION - optimal action]")
+                print(f"  Intervention {intervention_count}, session {intervention_session_count}/{intervention_duration}")
+            else:
+                print(f"Therapist responds: {OCTANTS[therapist_action]:3s} ({therapist_action}) [complementary]")
+
             print(f"Utility of interaction: {interaction_utility:7.2f}")
             print()
 
@@ -319,6 +405,15 @@ def verbose_session_trace(
         new_bond = client.bond
         rs_change = new_rs - current_rs
         bond_change = new_bond - current_bond
+
+        # Track intervention RS/Bond values
+        if enable_strategic_therapist and session in intervention_sessions:
+            intervention_rs_values.append(new_rs)
+            intervention_bond_values.append(new_bond)
+
+        # Update RS history for plateau detection (only when not in intervention)
+        if enable_strategic_therapist and not intervention_active:
+            rs_history.append(new_rs)
 
         # Check if threshold reached this session
         reached_threshold_this_session = new_rs >= rs_threshold
@@ -451,6 +546,32 @@ def verbose_session_trace(
         print(f"Stage 1 override rate: {pstats['stage1_override_rate']:.1%} (history-based changes)")
         print(f"Mean computed accuracy: {pstats['mean_computed_accuracy']:.3f}")
         print(f"Baseline path successes: {pstats['baseline_correct_count']} times")
+        print()
+
+    # Intervention summary (strategic therapist)
+    if enable_strategic_therapist:
+        print("INTERVENTION SUMMARY (Strategic Therapist)")
+        print("-" * 100)
+        print(f"Total interventions triggered: {intervention_count}")
+
+        if intervention_count > 0:
+            print(f"Intervention sessions: {intervention_sessions}")
+            print()
+
+            print("RS During Interventions:")
+            print(f"  Mean: {np.mean(intervention_rs_values):.2f}")
+            print(f"  Std: {np.std(intervention_rs_values):.2f}")
+            print(f"  Min: {np.min(intervention_rs_values):.2f}")
+            print(f"  Max: {np.max(intervention_rs_values):.2f}")
+            print()
+
+            print("Bond During Interventions:")
+            print(f"  Mean: {np.mean(intervention_bond_values):.4f}")
+            print(f"  Std: {np.std(intervention_bond_values):.4f}")
+            print(f"  Min: {np.min(intervention_bond_values):.4f}")
+            print(f"  Max: {np.max(intervention_bond_values):.4f}")
+        else:
+            print("  No interventions triggered during this simulation")
         print()
 
     # Action distribution
@@ -655,7 +776,35 @@ if __name__ == "__main__":
         default=0.8,
         help='Bond offset for sigmoid inflection point (0.0-1.0)'
     )
-    
+
+    # Strategic therapist arguments
+    parser.add_argument(
+        '--enable-strategic-therapist',
+        action='store_true',
+        help='Enable strategic therapist with plateau-triggered optimal interventions'
+    )
+
+    parser.add_argument(
+        '--rs-plateau-threshold',
+        type=float,
+        default=5.0,
+        help='RS range threshold to detect plateau (default: 5.0 RS points)'
+    )
+
+    parser.add_argument(
+        '--plateau-window',
+        type=int,
+        default=15,
+        help='Number of consecutive sessions to check for plateau (default: 15)'
+    )
+
+    parser.add_argument(
+        '--intervention-duration',
+        type=int,
+        default=10,
+        help='Number of sessions to enact optimal action during intervention (default: 10)'
+    )
+
     parser.add_argument(
         '--max-sessions', '-s',
         type=int,
@@ -708,17 +857,22 @@ if __name__ == "__main__":
         kwargs = {
             'mechanism': args.mechanism,
             'enable_perception': args.enable_perception,
-            'baseline_accuracy': args.baseline_accuracy,  
+            'baseline_accuracy': args.baseline_accuracy,
             'initial_memory_pattern': args.pattern,
             'success_threshold_percentile': args.threshold,
             'entropy': args.entropy,
             'history_weight': args.history_weight,
             'bond_power': args.bond_power,
-            'bond_alpha': args.bond_alpha,  
+            'bond_alpha': args.bond_alpha,
             'bond_offset': args.bond_offset,
             'verbose_sessions': verbose_sessions,
             'max_sessions': args.max_sessions,
             'random_state': args.seed,
+            # Strategic therapist
+            'enable_strategic_therapist': args.enable_strategic_therapist,
+            'rs_plateau_threshold': args.rs_plateau_threshold,
+            'plateau_window': args.plateau_window,
+            'intervention_duration': args.intervention_duration,
         }
         
         verbose_session_trace(**kwargs)
