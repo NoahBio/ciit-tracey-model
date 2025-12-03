@@ -218,3 +218,9 @@ optuna_studies/*.db-wal
 # Claude AI
 CLAUDE.md
 .claude
+
+# Training outputs (use cloud storage for cross-platform sharing)
+logs/
+models/
+results/
+optuna_studies/
