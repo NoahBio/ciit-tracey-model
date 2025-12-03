@@ -1,7 +1,17 @@
-# Default experiment configuration for FreqAmp multi-pattern training
-# Targets ~16 hours on Ryzen 5 5600 with 50M timesteps
+# RL vs Complementary Therapist Benchmark
+# Baseline: Complementary strategy achieves 18% success rate (18/100 seeds)
+# Task: cold_stuck pattern with frequency_amplifier mechanism
+# Challenge: bond_alpha=5.0 (high bond influence), threshold=0.8 (80th percentile)
+# Goal: Train PPO agent to beat 18% baseline success rate
+#
+# Configuration matches baseline experiment exactly:
+# - cold_stuck pattern with frequency_amplifier
+# - threshold=0.8, entropy=0.1, bond_alpha=5.0
+# - 100-session episodes with 50% perceptual accuracy
+#
+# Training: 50M timesteps (~16 hours on Ryzen 5 5600)
 
-experiment_name: FreqAmp_multipattern_v1
+experiment_name: RL_vs_Complementary_ColdStuck_FreqAmp_BondAlpha5
 
 # Environment parameters
 patterns:
@@ -32,7 +42,7 @@ hidden_size: 256
 lstm_hidden_size: 128
 
 # Logging and checkpointing
-log_dir: logs/FreqAmp_multipattern_v1
+log_dir: logs/RL_vs_Complementary_ColdStuck_FreqAmp_BondAlpha5
 save_freq: 10000
 eval_freq: 5000
 eval_episodes: 100

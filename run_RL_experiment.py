@@ -330,7 +330,7 @@ def run_experiment(
         print(f"Total timesteps: {config.total_timesteps:,}")
         print(f"Parallel environments: {config.n_envs}")
         print(f"Batch size: {config.batch_size}")
-        print(f"Expected training time: ~16 hours (Ryzen 5 5600)")
+        # Training time will vary depending on hardware and configuration.
         print()
 
         start_time = time.time()
