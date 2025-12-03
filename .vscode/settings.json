@@ -7,5 +7,14 @@
     "terminal.integrated.scrollback": 5000,
     "python.analysis.exclude": [
         "**/tests/**"
-    ]
+    ],
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "test*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
 }
