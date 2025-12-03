@@ -214,3 +214,7 @@ optuna_studies/*.db
 optuna_studies/*.db-journal
 optuna_studies/*.db-shm
 optuna_studies/*.db-wal
+
+# Claude AI
+Claude.md
+.claude
