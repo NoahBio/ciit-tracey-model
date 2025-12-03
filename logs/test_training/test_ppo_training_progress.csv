@@ -1,2 +1,0 @@
-epoch,step,train_reward_mean,train_reward_std,train_length_mean,test_reward_mean,test_reward_std,test_length_mean,duration
-0,0,0,0,0,0,0,0,0
