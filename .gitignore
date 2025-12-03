@@ -223,4 +223,5 @@ CLAUDE.md
 logs/
 models/
 results/
-optuna_studies/
+optuna_studies/* 
+!optuna_studies/README.md
