@@ -317,7 +317,11 @@ def parse_objectives(objectives_str: List[str]) -> Tuple[List[str], List[Tuple[s
 def save_results(
     study: optuna.Study,
     output_path: Path,
-    objective_specs: List[Tuple[str, str]]
+    objective_specs: List[Tuple[str, str]],
+    fixed_config: Dict[str, Any],
+    optimize_params: List[str],
+    n_seeds: int,
+    n_trials: int
 ) -> None:
     """Save optimization results to JSON.
 
@@ -329,12 +333,26 @@ def save_results(
         Path to save results JSON
     objective_specs : List[Tuple[str, str]]
         Objective specifications
+    fixed_config : Dict[str, Any]
+        Fixed parameters used in the study
+    optimize_params : List[str]
+        Parameters that were optimized
+    n_seeds : int
+        Number of seeds per trial
+    n_trials : int
+        Number of trials run
     """
     results = {
         'study_name': study.study_name,
         'n_trials': len(study.trials),
         'timestamp': datetime.now().isoformat(),
         'objectives': [{'direction': d, 'metric': m} for d, m in objective_specs],
+        'configuration': {
+            'fixed_parameters': fixed_config,
+            'optimized_parameters': optimize_params,
+            'n_seeds_per_trial': n_seeds,
+            'n_trials_requested': n_trials,
+        }
     }
 
     if len(objective_specs) == 1:
@@ -565,7 +583,15 @@ def main():
     results_dir = project_root / "optuna_studies" / args.study_name
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    save_results(study, results_dir / "results.json", objective_specs)
+    save_results(
+        study, 
+        results_dir / "results.json", 
+        objective_specs,
+        fixed_config,
+        args.optimize_params,
+        args.n_seeds,
+        args.n_trials
+    )
 
     # Generate visualizations
     print("\nGenerating visualizations...")
