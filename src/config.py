@@ -2,7 +2,6 @@
 Global configuration and parameters for CIIT-Tracey computational model.
 
     TODO:
-  - update success threshold to use client-specific u_matrix values
 """
 
 import numpy as np
@@ -239,10 +238,10 @@ PERCEPTION_HISTORY_WEIGHT = 0.8           # Weight of history-based perception (
 
 MAX_SESSIONS = 100  # Maximum therapy sessions per episode
 
-# Success threshold: 80th percentile of possible relationship satisfaction values
+# Success threshold: 90th percentile of possible relationship satisfaction values
 def calculate_success_threshold(
     u_matrix: NDArray[np.float64],
-    percentile: float = 0.8
+    percentile: float = 0.9
 ) -> float:
     """
     Calculate success threshold as a percentile of theoretically possible
@@ -252,7 +251,7 @@ def calculate_success_threshold(
     ----------
     u_matrix : NDArray[np.float64]
         The client's 8x8 utility matrix
-    percentile : float, default=0.8
+    percentile : float, default=0.9
         Percentile threshold for success (must be between 0 and 1)
         Higher values = more stringent success criteria
         
