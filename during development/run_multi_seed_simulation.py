@@ -809,7 +809,7 @@ def display_results(stats: MultiSeedStatistics, show_trajectories: bool = True,
 
 def run_multi_seed_simulation(
     n_seeds: int,
-    mechanism: str = 'conditional_amplifier',
+    mechanism: str = 'bond_only',
     initial_memory_pattern: str = 'cold_warm',
     success_threshold_percentile: float = 0.8,
     enable_perception: bool = False,
@@ -958,7 +958,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--mechanism', '-m',
         type=str,
-        default='conditional_amplifier',
+        default='bond_only',
         choices=[
             'bond_only',
             'frequency_amplifier',
