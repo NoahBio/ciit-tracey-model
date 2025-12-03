@@ -1,14 +1,24 @@
-numpy
+# Core dependencies
+numpy<2.0  # Tianshou compatibility requirement
 pandas>=2.0.0
 matplotlib>=3.7.0
 seaborn>=0.12.0
 scipy>=1.10.0
-gymnasium>=0.28.0,<0.29.0
+
+# RL framework
+gymnasium>=0.28.0,<0.29.0  # Tianshou 1.x requires <0.29.0
 torch>=2.0.0
 tianshou>=1.0.0,<2.0.0
 tensorboard>=2.13.0
-pytest>=7.4.0
+
+# Utilities
+PyYAML>=6.0
+tqdm>=4.65.0
+
+# Hyperparameter optimization
 optuna>=4.6.0
 optuna-dashboard>=0.20.0
 plotly>=5.0.0
-PyYAML>=6.0
+
+# Testing
+pytest>=7.4.0

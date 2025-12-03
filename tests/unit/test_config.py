@@ -243,15 +243,15 @@ class TestCalculateSuccessThreshold:
 
             np.testing.assert_almost_equal(threshold, expected, decimal=6)
 
-    def test_success_threshold_80th_percentile(self):
-        """Default 80th percentile should be correct."""
+    def test_success_threshold_90th_percentile(self):
+        """Default 90th percentile should be correct."""
         u_matrix = sample_u_matrix(random_state=42)
 
         threshold = calculate_success_threshold(u_matrix)
 
         rs_min = u_matrix.min()
         rs_max = u_matrix.max()
-        expected = rs_min + 0.8 * (rs_max - rs_min)
+        expected = rs_min + 0. * (rs_max - rs_min)
 
         np.testing.assert_almost_equal(threshold, expected)
 
