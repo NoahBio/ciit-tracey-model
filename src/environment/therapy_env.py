@@ -1,11 +1,8 @@
 """
 Gymnasium-compatible therapy simulation environment.
 
-This environment wraps the CIIT-Tracey client agent to enable reinforcement
-learning training of therapist agents. The environment implements Tracey's
-Three Step Model of therapeutic change, where the therapist must respond to
-client behaviors to build relationship satisfaction and achieve successful
-therapeutic outcomes.
+This environment wraps the CIIT-client-agent to enable reinforcement
+learning training of therapist agents.
 
 Key Design: The client acts first, selecting their behavior based on their
 current internal state. The therapist observes this action and responds.
