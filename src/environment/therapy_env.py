@@ -172,6 +172,10 @@ class TherapyEnv(gymnasium.Env):
         self._rs_threshold: float = 0.0
         self._interaction_history: deque = deque(maxlen=25)
 
+        # Perception tracking (for omniscient wrapper)
+        self._last_actual_action: int = 8  # Sentinel for "none"
+        self._last_perceived_action: int = 8  # Sentinel for "none"
+
         # Define observation space
         self.observation_space = spaces.Dict({
             "client_action": spaces.Discrete(8),
@@ -373,6 +377,21 @@ class TherapyEnv(gymnasium.Env):
 
         # Update client memory (triggers RS and bond recalculation)
         self._client.update_memory(client_action, therapist_action)
+
+        # Track actual vs perceived actions (for omniscient wrapper)
+        if self._enable_perception and hasattr(self._client, 'perception_history'):
+            if len(self._client.perception_history) > 0:  # type: ignore[attr-defined]
+                last_record = self._client.perception_history[-1]  # type: ignore[attr-defined]
+                self._last_actual_action = last_record.actual_therapist_action
+                self._last_perceived_action = last_record.perceived_therapist_action
+            else:
+                # No perception history yet, treat as identical
+                self._last_actual_action = therapist_action
+                self._last_perceived_action = therapist_action
+        else:
+            # Perception disabled or no perception history
+            self._last_actual_action = therapist_action
+            self._last_perceived_action = therapist_action
 
         # Add interaction to history
         self._interaction_history.append((client_action, therapist_action))

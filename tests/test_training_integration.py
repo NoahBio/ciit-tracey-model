@@ -74,6 +74,7 @@ class TestTrainingPipeline:
             checkpoint = torch.load(output_dir / "policy_best.pth", map_location="cpu")
             assert isinstance(checkpoint, dict), "Checkpoint should be a dict"
 
+    @pytest.mark.slow
     def test_checkpoint_loading(self):
         """Train minimal model and verify checkpoint can be loaded."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -176,6 +177,7 @@ class TestTrainingPipeline:
             action_sum = sum(metrics['action_distribution'])
             assert 0.99 <= action_sum <= 1.01, f"Action distribution should sum to 1.0, got {action_sum}"
 
+    @pytest.mark.slow
     def test_resume_training(self):
         """Verify training can resume from checkpoint."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -244,6 +246,7 @@ class TestTrainingPipeline:
                 else:
                     raise
 
+    @pytest.mark.slow
     def test_config_persistence(self):
         """Verify configuration is saved and can be loaded."""
         with tempfile.TemporaryDirectory() as tmpdir:

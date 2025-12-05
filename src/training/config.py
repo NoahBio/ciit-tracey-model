@@ -49,6 +49,9 @@ class TrainingConfig:
     hidden_size: int = 256
     lstm_hidden_size: int = 128
 
+    # === Omniscient-Specific Parameters ===
+    use_omniscient_wrapper: bool = False  # Enable omniscient observation wrapper
+
     # === Logging and Checkpointing ===
     log_dir: str = "logs"
     save_freq: int = 10_000

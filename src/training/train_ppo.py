@@ -34,9 +34,15 @@ def make_env(config: TrainingConfig, seed: int) -> TherapyEnv:
     Returns
     -------
     TherapyEnv
-        Configured environment instance
+        Configured environment instance (potentially wrapped)
     """
     env = TherapyEnv(**config.get_env_kwargs(), random_state=seed)
+
+    # Apply omniscient wrapper if requested
+    if hasattr(config, 'use_omniscient_wrapper') and config.use_omniscient_wrapper:
+        from src.environment.omniscient_wrapper import OmniscientObservationWrapper
+        env = OmniscientObservationWrapper(env)
+
     return env
 
 
@@ -137,14 +143,24 @@ def train(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
 
-    # Create networks
-    print("Creating actor and critic networks...")
-    actor, critic = make_therapy_networks(
-        observation_space=obs_space,
-        action_space=act_space,
-        hidden_sizes=(config.hidden_size, config.hidden_size),
-        device=device
-    )
+    # Create networks (omniscient or standard)
+    if hasattr(config, 'use_omniscient_wrapper') and config.use_omniscient_wrapper:
+        print("Creating OMNISCIENT actor and critic networks...")
+        from src.training.omniscient_networks import make_omniscient_networks
+        actor, critic = make_omniscient_networks(
+            observation_space=obs_space,
+            action_space=act_space,
+            hidden_sizes=(config.hidden_size, config.hidden_size),
+            device=device
+        )
+    else:
+        print("Creating standard actor and critic networks...")
+        actor, critic = make_therapy_networks(
+            observation_space=obs_space,
+            action_space=act_space,
+            hidden_sizes=(config.hidden_size, config.hidden_size),
+            device=device
+        )
 
     # Create optimizers
     optim = torch.optim.Adam(
