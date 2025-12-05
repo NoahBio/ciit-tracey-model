@@ -1,0 +1,67 @@
+# Omniscient RL vs Complementary Therapist Benchmark
+# Agent has FULL knowledge of client internal dynamics (u_matrix, RS, bond, entropy, mechanism, perception)
+# Same environment as RL_vs_Complementary, but with omniscient observation space (471 dims vs 417 dims)
+#
+# Baseline: Complementary strategy achieves 18% success rate (18/100 seeds)
+# Task: cold_stuck pattern with frequency_amplifier mechanism
+# Challenge: bond_alpha=5.0 (high bond influence), threshold=0.8 (80th percentile)
+# Goal: Train omniscient PPO agent to beat 18% baseline
+#
+# Expected: Omniscient agent should learn FASTER than model-free (fewer timesteps needed)
+# Training: 1M timesteps for quick test (~10-15 min), can extend to 5-10M if needed
+
+experiment_name: omniscient_RL_vs_Complementary_ColdStuck_FreqAmp_BondAlpha5_extensive
+
+# Environment parameters (copied exactly from omniscient_RL_vs_Complementary_experiment.yaml)
+patterns:
+  - cold_stuck
+mechanism: frequency_amplifier
+threshold: 0.8                # 80th percentile (harder than default 0.9)
+max_sessions: 100
+entropy: 0.1                  # Low entropy for more deterministic client
+bond_alpha: 5.0               # High bond influence
+bond_offset: 0.7
+history_weight: 1.0
+enable_perception: true
+baseline_accuracy: 0.5        # 50% perceptual accuracy
+
+# ===== OMNISCIENT-SPECIFIC =====
+use_omniscient_wrapper: true  # ✨ Enable omniscient observation wrapper (471 dims)
+
+# RL parameters (PPO) - Adjusted for omniscient observation space
+# QUICK TEST: 1M timesteps (~10-15 min) to verify functionality
+# For full training, uncomment one of the options below:
+# total_timesteps: 1000000      # 1M for quick test
+# total_timesteps: 5000000    # 5M (~90 min) - should show convergence
+total_timesteps: 10000000   # 10M (~3 hours) - if 5M not enough
+
+n_envs: 8
+learning_rate: 0.0001         # Lower LR for richer input space (471 dims vs 417 dims)
+batch_size: 128               # Larger batch to handle more complex features (vs 64 for model-free)
+n_epochs: 10
+gamma: 0.99
+gae_lambda: 0.95
+clip_range: 0.2
+ent_coef: 0.01
+
+# Network architecture
+hidden_size: 256              # Same as model-free (sufficient capacity)
+lstm_hidden_size: 128         # If using LSTM (currently not used for omniscient)
+
+# Logging and checkpointing
+log_dir: logs/omniscient_RL_vs_Complementary_extensive
+save_freq: 10000
+eval_freq: 5000
+eval_episodes: 100
+seed: 42
+
+# Notes on hyperparameter choices:
+# - Learning rate 0.0001 (vs 0.0003): Lower LR helps with richer observation space
+# - Batch size 128 (vs 64): Larger batches better for complex features
+# - Total timesteps 1M-10M (vs 50M): Should learn faster with perfect information
+# - Hidden size 256: Same as model-free (adequate for omniscient features)
+#
+# Observation space comparison:
+# - Model-free: 417 dims (client_action: 16, session: 1, history: 400)
+# - Omniscient: 471 dims (+u_matrix: 32 compressed, +RS: 1, +bond: 1, +entropy: 1,
+#                         +mechanism: 8 embedded, +perception: 11)
