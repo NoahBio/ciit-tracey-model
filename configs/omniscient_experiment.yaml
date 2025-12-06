@@ -30,10 +30,6 @@ ent_coef: 0.01  # Entropy bonus coefficient
 vf_coef: 0.5  # Value function loss coefficient
 max_grad_norm: 0.5  # Gradient clipping
 
-# For discrete action spaces (required by Tianshou)
-action_scaling: false
-action_bound_method: null
-
 # Network Architecture
 hidden_size: 256  # Hidden layer size (same as model-free for comparison)
 
@@ -41,8 +37,7 @@ hidden_size: 256  # Hidden layer size (same as model-free for comparison)
 log_dir: "logs/omniscient_rl"
 save_freq: 10_000  # Save checkpoint every N timesteps
 eval_freq: 5_000  # Evaluate every N timesteps
-n_eval_episodes: 10  # Episodes per evaluation
+eval_episodes: 10  # Episodes per evaluation
 
 # Training Infrastructure
 seed: 42  # Random seed for reproducibility
-device: "cpu"  # or "cuda" if available

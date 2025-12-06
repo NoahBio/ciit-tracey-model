@@ -177,8 +177,8 @@ def train(
         dist_fn=torch.distributions.Categorical,
         discount_factor=config.gamma,
         gae_lambda=config.gae_lambda,
-        max_grad_norm=0.5,
-        vf_coef=0.5,
+        max_grad_norm=config.max_grad_norm,
+        vf_coef=config.vf_coef,
         ent_coef=config.ent_coef,
         reward_normalization=True,
         action_bound_method=None, # Overrides default "clip" for discrete actions

@@ -105,11 +105,17 @@ class TherapyNet(nn.Module):
             session_number = torch.as_tensor(session_number, dtype=torch.float32, device=self.device)
         if not isinstance(history, torch.Tensor):
             history = torch.as_tensor(history, dtype=torch.long, device=self.device)
+        elif history.dtype != torch.long:
+            # Convert existing tensor to correct dtype (embeddings require integer indices)
+            history = history.to(dtype=torch.long, device=self.device)
+        else:
+            # Already correct dtype, just ensure correct device
+            history = history.to(self.device)
 
         # Ensure correct device
         client_action = client_action.to(self.device)
         session_number = session_number.to(self.device)
-        history = history.to(self.device)
+        # history device transfer handled in dtype conversion above
 
         # Embed client action: (batch_size,) -> (batch_size, 16)
         client_embed = self.client_action_embed(client_action)

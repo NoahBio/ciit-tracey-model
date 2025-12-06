@@ -44,6 +44,8 @@ class TrainingConfig:
     gae_lambda: float = 0.95
     clip_range: float = 0.2
     ent_coef: float = 0.01
+    vf_coef: float = 0.5  # Value function loss coefficient
+    max_grad_norm: Optional[float] = 0.5  # Gradient clipping norm (None = disabled)
 
     # Network architecture
     hidden_size: int = 256

@@ -369,6 +369,7 @@ class TestVectorizedEnvironments:
     def test_create_vectorized_wrapped_envs(self):
         """Create vectorized environments with wrapper."""
         from tianshou.env import DummyVectorEnv
+        from tianshou.data import Batch
 
         def make_env():
             env = TherapyEnv(pattern=["cold_stuck"], mechanism="frequency_amplifier")
@@ -379,15 +380,26 @@ class TestVectorizedEnvironments:
         vec_env = DummyVectorEnv([make_env for _ in range(4)])
 
         # Reset and verify
-        obs = vec_env.reset()
+        obs_result = vec_env.reset()
 
-        # Check that we have batch of observations
+        # Handle tuple return from reset() in newer Gymnasium versions
+        if isinstance(obs_result, tuple):
+            obs, info = obs_result
+        else:
+            obs = obs_result
+
+        # Convert numpy array of dicts to Batch for easier access
+        if isinstance(obs, np.ndarray) and len(obs) > 0 and isinstance(obs[0], dict):
+            obs = Batch(obs)
+
+        # Check batched observations
         assert obs.u_matrix.shape[0] == 4  # batch size
         assert obs.u_matrix.shape[1] == 64  # u_matrix dimension
 
     def test_vectorized_env_step(self):
         """Test stepping through vectorized wrapped environments."""
         from tianshou.env import DummyVectorEnv
+        from tianshou.data import Batch
 
         def make_env():
             env = TherapyEnv(pattern=["cold_stuck"], mechanism="frequency_amplifier")
@@ -399,7 +411,18 @@ class TestVectorizedEnvironments:
 
         # Take a step with batch of actions
         actions = np.array([0, 1, 2, 3])
-        obs, rewards, dones, infos = vec_env.step(actions)
+        result = vec_env.step(actions)
+
+        # Handle both old (4-value) and new (5-value) Gymnasium API
+        if len(result) == 5:
+            obs, rewards, terminated, truncated, infos = result
+            dones = terminated | truncated  # Combine for backward compatibility
+        else:
+            obs, rewards, dones, infos = result
+
+        # Convert numpy array of dicts to Batch for easier access
+        if isinstance(obs, np.ndarray) and len(obs) > 0 and isinstance(obs[0], dict):
+            obs = Batch(obs)
 
         # Verify batch sizes
         assert obs.u_matrix.shape[0] == 4
@@ -409,22 +432,42 @@ class TestVectorizedEnvironments:
     def test_networks_with_vectorized_observations(self):
         """Verify networks work with vectorized environment observations."""
         from tianshou.env import DummyVectorEnv
+        from tianshou.data import Batch
 
         def make_env():
             env = TherapyEnv()
             wrapped_env = OmniscientObservationWrapper(env)
             return wrapped_env
 
-        vec_env = DummyVectorEnv([make_env for _ in range(8)])
+        # Create vectorized environment
+        env_fns = [make_env for _ in range(8)]
+        vec_env = DummyVectorEnv(env_fns)
+
+        # Get observation and action spaces from a test environment
+        # (DummyVectorEnv doesn't expose .envs attribute in all versions)
+        test_env = make_env()
+        observation_space = test_env.observation_space
+        action_space = test_env.action_space
+        test_env.close()
 
         actor, critic = make_omniscient_networks(
-            observation_space=vec_env.envs[0].observation_space,
-            action_space=vec_env.envs[0].action_space,
+            observation_space=observation_space,
+            action_space=action_space,
             device="cpu"
         )
 
         # Get vectorized observations
-        obs = vec_env.reset()
+        obs_result = vec_env.reset()
+
+        # Handle tuple return from reset() in newer Gymnasium versions
+        if isinstance(obs_result, tuple):
+            obs, info = obs_result
+        else:
+            obs = obs_result
+
+        # Convert numpy array of dicts to Batch for easier access
+        if isinstance(obs, np.ndarray) and len(obs) > 0 and isinstance(obs[0], dict):
+            obs = Batch(obs)
 
         # Forward pass
         with torch.no_grad():

@@ -166,6 +166,12 @@ class OmniscientTherapyNet(nn.Module):
             session_number = torch.as_tensor(session_number, dtype=torch.float32, device=self.device)
         if not isinstance(history, torch.Tensor):
             history = torch.as_tensor(history, dtype=torch.long, device=self.device)
+        elif history.dtype != torch.long:
+            # Convert existing tensor to correct dtype (embeddings require integer indices)
+            history = history.to(dtype=torch.long, device=self.device)
+        else:
+            # Already correct dtype, just ensure correct device
+            history = history.to(self.device)
 
         # Omniscient components
         if not isinstance(u_matrix, torch.Tensor):
@@ -190,7 +196,7 @@ class OmniscientTherapyNet(nn.Module):
         # === Ensure correct device ===
         client_action = client_action.to(self.device)
         session_number = session_number.to(self.device)
-        history = history.to(self.device)
+        # history device transfer handled in dtype conversion above
         u_matrix = u_matrix.to(self.device)
         rs = rs.to(self.device)
         bond = bond.to(self.device)
