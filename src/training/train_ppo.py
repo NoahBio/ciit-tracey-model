@@ -192,11 +192,22 @@ def train(
     )
 
     # Load checkpoint if resuming
+    checkpoint_metadata = None
     if resume_from is not None:
         print(f"Resuming from checkpoint: {resume_from}")
         checkpoint = torch.load(resume_from, map_location=device)
         policy.load_state_dict(checkpoint['model'])
         optim.load_state_dict(checkpoint['optim'])
+
+        # Store metadata for later tensorboard logger initialization
+        checkpoint_metadata = {
+            'epoch': checkpoint.get('epoch', 0),
+            'env_step': checkpoint.get('env_step', 0),
+            'gradient_step': checkpoint.get('gradient_step', 0)
+        }
+        print(f"Resuming from: epoch={checkpoint_metadata['epoch']}, "
+              f"step={checkpoint_metadata['env_step']}, "
+              f"gradient_step={checkpoint_metadata['gradient_step']}")
 
     # Create collectors
     print("Setting up data collectors...")
@@ -219,14 +230,13 @@ def train(
     csv_writer.writeheader()
     print(f"Logging training progress to {csv_path}")
 
-    # Setup tensorboard logger (Note: TensorboardLogger API may vary by version)
-    try:
-        from torch.utils.tensorboard import SummaryWriter
-        writer = SummaryWriter(log_dir=str(log_dir))
-        tb_logger = TensorboardLogger(writer, update_interval=100)
-    except Exception:
-        # Fallback if TensorboardLogger signature differs
-        tb_logger = TensorboardLogger(writer=None, update_interval=100)  # type: ignore[call-arg]
+    # Setup tensorboard logger for training metrics and resumption
+    from torch.utils.tensorboard import SummaryWriter
+    writer = SummaryWriter(log_dir=str(log_dir))
+    tb_logger = TensorboardLogger(writer, update_interval=100)
+
+    # Note: TensorboardLogger.restore_data() has a bug - it reads .step instead of .value
+    # So we'll manually restore trainer state instead of using resume_from_log
 
     def save_checkpoint_fn(epoch: int, env_step: int, gradient_step: int) -> str:
         """Save model checkpoint."""
@@ -237,8 +247,10 @@ def train(
                 'optim': optim.state_dict(),
                 'epoch': epoch,
                 'env_step': env_step,
+                'gradient_step': gradient_step,
             }, ckpt_path)
-            print(f"Checkpoint saved to {ckpt_path}")
+
+            print(f"Checkpoint saved to {ckpt_path} (epoch={epoch}, step={env_step})")
             return str(ckpt_path)
         return ""
 
@@ -266,7 +278,7 @@ def train(
     print("=" * 60 + "\n")
 
     try:
-        result = OnpolicyTrainer(
+        trainer = OnpolicyTrainer(
             policy=policy,
             train_collector=train_collector,
             test_collector=eval_collector,
@@ -283,12 +295,23 @@ def train(
             save_checkpoint_fn=save_checkpoint_fn,
             logger=tb_logger,
             test_in_train=False,
-            resume_from_log=False,
+            resume_from_log=False,  # Disabled - has bug, we restore manually instead
             verbose=True,
-        ).run()
+        )
+
+        # Manually restore trainer state if resuming (TensorboardLogger.restore_data is buggy)
+        if checkpoint_metadata is not None:
+            trainer.start_epoch = checkpoint_metadata['epoch']
+            trainer.epoch = checkpoint_metadata['epoch']
+            trainer.env_step = checkpoint_metadata['env_step']
+            trainer._gradient_step = checkpoint_metadata['gradient_step']
+            print(f"Manually restored trainer state: epoch={trainer.epoch}, "
+                  f"env_step={trainer.env_step}, gradient_step={trainer._gradient_step}")
+
+        # Run full training
+        result = trainer.run()
 
         # Log final metrics
-        # Note: result is an InfoStats object, access attributes directly
         log_metrics_fn(
             getattr(result, 'epoch', 0),  # type: ignore[arg-type]
             getattr(result, 'env_step', 0),  # type: ignore[arg-type]
