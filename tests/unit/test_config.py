@@ -251,7 +251,7 @@ class TestCalculateSuccessThreshold:
 
         rs_min = u_matrix.min()
         rs_max = u_matrix.max()
-        expected = rs_min + 0. * (rs_max - rs_min)
+        expected = rs_min + 0.9 * (rs_max - rs_min)
 
         np.testing.assert_almost_equal(threshold, expected)
 
