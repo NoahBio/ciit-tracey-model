@@ -1,15 +1,24 @@
 # Optuna Hyperparameter Optimization Studies
 
+> **📁 Location:** All scripts in `during development/` directory
+> **📂 Run from:** Project root directory (recommended)
+> **💾 Output:** Study databases saved to `optuna_studies/` directory
+
 This directory contains SQLite databases for Optuna hyperparameter optimization studies.
 
 ## Quick Start
 
 ### Running an Optimization
 
+**Note:** All commands below assume you're running from the project root directory and have activated your virtual environment:
+```bash
+source venv/bin/activate  # Linux/Mac
+# or venv\Scripts\activate  # Windows
+```
+
 Single-objective (maximize success rate):
 ```bash
-cd "during development"
-../venv/bin/python optuna_hyperparameter_search.py \
+python "during development/optuna_hyperparameter_search.py" \
   --study-name "strategic_optimization" \
   --mechanism conditional_amplifier \
   --pattern cold_warm \
@@ -22,8 +31,7 @@ cd "during development"
 
 Multi-objective (maximize success, minimize sessions):
 ```bash
-cd "during development"
-../venv/bin/python optuna_hyperparameter_search.py \
+python "during development/optuna_hyperparameter_search.py" \
   --study-name "multi_obj_study" \
   --mechanism conditional_amplifier \
   --enable-strategic-therapist \
@@ -37,17 +45,16 @@ cd "during development"
 
 **Interactive Dashboard (recommended):**
 ```bash
-../venv/bin/optuna-dashboard sqlite:///optuna_studies/your_study_name.db
+optuna-dashboard sqlite:///optuna_studies/your_study_name.db
 ```
 Then open your browser to the URL shown (usually http://localhost:8080)
 
 **Command-line Analysis:**
 ```bash
-cd "during development"
-../venv/bin/python optuna_utils.py \
+python "during development/optuna_utils.py" \
   --study-name "your_study_name" \
-  --storage-path ../optuna_studies/your_study_name.db \
-  --export-csv ../optuna_studies/your_study_name/trials.csv
+  --storage-path optuna_studies/your_study_name.db \
+  --export-csv optuna_studies/your_study_name/trials.csv
 ```
 
 **View Results JSON:**
@@ -115,10 +122,10 @@ optuna_studies/
 Studies are automatically resumed if you use the same `--study-name`:
 ```bash
 # Run initial 50 trials
-../venv/bin/python optuna_hyperparameter_search.py --study-name "my_study" --n-trials 50 ...
+python "during development/optuna_hyperparameter_search.py" --study-name "my_study" --n-trials 50 ...
 
 # Resume and run 50 more trials (total: 100)
-../venv/bin/python optuna_hyperparameter_search.py --study-name "my_study" --n-trials 50 ...
+python "during development/optuna_hyperparameter_search.py" --study-name "my_study" --n-trials 50 ...
 ```
 
 ## Tips

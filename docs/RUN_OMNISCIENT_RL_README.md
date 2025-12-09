@@ -163,8 +163,17 @@ python -m src.evaluation.baseline_comparison \
 
 ## Next Steps
 
-1. **Run quick test** (1M steps, ~15 min)
+1. **Run quick test** (1M steps, ~15 min*)
 2. **Check if learning** (reward increasing?)
 3. **If yes:** Extend to 5M or 10M steps
 4. **If no:** Debug or adjust hyperparameters
 5. **Compare:** vs complementary baseline (18%)
+
+_* Duration estimates assume a modern CPU (8+ cores) or GPU. Actual time may vary._
+
+## See Also
+
+- **[SRC_TRAINING_README.md](SRC_TRAINING_README.md)** - General training guide with omniscient vs standard comparison
+- **[OMNISCIENT_TESTS_README.md](OMNISCIENT_TESTS_README.md)** - Comprehensive test suite for omniscient RL
+- **[THERAPYENV_README.md](THERAPYENV_README.md)** - Environment API reference
+- **[MULTI_SEED_USAGE_README.md](MULTI_SEED_USAGE_README.md)** - Statistical evaluation across random seeds

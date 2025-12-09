@@ -1254,12 +1254,29 @@ from src.config import (
 
 ## The Five Client Types Summary
 
-| Client Type | File | Key Difference | How Expectations Form |
-|-------------|------|----------------|----------------------|
-| **BondOnlyClient** | `bond_only_client.py` | No history tracking | Bond alone determines percentile of raw utilities |
-| **FrequencyAmplifierClient** | `frequency_amplifier_client.py` | Frequency amplifies utilities | Frequent outcomes become more salient (positive → more positive, negative → more negative) |
-| **ConditionalAmplifierClient** | `conditional_amplifier_client.py` | Uses conditional probabilities | P(therapist|client_action) - tracks specific response patterns |
-| **BondWeightedFrequencyClient** | `bond_weighted_frequency_amplifier_client.py` | History weight varies by bond | High bond → more history influence, Low bond → less history influence |
-| **BondWeightedConditionalClient** | `bond_weighted_conditional_amplifier_client.py` | Conditional + bond-weighted | Combines conditional probabilities with bond-modulated history weight |
+| Client Type | File Location | Key Difference | How Expectations Form |
+|-------------|---------------|----------------|----------------------|
+| **BondOnlyClient** | [`src/agents/client_agents/bond_only_client.py`](../src/agents/client_agents/bond_only_client.py) | No history tracking | Bond alone determines percentile of raw utilities |
+| **FrequencyAmplifierClient** | [`src/agents/client_agents/frequency_amplifier_client.py`](../src/agents/client_agents/frequency_amplifier_client.py) | Frequency amplifies utilities | Frequent outcomes become more salient (positive → more positive, negative → more negative) |
+| **ConditionalAmplifierClient** | [`src/agents/client_agents/conditional_amplifier_client.py`](../src/agents/client_agents/conditional_amplifier_client.py) | Uses conditional probabilities | P(therapist\|client_action) - tracks specific response patterns |
+| **BondWeightedFrequencyClient** | [`src/agents/client_agents/bond_weighted_frequency_amplifier_client.py`](../src/agents/client_agents/bond_weighted_frequency_amplifier_client.py) | History weight varies by bond | High bond → more history influence, Low bond → less history influence |
+| **BondWeightedConditionalClient** | [`src/agents/client_agents/bond_weighted_conditional_amplifier_client.py`](../src/agents/client_agents/bond_weighted_conditional_amplifier_client.py) | Conditional + bond-weighted | Combines conditional probabilities with bond-modulated history weight |
 
-All five can be wrapped with `with_perception()` to add perceptual distortion!
+**All five can be wrapped with `with_perception()` to add perceptual distortion!**
+
+### Core Architecture Files
+
+| Component | File Location | Description |
+|-----------|---------------|-------------|
+| **Base Client** | [`src/agents/client_agents/base_client.py`](../src/agents/client_agents/base_client.py) | Shared functionality: memory, RS, bond, action selection, dropout |
+| **Perceptual Distortion** | [`src/agents/client_agents/perceptual_distortion.py`](../src/agents/client_agents/perceptual_distortion.py) | Mixin for adding history-based perception to any client type |
+| **Global Config** | [`src/config.py`](../src/config.py) | U-matrix, memory weights, bond calculations, global parameters |
+
+---
+
+## See Also
+
+- **[THERAPYENV_README.md](THERAPYENV_README.md)** - How clients integrate with the Gymnasium environment
+- **[MULTI_SEED_USAGE_README.md](MULTI_SEED_USAGE_README.md)** - Testing clients across random seeds
+- **[SRC_TRAINING_README.md](SRC_TRAINING_README.md)** - Training therapist agents to work with these clients
+- **[GENERAL_README.md](GENERAL_README.md)** - Project overview and setup

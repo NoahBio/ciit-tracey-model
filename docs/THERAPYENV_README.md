@@ -296,6 +296,86 @@ Rewards are only given at episode end. This:
 - Matches therapy outcomes (success/failure at end)
 - Encourages long-term planning
 
+## Advanced Usage
+
+### Omniscient Observation Wrapper
+
+For training with perfect client state information, use `OmniscientObservationWrapper`:
+
+```python
+from src.environment import TherapyEnv
+from src.environment.omniscient_wrapper import OmniscientObservationWrapper
+
+# Create base environment
+base_env = TherapyEnv(
+    mechanism="frequency_amplifier",
+    pattern="cold_stuck",
+    threshold=0.8
+)
+
+# Wrap with omniscient observations
+env = OmniscientObservationWrapper(base_env)
+
+# Now observations include client internal state:
+# - U-matrix (64 values compressed to 32)
+# - Relationship satisfaction (RS)
+# - Bond level
+# - Entropy parameter
+# - Mechanism type (embedded)
+# - Perception tracking (if enabled)
+
+obs, info = env.reset()
+# obs now has 471 dimensions instead of 417
+```
+
+**Use cases:**
+- Upper bound performance with perfect information
+- Faster convergence (1-10M steps vs 50M+ for standard)
+- Comparison against model-free training
+
+**See:** [RUN_OMNISCIENT_RL_README.md](RUN_OMNISCIENT_RL_README.md) for detailed omniscient training guide.
+
+### Strategic Therapist Option
+
+TherapyEnv supports strategic therapist mode for development/testing:
+
+```python
+# This feature is available in development tools
+# See: during development/run_multi_seed_simulation.py
+```
+
+**Features:**
+- Plateau detection based on RS stability
+- Automatic switch to optimal action when plateau detected
+- Configurable intervention duration
+- Multiple interventions per episode
+
+**See:** [MULTI_SEED_USAGE_README.md](MULTI_SEED_USAGE_README.md) for strategic therapist usage.
+
+## Testing
+
+The environment has comprehensive test coverage:
+
+**Unit tests:**
+- [tests/test_therapy_env.py](../tests/test_therapy_env.py) - Core environment functionality
+- [tests/test_omniscient_wrapper.py](../tests/test_omniscient_wrapper.py) - Omniscient wrapper
+
+**Integration tests:**
+- [tests/test_training_integration.py](../tests/test_training_integration.py) - End-to-end training pipeline
+- [tests/test_omniscient_training.py](../tests/test_omniscient_training.py) - Omniscient training
+
+**Run tests:**
+```bash
+# All environment tests
+pytest tests/test_therapy_env.py -v
+
+# Omniscient wrapper tests
+pytest tests/test_omniscient_*.py -v
+
+# Full integration tests
+pytest tests/test_training_integration.py -v
+```
+
 ## Gymnasium Compatibility
 
 `TherapyEnv` is fully compatible with Gymnasium 0.28+:
