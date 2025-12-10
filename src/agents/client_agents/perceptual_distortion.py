@@ -15,7 +15,6 @@ from collections import deque
 from src.config import (
     PERCEPTION_WINDOW,
     PERCEPTION_BASELINE_ACCURACY,
-    PERCEPTION_HISTORY_WEIGHT,
 )
 
 
