@@ -1,7 +1,5 @@
 """
-Global configuration and parameters for CIIT-Tracey computational model.
-
-    TODO:
+Global configuration and parameters for the agent layer of this CIIT transactional cycle computational model.
 """
 
 import numpy as np

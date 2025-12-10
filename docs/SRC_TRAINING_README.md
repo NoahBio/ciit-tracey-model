@@ -10,14 +10,21 @@ This module provides tools for training reinforcement learning agents using Prox
 - `save_config()`: Save configuration to YAML
 - `get_default_config()`: Create default configuration
 
-### 2. Networks (`networks.py`)
+### 2. Networks
+**Standard Networks (`networks.py`):**
 - `TherapyNet`: Feature extraction network for Dict observation space
 - `Actor`: Policy network for discrete actions
 - `Critic`: Value function network
 - `make_therapy_networks()`: Factory function to create actor-critic pair
 
+**Omniscient Networks (`omniscient_networks.py`):**
+- `OmniscientTherapyNet`: Feature extraction with client internal state information
+- `Actor`: Policy network (same as standard)
+- `Critic`: Value network (same as standard)
+- `make_omniscient_networks()`: Factory function for omniscient actor-critic pair
+
 ### 3. Training Script (`train_ppo.py`)
-Main training script with CLI interface.
+Main training script with CLI interface. Automatically selects standard or omniscient networks based on configuration.
 
 ## Installation
 
@@ -62,6 +69,70 @@ python -m src.training.train_ppo \
 ```
 
 This runs a short training session (10k timesteps) with 2 environments.
+
+## Omniscient vs Standard Training
+
+The training system supports two modes: **standard (model-free)** and **omniscient**.
+
+### Standard Training (Default)
+
+Standard training uses partial observability where the agent only sees:
+- Client's current action
+- Session number
+- History of shared interactions
+
+The agent must **infer** the client's internal state (RS, bond, utilities, mechanism type) from observed behavior.
+
+**Use case:** Realistic therapy simulation where the therapist doesn't have perfect information.
+
+### Omniscient Training
+
+Omniscient training provides **perfect information** about the client's internal state:
+- ✅ U-matrix (client's utility preferences)
+- ✅ Relationship satisfaction (RS)
+- ✅ Bond level
+- ✅ Entropy parameter
+- ✅ Mechanism type
+- ✅ Perception tracking (actual vs perceived actions)
+
+**Use cases:**
+- **Upper bound performance:** Shows best possible results with perfect information
+- **Faster convergence:** Typically converges in 1-10M steps vs 50M+ for standard
+- **Benchmarking:** Comparison against model-free and heuristic policies
+
+### Configuration Comparison
+
+| Parameter | Standard | Omniscient | Notes |
+|-----------|----------|------------|-------|
+| `use_omniscient_wrapper` | `false` | `true` | Enable omniscient mode |
+| Observation dims | 417 | 471 (+54) | Additional internal state info |
+| Network | `TherapyNet` | `OmniscientTherapyNet` | Auto-selected by `train_ppo.py` |
+| Recommended timesteps | 50M | 1-10M | Faster convergence |
+| Recommended learning rate | 0.0003 | 0.0001 | Lower for complex input |
+| Recommended batch size | 64 | 128 | Larger for rich features |
+
+### Enabling Omniscient Mode
+
+**In YAML config:**
+```yaml
+# Standard training (default)
+use_omniscient_wrapper: false
+
+# Omniscient training
+use_omniscient_wrapper: true
+```
+
+**Example omniscient config files:**
+- `configs/omniscient_experiment.yaml`
+- `configs/omniscient_RL_vs_Complementary.yaml`
+- `configs/omniscient_RL_vs_Complementary_extensive.yaml`
+
+**Using omniscient config:**
+```bash
+python -m src.training.train_ppo --config configs/omniscient_RL_vs_Complementary.yaml
+```
+
+**For detailed omniscient RL usage, see:** [RUN_OMNISCIENT_RL_README.md](RUN_OMNISCIENT_RL_README.md)
 
 ## CLI Arguments
 

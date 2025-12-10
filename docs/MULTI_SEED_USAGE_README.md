@@ -1,5 +1,9 @@
 # Multi-Seed Simulation Runner - Usage Guide
 
+> **📁 Location:** `during development/run_multi_seed_simulation.py`
+> **📂 Run from:** Project root directory
+> **ℹ️ Note:** This is a development tool, not part of the core API
+
 ## Overview
 
 The `run_multi_seed_simulation.py` script runs therapy simulations across multiple random seeds and provides comprehensive statistical analysis. This is useful for assessing the reliability and success rate of different configurations.
@@ -10,14 +14,14 @@ The `run_multi_seed_simulation.py` script runs therapy simulations across multip
 
 Run 10 simulations with default settings:
 ```bash
-python run_multi_seed_simulation.py --n-seeds 10
+python "during development/run_multi_seed_simulation.py" --n-seeds 10
 ```
 
 ### Common Examples
 
 **Test conditional amplifier with cold_warm pattern:**
 ```bash
-python run_multi_seed_simulation.py \
+python "during development/run_multi_seed_simulation.py" \
     --n-seeds 20 \
     --mechanism conditional_amplifier \
     --pattern cold_warm \
@@ -27,7 +31,7 @@ python run_multi_seed_simulation.py \
 
 **Test with perception enabled:**
 ```bash
-python run_multi_seed_simulation.py \
+python "during development/run_multi_seed_simulation.py" \
     --n-seeds 20 \
     --mechanism conditional_amplifier \
     --pattern cold_warm \
@@ -38,7 +42,7 @@ python run_multi_seed_simulation.py \
 
 **Test bond-weighted mechanism:**
 ```bash
-python run_multi_seed_simulation.py \
+python "during development/run_multi_seed_simulation.py" \
     --n-seeds 20 \
     --mechanism bond_weighted_conditional_amplifier \
     --pattern cold_warm \
@@ -49,7 +53,7 @@ python run_multi_seed_simulation.py \
 
 **Quick test with minimal output:**
 ```bash
-python run_multi_seed_simulation.py \
+python "during development/run_multi_seed_simulation.py" \
     --n-seeds 5 \
     --mechanism conditional_amplifier \
     --pattern cold_warm \
@@ -60,7 +64,7 @@ python run_multi_seed_simulation.py \
 
 **Test strategic therapist with plateau-triggered interventions:**
 ```bash
-python run_multi_seed_simulation.py \
+python "during development/run_multi_seed_simulation.py" \
     --n-seeds 20 \
     --mechanism conditional_amplifier \
     --pattern cold_warm \
@@ -212,14 +216,14 @@ The strategic therapist feature implements a sophisticated intervention strategy
 
 ```bash
 # Baseline: complementary therapist only
-python run_multi_seed_simulation.py \
+python "during development/run_multi_seed_simulation.py" \
     --n-seeds 50 \
     --mechanism conditional_amplifier \
     --pattern cold_warm \
     --enable-perception
 
 # Strategic therapist with interventions
-python run_multi_seed_simulation.py \
+python "during development/run_multi_seed_simulation.py" \
     --n-seeds 50 \
     --mechanism conditional_amplifier \
     --pattern cold_warm \
@@ -247,7 +251,7 @@ python run_multi_seed_simulation.py \
 Use `--quiet`, `--no-trajectories`, and `--no-actions` flags to reduce output when running many seeds:
 
 ```bash
-python run_multi_seed_simulation.py --n-seeds 100 --quiet --no-actions
+python "during development/run_multi_seed_simulation.py" --n-seeds 100 --quiet --no-actions
 ```
 
 ### Using Strategic Therapist
@@ -264,25 +268,25 @@ To compare different configurations, run the script multiple times with differen
 
 ```bash
 # Test different mechanisms
-python run_multi_seed_simulation.py --n-seeds 50 --mechanism conditional_amplifier > results_conditional.txt
-python run_multi_seed_simulation.py --n-seeds 50 --mechanism bond_weighted_conditional_amplifier > results_bond_weighted.txt
+python "during development/run_multi_seed_simulation.py" --n-seeds 50 --mechanism conditional_amplifier > results_conditional.txt
+python "during development/run_multi_seed_simulation.py" --n-seeds 50 --mechanism bond_weighted_conditional_amplifier > results_bond_weighted.txt
 
 # Test different memory patterns
-python run_multi_seed_simulation.py --n-seeds 50 --pattern cold_warm > results_cold_warm.txt
-python run_multi_seed_simulation.py --n-seeds 50 --pattern conflictual > results_conflictual.txt
+python "during development/run_multi_seed_simulation.py" --n-seeds 50 --pattern cold_warm > results_cold_warm.txt
+python "during development/run_multi_seed_simulation.py" --n-seeds 50 --pattern conflictual > results_conflictual.txt
 
 # Test perception vs no perception
-python run_multi_seed_simulation.py --n-seeds 50 > results_no_perception.txt
-python run_multi_seed_simulation.py --n-seeds 50 --enable-perception > results_with_perception.txt
+python "during development/run_multi_seed_simulation.py" --n-seeds 50 > results_no_perception.txt
+python "during development/run_multi_seed_simulation.py" --n-seeds 50 --enable-perception > results_with_perception.txt
 
 # Test strategic therapist vs complementary
-python run_multi_seed_simulation.py --n-seeds 50 --enable-perception > results_complementary.txt
-python run_multi_seed_simulation.py --n-seeds 50 --enable-perception --enable-strategic-therapist > results_strategic.txt
+python "during development/run_multi_seed_simulation.py" --n-seeds 50 --enable-perception > results_complementary.txt
+python "during development/run_multi_seed_simulation.py" --n-seeds 50 --enable-perception --enable-strategic-therapist > results_strategic.txt
 ```
 
 ## Integration with Existing Tools
 
-This script is designed to work alongside `test_verbose_session_trace.py`:
+This script is designed to work alongside `test_verbose_session_trace.py` (also in `during development/`):
 
 - Use **`test_verbose_session_trace.py`** for:
   - Detailed inspection of a single simulation run
@@ -300,18 +304,18 @@ This script is designed to work alongside `test_verbose_session_trace.py`:
 
 1. **Initial exploration** with verbose trace:
    ```bash
-   python test_verbose_session_trace.py --mechanism conditional_amplifier --pattern cold_warm
+   python "during development/test_verbose_session_trace.py" --mechanism conditional_amplifier --pattern cold_warm
    ```
 
 2. **Statistical validation** with multi-seed runner:
    ```bash
-   python run_multi_seed_simulation.py --n-seeds 50 --mechanism conditional_amplifier --pattern cold_warm
+   python "during development/run_multi_seed_simulation.py" --n-seeds 50 --mechanism conditional_amplifier --pattern cold_warm
    ```
 
 3. **Detailed investigation** of specific seeds:
    ```bash
    # If seed 17 was interesting from multi-seed run
-   python test_verbose_session_trace.py --mechanism conditional_amplifier --pattern cold_warm --seed 17
+   python "during development/test_verbose_session_trace.py" --mechanism conditional_amplifier --pattern cold_warm --seed 17
    ```
 
 ## Return Value
