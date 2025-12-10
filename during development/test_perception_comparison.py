@@ -17,14 +17,13 @@ from collections import Counter
 from tqdm import tqdm
 from typing import Dict, List, Tuple, Optional
 
-from src.agents.client_agents import BondOnlyClient, BaseClientAgent
-from src.agents.client_agents.perceptual_distortion import with_perception
+from src.agents.client_agents import BondOnlyClient, BaseClientAgent, with_perception
 from src.config import (
     sample_u_matrix,
     calculate_success_threshold,
     OCTANTS,
-    PERCEPTION_BASELINE_ACCURACY,
-    PERCEPTION_WINDOW,
+    PARATAXIC_BASELINE_ACCURACY,
+    PARATAXIC_WINDOW,
     CLIENT_ENTROPY_MEAN,
     MAX_SESSIONS,
 )
@@ -39,8 +38,8 @@ def display_configuration():
     print("CONFIGURATION")
     print("-" * 100)
     print("Standard Config Values:")
-    print(f"  PERCEPTION_BASELINE_ACCURACY: {PERCEPTION_BASELINE_ACCURACY:.2f}")
-    print(f"  PERCEPTION_WINDOW: {PERCEPTION_WINDOW}")
+    print(f"  PARATAXIC_BASELINE_ACCURACY: {PARATAXIC_BASELINE_ACCURACY:.2f}")
+    print(f"  PARATAXIC_WINDOW: {PARATAXIC_WINDOW}")
     print(f"  CLIENT_ENTROPY: {CLIENT_ENTROPY_MEAN:.2f}")
     print(f"  MAX_SESSIONS: {MAX_SESSIONS}")
     print(f"  SUCCESS_THRESHOLD: 80th percentile")
@@ -121,7 +120,7 @@ def run_single_trial(
             u_matrix=u_matrix,
             entropy=entropy,
             initial_memory=initial_memory,
-            baseline_accuracy=PERCEPTION_BASELINE_ACCURACY,
+            baseline_accuracy=PARATAXIC_BASELINE_ACCURACY,
             enable_perception=True,
             random_state=rng,
         )

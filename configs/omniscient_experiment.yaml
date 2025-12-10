@@ -8,8 +8,8 @@ patterns: ["cold_stuck"]
 mechanism: "frequency_amplifier"
 threshold: 0.9  # Success threshold (90th percentile)
 max_sessions: 100
-enable_perception: true  # Enable perception for more realistic simulation
-baseline_accuracy: 0.2  # 20% baseline perception accuracy
+enable_parataxic: true  # Enable parataxic distortion for more realistic simulation
+baseline_accuracy: 0.2  # 20% baseline parataxic distortion accuracy
 
 # Omniscient-Specific
 use_omniscient_wrapper: true  # Enable omniscient observation wrapper

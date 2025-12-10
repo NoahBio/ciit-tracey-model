@@ -22,8 +22,8 @@ entropy: 0.1                  # Low entropy for more deterministic client
 bond_alpha: 5.0               # High bond influence
 bond_offset: 0.7
 history_weight: 1.0
-enable_perception: true
-baseline_accuracy: 0.5        # 50% perceptual accuracy
+enable_parataxic: true
+baseline_accuracy: 0.5        # 50% parataxic distortion accuracy
 
 # ===== OMNISCIENT-SPECIFIC =====
 use_omniscient_wrapper: true  # ✨ Enable omniscient observation wrapper (471 dims)

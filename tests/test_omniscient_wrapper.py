@@ -66,8 +66,8 @@ class TestWrapperCreation:
         assert "mechanism_type" in obs_space
         assert "last_actual_action" in obs_space
         assert "last_perceived_action" in obs_space
-        assert "misperception_rate" in obs_space
-        assert "perception_enabled" in obs_space
+        assert "parataxic_distortion_rate" in obs_space
+        assert "parataxic_enabled" in obs_space
 
     def test_omniscient_observation_space_shapes(self):
         """Verify shapes and dtypes of omniscient components."""
@@ -115,16 +115,16 @@ class TestWrapperCreation:
         assert isinstance(obs_space["last_perceived_action"], spaces.Discrete)
         assert obs_space["last_perceived_action"].n == 9
 
-        # Misperception rate: scalar in [0, 1]
-        assert isinstance(obs_space["misperception_rate"], spaces.Box)
-        assert obs_space["misperception_rate"].shape == (1,)
-        assert obs_space["misperception_rate"].dtype == np.float32
-        assert obs_space["misperception_rate"].low[0] == 0.0
-        assert obs_space["misperception_rate"].high[0] == 1.0
+        # Parataxic distortion rate: scalar in [0, 1]
+        assert isinstance(obs_space["parataxic_distortion_rate"], spaces.Box)
+        assert obs_space["parataxic_distortion_rate"].shape == (1,)
+        assert obs_space["parataxic_distortion_rate"].dtype == np.float32
+        assert obs_space["parataxic_distortion_rate"].low[0] == 0.0
+        assert obs_space["parataxic_distortion_rate"].high[0] == 1.0
 
-        # Perception enabled: discrete binary
-        assert isinstance(obs_space["perception_enabled"], spaces.Discrete)
-        assert obs_space["perception_enabled"].n == 2
+        # Parataxic enabled: discrete binary
+        assert isinstance(obs_space["parataxic_enabled"], spaces.Discrete)
+        assert obs_space["parataxic_enabled"].n == 2
 
 
 class TestObservationExtraction:
@@ -142,7 +142,7 @@ class TestObservationExtraction:
             "client_action", "session_number", "history",
             "u_matrix", "relationship_satisfaction", "bond", "entropy",
             "mechanism_type", "last_actual_action", "last_perceived_action",
-            "misperception_rate", "perception_enabled"
+            "parataxic_distortion_rate", "parataxic_enabled"
         }
         assert set(obs.keys()) == expected_keys
 
@@ -159,7 +159,7 @@ class TestObservationExtraction:
             "client_action", "session_number", "history",
             "u_matrix", "relationship_satisfaction", "bond", "entropy",
             "mechanism_type", "last_actual_action", "last_perceived_action",
-            "misperception_rate", "perception_enabled"
+            "parataxic_distortion_rate", "parataxic_enabled"
         }
         assert set(obs.keys()) == expected_keys
 
@@ -257,26 +257,26 @@ class TestMechanismMapping:
         assert mechanism_type == expected_idx
 
 
-class TestPerceptionTracking:
-    """Tests for perception-related observations."""
+class TestParataxicTracking:
+    """Tests for parataxic distortion-related observations."""
 
-    def test_perception_enabled_flag(self):
-        """Verify perception_enabled flag is correct."""
-        # Test with perception enabled
-        env = TherapyEnv(enable_perception=True)
+    def test_parataxic_enabled_flag(self):
+        """Verify parataxic_enabled flag is correct."""
+        # Test with parataxic distortion enabled
+        env = TherapyEnv(enable_parataxic=True)
         wrapped_env = OmniscientObservationWrapper(env)
         obs, _ = wrapped_env.reset(seed=42)
-        assert obs["perception_enabled"] == 1
+        assert obs["parataxic_enabled"] == 1
 
-        # Test with perception disabled
-        env = TherapyEnv(enable_perception=False)
+        # Test with parataxic distortion disabled
+        env = TherapyEnv(enable_parataxic=False)
         wrapped_env = OmniscientObservationWrapper(env)
         obs, _ = wrapped_env.reset(seed=42)
-        assert obs["perception_enabled"] == 0
+        assert obs["parataxic_enabled"] == 0
 
-    def test_perception_tracking_with_perception_enabled(self):
-        """Verify actual/perceived actions tracked when perception enabled."""
-        env = TherapyEnv(enable_perception=True, baseline_accuracy=0.2)
+    def test_parataxic_tracking_with_parataxic_enabled(self):
+        """Verify actual/perceived actions tracked when parataxic distortion enabled."""
+        env = TherapyEnv(enable_parataxic=True, baseline_accuracy=0.2)
         wrapped_env = OmniscientObservationWrapper(env)
 
         wrapped_env.reset(seed=42)
@@ -292,9 +292,9 @@ class TestPerceptionTracking:
         # After first step, actual action should match what we sent
         assert obs["last_actual_action"] == action
 
-    def test_perception_tracking_with_perception_disabled(self):
-        """Verify actual/perceived actions match when perception disabled."""
-        env = TherapyEnv(enable_perception=False)
+    def test_parataxic_tracking_with_parataxic_disabled(self):
+        """Verify actual/perceived actions match when parataxic distortion disabled."""
+        env = TherapyEnv(enable_parataxic=False)
         wrapped_env = OmniscientObservationWrapper(env)
 
         wrapped_env.reset(seed=42)
@@ -307,23 +307,23 @@ class TestPerceptionTracking:
         assert obs["last_actual_action"] == action
         assert obs["last_perceived_action"] == action
 
-    def test_misperception_rate_in_range(self):
-        """Verify misperception_rate is in [0, 1]."""
-        env = TherapyEnv(enable_perception=True)
+    def test_parataxic_distortion_rate_in_range(self):
+        """Verify parataxic_distortion_rate is in [0, 1]."""
+        env = TherapyEnv(enable_parataxic=True)
         wrapped_env = OmniscientObservationWrapper(env)
 
         obs, _ = wrapped_env.reset(seed=42)
-        misperception_rate = obs["misperception_rate"]
+        parataxic_distortion_rate = obs["parataxic_distortion_rate"]
 
         # Check shape
-        assert misperception_rate.shape == (1,)
+        assert parataxic_distortion_rate.shape == (1,)
 
         # Check range
-        assert misperception_rate[0] >= 0.0
-        assert misperception_rate[0] <= 1.0
+        assert parataxic_distortion_rate[0] >= 0.0
+        assert parataxic_distortion_rate[0] <= 1.0
 
         # Check dtype
-        assert misperception_rate.dtype == np.float32
+        assert parataxic_distortion_rate.dtype == np.float32
 
 
 class TestNormalizationEdgeCases:
@@ -407,7 +407,7 @@ class TestMultipleSteps:
                 "client_action", "session_number", "history",
                 "u_matrix", "relationship_satisfaction", "bond", "entropy",
                 "mechanism_type", "last_actual_action", "last_perceived_action",
-                "misperception_rate", "perception_enabled"
+                "parataxic_distortion_rate", "parataxic_enabled"
             }
             assert set(obs.keys()) == expected_keys
 
@@ -419,15 +419,15 @@ class TestMultipleSteps:
             assert 0 <= obs["mechanism_type"] <= 4
             assert 0 <= obs["last_actual_action"] <= 8
             assert 0 <= obs["last_perceived_action"] <= 8
-            assert 0.0 <= obs["misperception_rate"][0] <= 1.0
-            assert 0 <= obs["perception_enabled"] <= 1
+            assert 0.0 <= obs["parataxic_distortion_rate"][0] <= 1.0
+            assert 0 <= obs["parataxic_enabled"] <= 1
 
             if terminated or truncated:
                 break
 
-    def test_perception_history_accumulates(self):
-        """Verify perception info updates correctly over multiple steps."""
-        env = TherapyEnv(enable_perception=True, baseline_accuracy=0.2)
+    def test_parataxic_history_accumulates(self):
+        """Verify parataxic distortion info updates correctly over multiple steps."""
+        env = TherapyEnv(enable_parataxic=True, baseline_accuracy=0.2)
         wrapped_env = OmniscientObservationWrapper(env)
 
         wrapped_env.reset(seed=42)

@@ -222,12 +222,18 @@ CLIENT_ENTROPY_MAX = 5
 HISTORY_WEIGHT = 1.0  # Weighting factor for client history in utility calculation (used in amplifier mechanisms)
 
 # =============================================================================
-# PERCEPTION PARAMETERS
+# PARATAXIC DISTORTION PARAMETERS
 # =============================================================================
 
-# Imperfect perception system for client agents
-PERCEPTION_WINDOW = 15                    # Number of recent interactions to consider for perception
-PERCEPTION_BASELINE_ACCURACY = 0.        # Base probability of correct perception (20%)
+# Parataxic distortion system for client agents
+# Models Sullivan's concept of parataxic distortion - tendency to perceive present
+# relationships through the lens of past experiences
+PARATAXIC_WINDOW = 15                    # Number of recent interactions to consider for distortion
+PARATAXIC_BASELINE_ACCURACY = 0.2        # Base probability of correct perception (20%)
+
+# Backward compatibility aliases (deprecated)
+PERCEPTION_WINDOW = PARATAXIC_WINDOW
+PERCEPTION_BASELINE_ACCURACY = PARATAXIC_BASELINE_ACCURACY
 
 # =============================================================================
 # EPISODE PARAMETERS

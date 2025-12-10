@@ -27,8 +27,8 @@ class OmniscientTherapyNet(nn.Module):
     - mechanism_type: Discrete(5) -> embedded
     - last_actual_action: Discrete(9) -> embedded
     - last_perceived_action: Discrete(9) -> embedded
-    - misperception_rate: Box([0,1], shape=(1,))
-    - perception_enabled: Discrete(2) -> embedded
+    - parataxic_distortion_rate: Box([0,1], shape=(1,))
+    - parataxic_enabled: Discrete(2) -> embedded
 
     Parameters
     ----------
@@ -57,7 +57,7 @@ class OmniscientTherapyNet(nn.Module):
         self.mechanism_embed = nn.Embedding(5, 8)  # 5 mechanism types
         self.last_actual_action_embed = nn.Embedding(9, 4)  # 9 includes "none" (8)
         self.last_perceived_action_embed = nn.Embedding(9, 4)  # 9 includes "none" (8)
-        self.perception_enabled_embed = nn.Embedding(2, 2)  # Binary: enabled or not
+        self.parataxic_enabled_embed = nn.Embedding(2, 2)  # Binary: enabled or not
 
         # === NEW: U-matrix processor (compress 64 -> 32 dims) ===
         self.u_matrix_processor = nn.Sequential(
@@ -80,8 +80,8 @@ class OmniscientTherapyNet(nn.Module):
         #   mechanism_type_embed: 8
         #   last_actual_action_embed: 4
         #   last_perceived_action_embed: 4
-        #   misperception_rate: 1
-        #   perception_enabled_embed: 2
+        #   parataxic_distortion_rate: 1
+        #   parataxic_enabled_embed: 2
         # TOTAL: 16 + 1 + 400 + 32 + 1 + 1 + 1 + 8 + 4 + 4 + 1 + 2 = 471
         input_dim = 471
 
@@ -141,8 +141,8 @@ class OmniscientTherapyNet(nn.Module):
             mechanism_type = obs.mechanism_type  # type: ignore[attr-defined]
             last_actual = obs.last_actual_action  # type: ignore[attr-defined]
             last_perceived = obs.last_perceived_action  # type: ignore[attr-defined]
-            misperception_rate = obs.misperception_rate  # type: ignore[attr-defined]
-            perception_enabled = obs.perception_enabled  # type: ignore[attr-defined]
+            parataxic_distortion_rate = obs.parataxic_distortion_rate  # type: ignore[attr-defined]
+            parataxic_enabled = obs.parataxic_enabled  # type: ignore[attr-defined]
         else:
             # Fallback for dict-like objects
             client_action = obs['client_action']  # type: ignore[index]
@@ -155,8 +155,8 @@ class OmniscientTherapyNet(nn.Module):
             mechanism_type = obs['mechanism_type']  # type: ignore[index]
             last_actual = obs['last_actual_action']  # type: ignore[index]
             last_perceived = obs['last_perceived_action']  # type: ignore[index]
-            misperception_rate = obs['misperception_rate']  # type: ignore[index]
-            perception_enabled = obs['perception_enabled']  # type: ignore[index]
+            parataxic_distortion_rate = obs['parataxic_distortion_rate']  # type: ignore[index]
+            parataxic_enabled = obs['parataxic_enabled']  # type: ignore[index]
 
         # === Convert to tensors if needed ===
         # Base components
@@ -188,10 +188,10 @@ class OmniscientTherapyNet(nn.Module):
             last_actual = torch.as_tensor(last_actual, dtype=torch.long, device=self.device)
         if not isinstance(last_perceived, torch.Tensor):
             last_perceived = torch.as_tensor(last_perceived, dtype=torch.long, device=self.device)
-        if not isinstance(misperception_rate, torch.Tensor):
-            misperception_rate = torch.as_tensor(misperception_rate, dtype=torch.float32, device=self.device)
-        if not isinstance(perception_enabled, torch.Tensor):
-            perception_enabled = torch.as_tensor(perception_enabled, dtype=torch.long, device=self.device)
+        if not isinstance(parataxic_distortion_rate, torch.Tensor):
+            parataxic_distortion_rate = torch.as_tensor(parataxic_distortion_rate, dtype=torch.float32, device=self.device)
+        if not isinstance(parataxic_enabled, torch.Tensor):
+            parataxic_enabled = torch.as_tensor(parataxic_enabled, dtype=torch.long, device=self.device)
 
         # === Ensure correct device ===
         client_action = client_action.to(self.device)
@@ -204,8 +204,8 @@ class OmniscientTherapyNet(nn.Module):
         mechanism_type = mechanism_type.to(self.device)
         last_actual = last_actual.to(self.device)
         last_perceived = last_perceived.to(self.device)
-        misperception_rate = misperception_rate.to(self.device)
-        perception_enabled = perception_enabled.to(self.device)
+        parataxic_distortion_rate = parataxic_distortion_rate.to(self.device)
+        parataxic_enabled = parataxic_enabled.to(self.device)
 
         # === Process base TherapyNet components ===
         # Embed client action: (batch_size,) -> (batch_size, 16)
@@ -244,12 +244,12 @@ class OmniscientTherapyNet(nn.Module):
         # Last perceived action: (batch_size,) -> (batch_size, 4)
         last_perceived_embed = self.last_perceived_action_embed(last_perceived)
 
-        # Misperception rate: ensure shape (batch_size, 1)
-        if misperception_rate.dim() == 1:
-            misperception_rate = misperception_rate.unsqueeze(-1)
+        # Parataxic distortion rate: ensure shape (batch_size, 1)
+        if parataxic_distortion_rate.dim() == 1:
+            parataxic_distortion_rate = parataxic_distortion_rate.unsqueeze(-1)
 
-        # Perception enabled: (batch_size,) -> (batch_size, 2)
-        perception_enabled_embed = self.perception_enabled_embed(perception_enabled)
+        # Parataxic enabled: (batch_size,) -> (batch_size, 2)
+        parataxic_enabled_embed = self.parataxic_enabled_embed(parataxic_enabled)
 
         # === Concatenate all features ===
         features = torch.cat([
@@ -263,8 +263,8 @@ class OmniscientTherapyNet(nn.Module):
             mechanism_embed,  # 8
             last_actual_embed,  # 4
             last_perceived_embed,  # 4
-            misperception_rate,  # 1
-            perception_enabled_embed,  # 2
+            parataxic_distortion_rate,  # 1
+            parataxic_enabled_embed,  # 2
         ], dim=-1)  # Total: 471
 
         # === Apply layer normalization ===

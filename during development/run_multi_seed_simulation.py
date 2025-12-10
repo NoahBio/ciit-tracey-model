@@ -24,6 +24,7 @@ import argparse
 
 from src.agents.client_agents import (
     with_perception,
+    with_parataxic,
     BondOnlyClient,
     FrequencyAmplifierClient,
     ConditionalAmplifierClient,
@@ -172,7 +173,7 @@ def run_single_simulation(
     mechanism: str,
     initial_memory_pattern: str,
     success_threshold_percentile: float,
-    enable_perception: bool = False,
+    enable_parataxic: bool = False,
     baseline_accuracy: float = 0.2,
     max_sessions: int = 100,
     entropy: float = 3.0,
@@ -220,9 +221,9 @@ def run_single_simulation(
     if 'bond_weighted' in mechanism:
         client_kwargs['bond_power'] = bond_power
 
-    if enable_perception:
+    if enable_parataxic:
         client_kwargs['baseline_accuracy'] = baseline_accuracy
-        client_kwargs['enable_perception'] = True
+        client_kwargs['enable_parataxic'] = True
 
     mechanisms = {
         'bond_only': BondOnlyClient,
@@ -234,8 +235,8 @@ def run_single_simulation(
 
     ClientClass = mechanisms[mechanism]
 
-    if enable_perception:
-        ClientClass = with_perception(ClientClass)
+    if enable_parataxic:
+        ClientClass = with_parataxic(ClientClass)
 
     client = ClientClass(**client_kwargs)
 
@@ -356,10 +357,10 @@ def run_single_simulation(
     final_rs = client.relationship_satisfaction
     final_bond = client.bond
 
-    # Get perception stats if enabled
+    # Get parataxic distortion stats if enabled
     perception_stats = None
-    if enable_perception and hasattr(client, 'get_perception_stats'):
-        perception_stats = client.get_perception_stats()
+    if enable_parataxic and hasattr(client, 'get_parataxic_stats'):
+        perception_stats = client.get_parataxic_stats()
 
     # Calculate gap to threshold
     gap_to_threshold = rs_threshold - closest_rs
@@ -812,7 +813,7 @@ def run_multi_seed_simulation(
     mechanism: str = 'bond_only',
     initial_memory_pattern: str = 'cold_warm',
     success_threshold_percentile: float = 0.8,
-    enable_perception: bool = False,
+    enable_parataxic: bool = False,
     baseline_accuracy: float = 0.2,
     max_sessions: int = 100,
     entropy: float = 3.0,
@@ -841,10 +842,10 @@ def run_multi_seed_simulation(
         Initial memory pattern
     success_threshold_percentile : float
         Percentile of client's achievable RS range (0-1)
-    enable_perception : bool
-        Enable perceptual distortion
+    enable_parataxic : bool
+        Enable parataxic distortion (Sullivan's concept)
     baseline_accuracy : float
-        Baseline perception accuracy
+        Baseline parataxic distortion accuracy
     max_sessions : int
         Maximum number of sessions per run
     entropy : float
@@ -882,8 +883,8 @@ def run_multi_seed_simulation(
         'mechanism': mechanism,
         'initial_memory_pattern': initial_memory_pattern,
         'success_threshold_percentile': success_threshold_percentile,
-        'enable_perception': enable_perception,
-        'baseline_accuracy': baseline_accuracy if enable_perception else 'N/A',
+        'enable_parataxic': enable_parataxic,
+        'baseline_accuracy': baseline_accuracy if enable_parataxic else 'N/A',
         'max_sessions': max_sessions,
         'entropy': entropy,
         'history_weight': history_weight if 'amplifier' in mechanism else 'N/A',
@@ -907,7 +908,7 @@ def run_multi_seed_simulation(
             mechanism=mechanism,
             initial_memory_pattern=initial_memory_pattern,
             success_threshold_percentile=success_threshold_percentile,
-            enable_perception=enable_perception,
+            enable_parataxic=enable_parataxic,
             baseline_accuracy=baseline_accuracy,
             max_sessions=max_sessions,
             entropy=entropy,
@@ -986,16 +987,25 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        '--enable-parataxic',
+        action='store_true',
+        dest='enable_parataxic',
+        help='Enable parataxic distortion (Sullivan\'s concept)'
+    )
+
+    # Backward compatibility for old flag name
+    parser.add_argument(
         '--enable-perception',
         action='store_true',
-        help='Enable perceptual distortion'
+        dest='enable_parataxic',
+        help='[DEPRECATED] Use --enable-parataxic instead'
     )
 
     parser.add_argument(
         '--baseline-accuracy',
         type=float,
         default=0.2,
-        help='Baseline perception accuracy (if perception enabled)'
+        help='Baseline accuracy for parataxic distortion (if enabled)'
     )
 
     parser.add_argument(
@@ -1093,7 +1103,7 @@ if __name__ == "__main__":
         mechanism=args.mechanism,
         initial_memory_pattern=args.pattern,
         success_threshold_percentile=args.threshold,
-        enable_perception=args.enable_perception,
+        enable_parataxic=args.enable_parataxic,
         baseline_accuracy=args.baseline_accuracy,
         max_sessions=args.max_sessions,
         entropy=args.entropy,

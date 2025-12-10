@@ -17,7 +17,7 @@ sys.path.insert(0, str(project_root))
 
 import numpy as np
 from src.agents.client_agents import (
-    with_perception,
+    with_parataxic,
     BondOnlyClient,
     FrequencyAmplifierClient,
     ConditionalAmplifierClient,
@@ -30,7 +30,7 @@ from src.config import (
     sample_u_matrix,
     OCTANTS,
     calculate_success_threshold,
-    PERCEPTION_BASELINE_ACCURACY,
+    PARATAXIC_BASELINE_ACCURACY,
 )
 import argparse
 
@@ -83,7 +83,7 @@ def verbose_session_trace(
     mechanism: str,
     initial_memory_pattern: str,
     success_threshold_percentile: float,
-    enable_perception: bool = False,
+    enable_parataxic: bool = False,
     baseline_accuracy: float = 0.2,
     verbose_sessions: range = range(1, 6),
     max_sessions: int = 100,
@@ -180,9 +180,9 @@ def verbose_session_trace(
     if 'bond_weighted' in mechanism:
         client_kwargs['bond_power'] = bond_power
 
-    if enable_perception:
+    if enable_parataxic:
         client_kwargs['baseline_accuracy'] = baseline_accuracy
-        client_kwargs['enable_perception'] = True
+        client_kwargs['enable_parataxic'] = True
     
     mechanisms = {
         'bond_only': BondOnlyClient,
@@ -194,8 +194,8 @@ def verbose_session_trace(
 
     ClientClass = mechanisms[mechanism]
 
-    if enable_perception:
-        ClientClass = with_perception(ClientClass)
+    if enable_parataxic:
+        ClientClass = with_parataxic(ClientClass)
 
     # Create client directly with the class (not create_client)
     client = ClientClass(**client_kwargs)
@@ -216,11 +216,11 @@ def verbose_session_trace(
         print(f"Bond power: {bond_power:.2f}")
     print(f"Bond alpha: {bond_alpha:.2f}")
     print(f"Bond offset: {bond_offset:.2f}")
-    if enable_perception:
-        print(f"Perception enabled: Yes")
+    if enable_parataxic:
+        print(f"Parataxic distortion enabled: Yes")
         print(f"Baseline accuracy: {baseline_accuracy:.1%}")
     else:
-        print(f"Perception enabled: No (perfect perception)")
+        print(f"Parataxic distortion enabled: No (perfect perception)")
 
     if enable_strategic_therapist:
         print(f"Strategic therapist: Enabled")
@@ -374,12 +374,12 @@ def verbose_session_trace(
         # Update memory
         client.update_memory(client_action, therapist_action)
 
-        # Show perception details if enabled
-        if is_verbose and enable_perception:
-            if hasattr(client, 'perception_history') and client.perception_history:
-                record = client.perception_history[-1]
+        # Show parataxic distortion details if enabled
+        if is_verbose and enable_parataxic:
+            if hasattr(client, 'parataxic_history') and client.parataxic_history:
+                record = client.parataxic_history[-1]
 
-                print("Perception Details:")
+                print("Parataxic Distortion Details:")
                 print(f"  Actual therapist action: {OCTANTS[record.actual_therapist_action]:3s} ({record.actual_therapist_action})")
                 print(f"  Perceived by client:     {OCTANTS[record.perceived_therapist_action]:3s} ({record.perceived_therapist_action})", end="")
 
@@ -391,7 +391,7 @@ def verbose_session_trace(
                 # Show perception stages
                 print(f"  Stage 1 (history-based): {OCTANTS[record.stage1_result]:3s} ({record.stage1_result})", end="")
                 if record.baseline_path_succeeded:
-                    print(f" [baseline path: {PERCEPTION_BASELINE_ACCURACY:.0%}]")
+                    print(f" [baseline path: {PARATAXIC_BASELINE_ACCURACY:.0%}]")
                 else:
                     print(f" [frequency path: {record.computed_accuracy:.2%}]")
 
@@ -536,11 +536,11 @@ def verbose_session_trace(
     print(f"Average per session: {total_bond_change/session:+.4f}")
     print()
 
-    # Perception summary
-    if enable_perception and hasattr(client, 'get_perception_stats'):
-        print("PERCEPTION SUMMARY")
+    # Parataxic distortion summary
+    if enable_parataxic and hasattr(client, 'get_parataxic_stats'):
+        print("PARATAXIC DISTORTION SUMMARY")
         print("-" * 100)
-        pstats = client.get_perception_stats()
+        pstats = client.get_parataxic_stats()
         print(f"Total interactions: {pstats['total_interactions']}")
         print(f"Overall misperception rate: {pstats['overall_misperception_rate']:.1%}")
         print(f"Stage 1 override rate: {pstats['stage1_override_rate']:.1%} (history-based changes)")
@@ -715,16 +715,24 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-    '--enable-perception',
-    action='store_true',
-    help='Enable perceptual distortion (imperfect client perception of therapist actions)'
+        '--enable-parataxic',
+        action='store_true',
+        dest='enable_parataxic',
+        help='Enable parataxic distortion (Sullivan\'s concept of imperfect client perception)'
+    )
+
+    parser.add_argument(
+        '--enable-perception',
+        action='store_true',
+        dest='enable_parataxic',
+        help='[DEPRECATED] Use --enable-parataxic instead'
     )
 
     parser.add_argument(
         '--baseline-accuracy',
         type=float,
         default=0.2,
-        help='Baseline perception accuracy (default: 0.2 = 20%% chance of correct perception via baseline path)'
+        help='Baseline parataxic distortion accuracy (default: 0.2 = 20%% chance of correct perception via baseline path)'
     )
     parser.add_argument(
         '--pattern', '-p',
@@ -856,7 +864,7 @@ if __name__ == "__main__":
         
         kwargs = {
             'mechanism': args.mechanism,
-            'enable_perception': args.enable_perception,
+            'enable_parataxic': args.enable_parataxic,
             'baseline_accuracy': args.baseline_accuracy,
             'initial_memory_pattern': args.pattern,
             'success_threshold_percentile': args.threshold,

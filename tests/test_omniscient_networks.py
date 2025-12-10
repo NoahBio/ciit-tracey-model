@@ -62,7 +62,7 @@ class TestNetworkInitialization:
         assert hasattr(net, "mechanism_embed")
         assert hasattr(net, "last_actual_action_embed")
         assert hasattr(net, "last_perceived_action_embed")
-        assert hasattr(net, "perception_enabled_embed")
+        assert hasattr(net, "parataxic_enabled_embed")
 
         # Check u_matrix processor exists
         assert hasattr(net, "u_matrix_processor")
@@ -111,8 +111,8 @@ class TestNetworkInitialization:
         assert net.last_perceived_action_embed.num_embeddings == 9
         assert net.last_perceived_action_embed.embedding_dim == 4
 
-        assert net.perception_enabled_embed.num_embeddings == 2
-        assert net.perception_enabled_embed.embedding_dim == 2
+        assert net.parataxic_enabled_embed.num_embeddings == 2
+        assert net.parataxic_enabled_embed.embedding_dim == 2
 
     def test_u_matrix_processor_architecture(self):
         """Verify u_matrix processor has correct architecture."""
@@ -589,8 +589,8 @@ class TestInputDimensions:
         # mechanism_embed: 8
         # last_actual_action_embed: 4
         # last_perceived_action_embed: 4
-        # misperception_rate: 1
-        # perception_enabled_embed: 2
+        # parataxic_distortion_rate: 1
+        # parataxic_enabled_embed: 2
         # TOTAL: 16 + 1 + 400 + 32 + 1 + 1 + 1 + 8 + 4 + 4 + 1 + 2 = 471
 
         total = 16 + 1 + 400 + 32 + 1 + 1 + 1 + 8 + 4 + 4 + 1 + 2
@@ -626,7 +626,7 @@ class TestGradientFlow:
         assert net.mechanism_embed.weight.grad is not None
         assert net.last_actual_action_embed.weight.grad is not None
         assert net.last_perceived_action_embed.weight.grad is not None
-        assert net.perception_enabled_embed.weight.grad is not None
+        assert net.parataxic_enabled_embed.weight.grad is not None
 
     def test_gradients_flow_to_u_matrix_processor(self):
         """Verify u_matrix processor receives gradients."""

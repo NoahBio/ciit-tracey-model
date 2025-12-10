@@ -33,7 +33,7 @@ class OmniscientObservationWrapper(gymnasium.Wrapper):
     - Bond level
     - Entropy (temperature parameter)
     - Mechanism type (which expectation mechanism the client uses)
-    - Perception information (if enabled): actual vs perceived actions
+    - Parataxic distortion information (if enabled): actual vs perceived actions
 
     The agent has "perfect information" about client psychology.
     """
@@ -96,19 +96,19 @@ class OmniscientObservationWrapper(gymnasium.Wrapper):
 
             "mechanism_type": spaces.Discrete(5),  # 0-4 for 5 mechanism types
 
-            # === NEW: Perception Info ===
+            # === NEW: Parataxic Distortion Info ===
             "last_actual_action": spaces.Discrete(9),  # 0-7 for octants, 8 for "none"
 
             "last_perceived_action": spaces.Discrete(9),  # 0-7 for octants, 8 for "none"
 
-            "misperception_rate": spaces.Box(
+            "parataxic_distortion_rate": spaces.Box(
                 low=0.0,
                 high=1.0,
                 shape=(1,),
                 dtype=np.float32
-            ),  # Overall misperception rate
+            ),  # Overall parataxic distortion rate (misperception rate)
 
-            "perception_enabled": spaces.Discrete(2),  # 0=disabled, 1=enabled
+            "parataxic_enabled": spaces.Discrete(2),  # 0=disabled, 1=enabled
         })
 
     def reset(
@@ -220,20 +220,20 @@ class OmniscientObservationWrapper(gymnasium.Wrapper):
         mechanism_str = self.env._mechanism  # type: ignore[attr-defined]
         mechanism_idx = self.mechanism_map.get(mechanism_str, 0)
 
-        # === 6. Perception Information ===
+        # === 6. Parataxic Distortion Information ===
         # Get last actual and perceived actions (use sentinel 8 for "none")
         last_actual = getattr(self.env, '_last_actual_action', 8)
         last_perceived = getattr(self.env, '_last_perceived_action', 8)
 
-        # Get perception statistics if available
-        if hasattr(client, 'get_perception_stats'):
-            perception_stats = client.get_perception_stats()
-            misperception_rate = perception_stats.get('overall_misperception_rate', 0.0)
+        # Get parataxic distortion statistics if available
+        if hasattr(client, 'get_parataxic_stats'):
+            parataxic_stats = client.get_parataxic_stats()
+            distortion_rate = parataxic_stats.get('overall_misperception_rate', 0.0)
         else:
-            misperception_rate = 0.0
+            distortion_rate = 0.0
 
-        # Check if perception is enabled
-        perception_enabled = 1 if self.env._enable_perception else 0  # type: ignore[attr-defined]
+        # Check if parataxic distortion is enabled
+        parataxic_enabled = 1 if self.env._enable_parataxic else 0  # type: ignore[attr-defined]
 
         # === Add omniscient components to observation ===
         obs['u_matrix'] = u_matrix_norm.astype(np.float32)
@@ -243,8 +243,8 @@ class OmniscientObservationWrapper(gymnasium.Wrapper):
         obs['mechanism_type'] = mechanism_idx
         obs['last_actual_action'] = last_actual
         obs['last_perceived_action'] = last_perceived
-        obs['misperception_rate'] = np.array([misperception_rate], dtype=np.float32)
-        obs['perception_enabled'] = perception_enabled
+        obs['parataxic_distortion_rate'] = np.array([distortion_rate], dtype=np.float32)
+        obs['parataxic_enabled'] = parataxic_enabled
 
         return obs
 
@@ -259,7 +259,7 @@ def test_wrapper():
     env = TherapyEnv(
         pattern=["cold_stuck"],
         mechanism="frequency_amplifier",
-        enable_perception=True
+        enable_parataxic=True
     )
 
     # Wrap with omniscient wrapper

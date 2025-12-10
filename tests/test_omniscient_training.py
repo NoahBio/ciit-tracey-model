@@ -593,10 +593,10 @@ class TestDifferentConfigurations:
             if terminated or truncated:
                 break
 
-    @pytest.mark.parametrize("enable_perception", [True, False])
-    def test_training_with_perception_settings(self, enable_perception):
-        """Verify training works with perception enabled/disabled."""
-        env = TherapyEnv(enable_perception=enable_perception)
+    @pytest.mark.parametrize("enable_parataxic", [True, False])
+    def test_training_with_parataxic_settings(self, enable_parataxic):
+        """Verify training works with parataxic distortion enabled/disabled."""
+        env = TherapyEnv(enable_parataxic=enable_parataxic)
         wrapped_env = OmniscientObservationWrapper(env)
 
         actor, critic = make_omniscient_networks(
@@ -607,8 +607,8 @@ class TestDifferentConfigurations:
 
         obs, _ = wrapped_env.reset(seed=42)
 
-        # Verify perception_enabled flag matches
-        assert obs["perception_enabled"] == (1 if enable_perception else 0)
+        # Verify parataxic_enabled flag matches
+        assert obs["parataxic_enabled"] == (1 if enable_parataxic else 0)
 
         # Run a few steps
         for _ in range(10):

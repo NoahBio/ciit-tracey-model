@@ -1,5 +1,5 @@
 # Omniscient RL vs Complementary Therapist Benchmark
-# Agent has FULL knowledge of client internal dynamics (u_matrix, RS, bond, entropy, mechanism, perception)
+# Agent has FULL knowledge of client internal dynamics (u_matrix, RS, bond, entropy, mechanism, parataxic distortion)
 # Same environment as RL_vs_Complementary, but with omniscient observation space (471 dims vs 417 dims)
 #
 # Baseline: Complementary strategy achieves 18% success rate (18/100 seeds)
@@ -22,8 +22,8 @@ entropy: 0.1                  # Low entropy for more deterministic client
 bond_alpha: 5.0               # High bond influence
 bond_offset: 0.7
 history_weight: 1.0
-enable_perception: true
-baseline_accuracy: 0.5        # 50% perceptual accuracy
+enable_parataxic: true
+baseline_accuracy: 0.5        # 50% parataxic distortion accuracy
 
 # ===== OMNISCIENT-SPECIFIC =====
 use_omniscient_wrapper: true  # ✨ Enable omniscient observation wrapper (471 dims)
@@ -64,4 +64,4 @@ seed: 42
 # Observation space comparison:
 # - Model-free: 417 dims (client_action: 16, session: 1, history: 400)
 # - Omniscient: 471 dims (+u_matrix: 32 compressed, +RS: 1, +bond: 1, +entropy: 1,
-#                         +mechanism: 8 embedded, +perception: 11)
+#                         +mechanism: 8 embedded, +parataxic_distortion: 11)
