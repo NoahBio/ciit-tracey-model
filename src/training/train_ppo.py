@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+import gymnasium
 import numpy as np
 import torch
 from tianshou.data import Collector, VectorReplayBuffer
@@ -20,7 +21,7 @@ from src.training.config import TrainingConfig, load_config, save_config
 from src.training.networks import make_therapy_networks
 
 
-def make_env(config: TrainingConfig, seed: int) -> TherapyEnv:
+def make_env(config: TrainingConfig, seed: int) -> gymnasium.Env:
     """
     Create a single TherapyEnv instance.
 
@@ -33,8 +34,8 @@ def make_env(config: TrainingConfig, seed: int) -> TherapyEnv:
 
     Returns
     -------
-    TherapyEnv
-        Configured environment instance (potentially wrapped)
+    gymnasium.Env
+        Configured environment instance (potentially wrapped with OmniscientObservationWrapper)
     """
     env = TherapyEnv(**config.get_env_kwargs(), random_state=seed)
 
@@ -196,18 +197,30 @@ def train(
     if resume_from is not None:
         print(f"Resuming from checkpoint: {resume_from}")
         checkpoint = torch.load(resume_from, map_location=device)
-        policy.load_state_dict(checkpoint['model'])
-        optim.load_state_dict(checkpoint['optim'])
 
-        # Store metadata for later tensorboard logger initialization
-        checkpoint_metadata = {
-            'epoch': checkpoint.get('epoch', 0),
-            'env_step': checkpoint.get('env_step', 0),
-            'gradient_step': checkpoint.get('gradient_step', 0)
-        }
-        print(f"Resuming from: epoch={checkpoint_metadata['epoch']}, "
-              f"step={checkpoint_metadata['env_step']}, "
-              f"gradient_step={checkpoint_metadata['gradient_step']}")
+        # Handle both checkpoint formats:
+        # 1. Full checkpoint dict with 'model', 'optim', metadata (checkpoint_*.pth)
+        # 2. Direct state dict (policy_final.pth, policy_best.pth)
+        if isinstance(checkpoint, dict) and 'model' in checkpoint:
+            # Full checkpoint with metadata
+            policy.load_state_dict(checkpoint['model'])
+            optim.load_state_dict(checkpoint['optim'])
+
+            # Store metadata for later tensorboard logger initialization
+            checkpoint_metadata = {
+                'epoch': checkpoint.get('epoch', 0),
+                'env_step': checkpoint.get('env_step', 0),
+                'gradient_step': checkpoint.get('gradient_step', 0)
+            }
+            print(f"Resuming from: epoch={checkpoint_metadata['epoch']}, "
+                  f"step={checkpoint_metadata['env_step']}, "
+                  f"gradient_step={checkpoint_metadata['gradient_step']}")
+        else:
+            # Direct state dict (no metadata)
+            policy.load_state_dict(checkpoint)
+            print("Warning: Loading direct state dict without metadata. "
+                  "Training will restart from step 0. "
+                  "Use checkpoint_*.pth files for proper resumption.")
 
     # Create collectors
     print("Setting up data collectors...")
@@ -239,9 +252,14 @@ def train(
     # So we'll manually restore trainer state instead of using resume_from_log
 
     def save_checkpoint_fn(epoch: int, env_step: int, gradient_step: int) -> str:
-        """Save model checkpoint."""
+        """Save model checkpoint.
+
+        Note: env_step is the CUMULATIVE total from trainer.env_step,
+        which should include restored checkpoint steps after resumption.
+        """
         if env_step % config.save_freq == 0 or env_step >= config.total_timesteps:
             ckpt_path = output_dir / f"checkpoint_{env_step}.pth"
+            print(f"Saving checkpoint: epoch={epoch}, env_step={env_step}, gradient_step={gradient_step}")
             torch.save({
                 'model': policy.state_dict(),
                 'optim': optim.state_dict(),
@@ -301,14 +319,22 @@ def train(
 
         # Manually restore trainer state if resuming (TensorboardLogger.restore_data is buggy)
         if checkpoint_metadata is not None:
+            print(f"\nRestoring trainer state from checkpoint...")
+            print(f"  Checkpoint metadata: epoch={checkpoint_metadata['epoch']}, "
+                  f"env_step={checkpoint_metadata['env_step']}, "
+                  f"gradient_step={checkpoint_metadata['gradient_step']}")
+
             trainer.start_epoch = checkpoint_metadata['epoch']
             trainer.epoch = checkpoint_metadata['epoch']
             trainer.env_step = checkpoint_metadata['env_step']
             trainer._gradient_step = checkpoint_metadata['gradient_step']
-            print(f"Manually restored trainer state: epoch={trainer.epoch}, "
+
+            print(f"  Trainer state after restoration: epoch={trainer.epoch}, "
                   f"env_step={trainer.env_step}, gradient_step={trainer._gradient_step}")
+            print(f"  Training will continue from epoch {trainer.epoch+1} to epoch {trainer.max_epoch}\n")
 
         # Run full training
+        print(f"Starting training loop...")
         result = trainer.run()
 
         # Log final metrics
@@ -434,6 +460,38 @@ def main():
     if args.config is not None:
         print(f"Loading configuration from {args.config}")
         config = load_config(args.config)
+
+        # Override config values with explicitly provided CLI arguments
+        # This allows resuming with different settings (e.g., extended total_timesteps)
+        overrides_applied = False
+
+        if args.total_timesteps != 500_000:  # Default is 500k
+            print(f"  Overriding total_timesteps: {config.total_timesteps} → {args.total_timesteps}")
+            config.total_timesteps = args.total_timesteps
+            overrides_applied = True
+
+        if args.learning_rate != 3e-4:  # Default is 3e-4
+            print(f"  Overriding learning_rate: {config.learning_rate} → {args.learning_rate}")
+            config.learning_rate = args.learning_rate
+            overrides_applied = True
+
+        if args.batch_size != 64:  # Default is 64
+            print(f"  Overriding batch_size: {config.batch_size} → {args.batch_size}")
+            config.batch_size = args.batch_size
+            overrides_applied = True
+
+        if args.n_envs != 8:  # Default is 8
+            print(f"  Overriding n_envs: {config.n_envs} → {args.n_envs}")
+            config.n_envs = args.n_envs
+            overrides_applied = True
+
+        if args.hidden_size != 256:  # Default is 256
+            print(f"  Overriding hidden_size: {config.hidden_size} → {args.hidden_size}")
+            config.hidden_size = args.hidden_size
+            overrides_applied = True
+
+        if overrides_applied:
+            print()  # Add blank line after overrides
     else:
         config = TrainingConfig(
             experiment_name=args.experiment_name,
