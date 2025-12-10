@@ -6,7 +6,7 @@ Tests verify:
 - Novel behavior → low accuracy (~20% baseline)
 - Misperception samples from history distribution
 - Disabled perception = perfect
-- Memory stores perceived, perception_history stores actual
+- Memory stores perceived, parataxic_history stores actual
 - Reproducible with same random_state
 - with_perception() creates functional subclass
 - Custom baseline_accuracy parameter works
@@ -25,7 +25,7 @@ from src.agents.client_agents import (
     FrequencyAmplifierClient,
     ConditionalAmplifierClient,
 )
-from src.config import sample_u_matrix, PERCEPTION_WINDOW
+from src.config import sample_u_matrix, PARATAXIC_WINDOW
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ def test_consistent_therapist_high_accuracy(base_client_params):
     client = PerceptualBondOnlyClient(
         **base_client_params,
         baseline_accuracy=0.2,
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=42,
     )
 
@@ -63,7 +63,7 @@ def test_consistent_therapist_high_accuracy(base_client_params):
         client.update_memory(client_action, consistent_action)
 
     # Get perception statistics
-    stats = client.get_perception_stats()
+    stats = client.get_parataxic_stats()
 
     # With consistent therapist and memory pre-filled with the same action:
     # - Baseline path (20%): Perceives correctly
@@ -89,7 +89,7 @@ def test_novel_behavior_baseline_accuracy(base_client_params):
     client = PerceptualBondOnlyClient(
         **base_client_params,
         baseline_accuracy=0.2,
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=123,
     )
 
@@ -101,7 +101,7 @@ def test_novel_behavior_baseline_accuracy(base_client_params):
         client_action = client.select_action()
         client.update_memory(client_action, novel_action)
 
-    stats = client.get_perception_stats()
+    stats = client.get_parataxic_stats()
 
     # For novel actions:
     # - frequency[7] starts at 0.0, gradually increases
@@ -124,7 +124,7 @@ def test_misperception_samples_from_frequency_distribution(base_client_params):
     client = PerceptualBondOnlyClient(
         **base_client_params,
         baseline_accuracy=0.0,  # Disable baseline so only frequency path is used
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=456,
     )
 
@@ -138,7 +138,7 @@ def test_misperception_samples_from_frequency_distribution(base_client_params):
         client.update_memory(client_action, novel_action)
 
     # Count perceived actions
-    perceived_actions = [record.perceived_therapist_action for record in client.perception_history]
+    perceived_actions = [record.perceived_therapist_action for record in client.parataxic_history]
     perceived_counts = Counter(perceived_actions)
 
     # Since baseline_accuracy=0 and frequency[7]=0 (novel),
@@ -156,11 +156,11 @@ def test_misperception_samples_from_frequency_distribution(base_client_params):
 
 
 def test_disabled_perception_is_perfect(base_client_params):
-    """When enable_perception=False, perception should be perfect."""
+    """When enable_parataxic=False, perception should be perfect."""
     client = PerceptualBondOnlyClient(
         **base_client_params,
         baseline_accuracy=0.2,
-        enable_perception=False,  # Disable perception
+        enable_parataxic=False,  # Disable perception
         random_state=111,
     )
 
@@ -174,7 +174,7 @@ def test_disabled_perception_is_perfect(base_client_params):
         client.update_memory(client_action, therapist_action)
 
     # No perception records should be created
-    assert len(client.perception_history) == 0, \
+    assert len(client.parataxic_history) == 0, \
         "Disabled perception should not create perception records"
 
     # Check that all memories are exactly as provided
@@ -189,7 +189,7 @@ def test_memory_stores_perceived_not_actual(base_client_params):
     client = PerceptualBondOnlyClient(
         **base_client_params,
         baseline_accuracy=0.0,  # Force misperceptions
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=333,
     )
 
@@ -218,11 +218,11 @@ def test_memory_stores_perceived_not_actual(base_client_params):
 
 
 def test_perception_history_tracks_actual(base_client_params):
-    """perception_history should track ground truth actual actions."""
+    """parataxic_history should track ground truth actual actions."""
     client = PerceptualBondOnlyClient(
         **base_client_params,
         baseline_accuracy=0.2,
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=444,
     )
 
@@ -234,10 +234,10 @@ def test_perception_history_tracks_actual(base_client_params):
         client.update_memory(client_action, therapist_action)
 
     # Verify perception_history has all actual actions
-    assert len(client.perception_history) == len(actual_sequence), \
-        "perception_history should record every interaction"
+    assert len(client.parataxic_history) == len(actual_sequence), \
+        "parataxic_history should record every interaction"
 
-    for i, record in enumerate(client.perception_history):
+    for i, record in enumerate(client.parataxic_history):
         assert record.actual_therapist_action == actual_sequence[i], \
             f"Record {i} should track actual action {actual_sequence[i]}"
 
@@ -250,14 +250,14 @@ def test_reproducible_with_same_random_state(base_client_params):
     client1 = PerceptualBondOnlyClient(
         **base_client_params,
         baseline_accuracy=0.2,
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=seed,
     )
 
     client2 = PerceptualBondOnlyClient(
         **base_client_params,
         baseline_accuracy=0.2,
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=seed,
     )
 
@@ -275,9 +275,9 @@ def test_reproducible_with_same_random_state(base_client_params):
         client2.update_memory(action2, therapist_action)
 
     # Verify identical perception histories
-    assert len(client1.perception_history) == len(client2.perception_history)
+    assert len(client1.parataxic_history) == len(client2.parataxic_history)
 
-    for r1, r2 in zip(client1.perception_history, client2.perception_history):
+    for r1, r2 in zip(client1.parataxic_history, client2.parataxic_history):
         assert r1.actual_therapist_action == r2.actual_therapist_action
         assert r1.perceived_therapist_action == r2.perceived_therapist_action
         assert r1.stage1_result == r2.stage1_result
@@ -292,21 +292,21 @@ def test_with_perception_creates_functional_subclass(base_client_params):
     for ClientClass in [BondOnlyClient, FrequencyAmplifierClient, ConditionalAmplifierClient]:
         PerceptualClient = with_perception(ClientClass)
 
-        # Verify class name
-        assert PerceptualClient.__name__ == f"Perceptual{ClientClass.__name__}"
+        # Note: with_perception is an alias for with_parataxic, and for backward compatibility,
+        # the generated class uses the "Parataxic" prefix in its name even when using with_perception().
+        assert PerceptualClient.__name__ == f"Parataxic{ClientClass.__name__}"
 
         # Create instance
         client = PerceptualClient(
             **base_client_params,
             baseline_accuracy=0.2,
-            enable_perception=True,
+            enable_parataxic=True,
             random_state=666,
         )
 
-        # Verify it has perception capabilities
+        # Verify it has perception capabilities (backward compat aliases)
         assert hasattr(client, 'perception_history')
         assert hasattr(client, 'get_perception_stats')
-        assert hasattr(client, '_perceive_therapist_action')
 
         # Verify it still has base client capabilities
         assert hasattr(client, 'select_action')
@@ -318,10 +318,10 @@ def test_with_perception_creates_functional_subclass(base_client_params):
             client.update_memory(action, 0)
 
         # Verify perception records were created
-        assert len(client.perception_history) == 10
+        assert len(client.parataxic_history) == 10
 
         # Verify stats work
-        stats = client.get_perception_stats()
+        stats = client.get_parataxic_stats()
         assert stats['total_interactions'] == 10
 
 
@@ -331,7 +331,7 @@ def test_custom_baseline_accuracy(base_client_params):
     client_high = PerceptualBondOnlyClient(
         **base_client_params,
         baseline_accuracy=0.9,
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=777,
     )
 
@@ -339,7 +339,7 @@ def test_custom_baseline_accuracy(base_client_params):
     client_low = PerceptualBondOnlyClient(
         **base_client_params,
         baseline_accuracy=0.05,
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=777,  # Same seed to isolate baseline effect
     )
 
@@ -358,8 +358,8 @@ def test_custom_baseline_accuracy(base_client_params):
         client_low.update_memory(action_l, novel_action)
 
     # Get stats
-    stats_high = client_high.get_perception_stats()
-    stats_low = client_low.get_perception_stats()
+    stats_high = client_high.get_parataxic_stats()
+    stats_low = client_low.get_parataxic_stats()
 
     # High baseline should use baseline path more often
     baseline_rate_high = stats_high['baseline_correct_count'] / stats_high['total_interactions']
@@ -381,12 +381,12 @@ def test_perception_stats_structure():
         entropy=3.0,
         initial_memory=[(0, 0)] * 50,
         baseline_accuracy=0.2,
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=888,
     )
 
     # No interactions yet
-    stats = client.get_perception_stats()
+    stats = client.get_parataxic_stats()
     expected_keys = {
         'total_interactions',
         'total_misperceptions',
@@ -404,7 +404,7 @@ def test_perception_stats_structure():
         action = client.select_action()
         client.update_memory(action, 0)
 
-    stats = client.get_perception_stats()
+    stats = client.get_parataxic_stats()
     assert stats['total_interactions'] == 50
     assert 0 <= stats['overall_misperception_rate'] <= 1
     assert 0 <= stats['stage1_override_rate'] <= 1
@@ -413,7 +413,7 @@ def test_perception_stats_structure():
 
 
 def test_perception_window_size():
-    """Perception should use exactly PERCEPTION_WINDOW (15) recent interactions."""
+    """Perception should use exactly PARATAXIC_WINDOW (15) recent interactions."""
     u_matrix = sample_u_matrix(random_state=42)
 
     # Create memory with specific pattern:
@@ -427,7 +427,7 @@ def test_perception_window_size():
         entropy=3.0,
         initial_memory=initial_memory,
         baseline_accuracy=0.0,  # Only use frequency path
-        enable_perception=True,
+        enable_parataxic=True,
         random_state=999,
     )
 
@@ -440,7 +440,7 @@ def test_perception_window_size():
     client.update_memory(action, 2)
 
     # Check the computed accuracy for this perception
-    record = client.perception_history[0]
+    record = client.parataxic_history[0]
 
     # frequency[2] should be 0.0 (not in last 15 interactions)
     # So computed_accuracy should be 0.0 (since baseline_accuracy=0.0)

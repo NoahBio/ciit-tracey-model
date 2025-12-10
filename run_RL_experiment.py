@@ -149,7 +149,7 @@ def generate_report(
         f.write(f"- **Bond Alpha**: {config.bond_alpha}\n")
         f.write(f"- **Bond Offset**: {config.bond_offset}\n")
         f.write(f"- **History Weight**: {config.history_weight}\n")
-        f.write(f"- **Enable Perception**: {config.enable_perception}\n")
+        f.write(f"- **Enable Parataxic Distortion**: {config.enable_parataxic}\n")
         f.write(f"- **Baseline Accuracy**: {config.baseline_accuracy}\n")
         f.write("\n")
 

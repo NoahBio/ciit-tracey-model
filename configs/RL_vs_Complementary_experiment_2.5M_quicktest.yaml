@@ -7,7 +7,7 @@
 # Configuration matches baseline experiment exactly:
 # - cold_stuck pattern with frequency_amplifier
 # - threshold=0.8, entropy=0.1, bond_alpha=5.0
-# - 100-session episodes with 50% perceptual accuracy
+# - 100-session episodes with 50% parataxic distortion accuracy
 #
 # Training: 2.5M timesteps (~10 hours) - Quick validation run
 
@@ -23,7 +23,7 @@ entropy: 0.1
 bond_alpha: 5.0
 bond_offset: 0.7
 history_weight: 1.0
-enable_perception: true
+enable_parataxic: true
 baseline_accuracy: 0.5
 
 # RL parameters (PPO)

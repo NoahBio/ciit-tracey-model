@@ -75,8 +75,8 @@ def test_smoke_omniscient_wrapper():
     assert "mechanism_type" in obs
     assert "last_actual_action" in obs
     assert "last_perceived_action" in obs
-    assert "misperception_rate" in obs
-    assert "perception_enabled" in obs
+    assert "parataxic_distortion_rate" in obs
+    assert "parataxic_enabled" in obs
 
     print(f"✓ All omniscient components present")
 

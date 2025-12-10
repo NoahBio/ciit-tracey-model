@@ -493,8 +493,11 @@ def main():
         help='Initial memory pattern (can be optimized if in --optimize-params)'
     )
     parser.add_argument('--threshold', type=float, default=0.8, help='Success threshold percentile')
-    parser.add_argument('--enable-perception', action='store_true', help='Enable perceptual distortion')
-    parser.add_argument('--baseline-accuracy', type=float, default=0.2, help='Baseline perception accuracy')
+    parser.add_argument('--enable-parataxic', action='store_true', dest='enable_parataxic',
+                        help='Enable parataxic distortion (Sullivan\'s concept)')
+    parser.add_argument('--enable-perception', action='store_true', dest='enable_parataxic',
+                        help='[DEPRECATED] Use --enable-parataxic instead')
+    parser.add_argument('--baseline-accuracy', type=float, default=0.2, help='Baseline parataxic distortion accuracy')
     parser.add_argument('--max-sessions', type=int, default=100, help='Maximum sessions per run')
     parser.add_argument('--entropy', type=float, default=3.0, help='Client entropy')
     parser.add_argument('--history-weight', type=float, default=1.0, help='History weight for amplifiers')
@@ -525,7 +528,7 @@ def main():
         'mechanism': args.mechanism,
         'pattern': args.pattern,
         'threshold': args.threshold,
-        'enable_perception': args.enable_perception,
+        'enable_parataxic': args.enable_parataxic,
         'baseline_accuracy': args.baseline_accuracy,
         'max_sessions': args.max_sessions,
         'entropy': args.entropy,

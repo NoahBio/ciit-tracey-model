@@ -61,7 +61,7 @@ class TestEnvironmentCreation:
             history_weight=0.5,
             bond_alpha=3.0,
             bond_offset=0.6,
-            enable_perception=False,
+            enable_parataxic=False,
             baseline_accuracy=0.3,
             random_state=42
         )

@@ -9,14 +9,20 @@ from .frequency_amplifier_client import FrequencyAmplifierClient
 from .conditional_amplifier_client import ConditionalAmplifierClient
 from .bond_weighted_conditional_amplifier_client import BondWeightedConditionalAmplifier
 from .bond_weighted_frequency_amplifier_client import BondWeightedFrequencyAmplifier
-from .perceptual_distortion import (
-    PerceptionRecord,
-    PerceptualClientMixin,
-    with_perception,
+from .parataxic_distortion import (
+    ParataxicRecord,
+    ParataxicClientMixin,
+    with_parataxic,
 )
 
-# Create pre-composed perceptual variant
-PerceptualBondOnlyClient = with_perception(BondOnlyClient)
+# Backward compatibility aliases (deprecated)
+PerceptionRecord = ParataxicRecord
+PerceptualClientMixin = ParataxicClientMixin
+with_perception = with_parataxic
+
+# Create pre-composed parataxic variant
+ParataxicBondOnlyClient = with_parataxic(BondOnlyClient)
+PerceptualBondOnlyClient = ParataxicBondOnlyClient  # Backward compatibility alias
 
 __all__ = [
     'BaseClientAgent',
@@ -25,10 +31,17 @@ __all__ = [
     'ConditionalAmplifierClient',
     'BondWeightedConditionalAmplifier',
     'BondWeightedFrequencyAmplifier',
+    # New parataxic distortion names
+    'ParataxicRecord',
+    'ParataxicClientMixin',
+    'with_parataxic',
+    'ParataxicBondOnlyClient',
+    # Backward compatibility aliases (deprecated)
     'PerceptionRecord',
     'PerceptualClientMixin',
     'with_perception',
     'PerceptualBondOnlyClient',
+    # Factory functions
     'create_client',
     'create_problematic_client',
 ]

@@ -14,8 +14,8 @@ Your client architecture is designed to model therapy clients who:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   PERCEPTUAL LAYER                          │
-│              (perceptual_distortion.py)                     │
+│                   parataxic LAYER                          │
+│              (parataxic_distortion.py)                     │
 │  - Optional: Distorts therapist actions before memory       │
 │  - Can be added to ANY client type via mixing              │
 └─────────────────────────────────────────────────────────────┘
@@ -217,7 +217,7 @@ This diagram shows EVERYTHING that happens in one therapy session:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │         STEP 3: CLIENT PERCEIVES THERAPIST ACTION                       │
 │         client._perceive_therapist_action(actual_action=2)              │
-│         (Only happens if using PerceptualClientMixin)                   │
+│         (Only happens if using parataxicClientMixin)                   │
 └─────────────────────────────────────────────────────────────────────────┘
                                     ↓
 │  ┌────────────────────────────────────────────────────────────────┐   │
@@ -286,7 +286,7 @@ This diagram shows EVERYTHING that happens in one therapy session:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │         STEP 4: UPDATE MEMORY                                           │
 │         client.update_memory(client_action=2, therapist_action=2)       │
-│         (Perceptual version stores perceived, not actual)               │
+│         (parataxic version stores perceived, not actual)               │
 └─────────────────────────────────────────────────────────────────────────┘
                                     ↓
 │  ┌────────────────────────────────────────────────────────────────┐   │
@@ -756,7 +756,7 @@ def generate_problematic_memory(
 
 ---
 
-## Part 2: Perceptual Distortion (`perceptual_distortion.py`)
+## Part 2: parataxic Distortion (`parataxic_distortion.py`)
 
 ### What Problem Does This Solve?
 
@@ -767,7 +767,7 @@ In real therapy, clients don't perceive therapist actions perfectly. A therapist
 **Mixin** = a class that adds functionality to other classes through inheritance.
 
 ```python
-class PerceptualClientMixin:
+class ParataxicClientMixin:
     """Adds imperfect perception to ANY client type."""
 
     def __init__(
@@ -840,22 +840,22 @@ This is a clever way to add perception to any client type:
 ```python
 def with_perception(client_class):
     """Add perception to any client type."""
-    class PerceptualClient(PerceptualClientMixin, client_class):
+    class parataxicClient(parataxicClientMixin, client_class):
         pass
 
-    PerceptualClient.__name__ = f"Perceptual{client_class.__name__}"
-    return PerceptualClient
+    parataxicClient.__name__ = f"parataxic{client_class.__name__}"
+    return parataxicClient
 ```
 
 **Usage:**
 ```python
 from src.agents.client_agents import BondOnlyClient, with_perception
 
-# Create perceptual version
-PerceptualBondOnly = with_perception(BondOnlyClient)
+# Create parataxic version
+parataxicBondOnly = with_perception(BondOnlyClient)
 
 # Use it
-client = PerceptualBondOnly(
+client = parataxicBondOnly(
     u_matrix=my_matrix,
     entropy=3.0,
     initial_memory=my_memory,
@@ -1001,7 +1001,7 @@ Frequently-seen negative outcomes get WORSE!
 
 ## How These Pieces Work Together: A Session Walkthrough
 
-Let's trace a complete therapy session with a **Perceptual Frequency-Amplifier Client**:
+Let's trace a complete therapy session with a **parataxic Frequency-Amplifier Client**:
 
 ### Session N: Before the Interaction
 
@@ -1075,7 +1075,7 @@ perceived_action = stage1_result  # = 2
 
 ```python
 client.update_memory(client_action=2, therapist_action=2)
-# Actually calls the perceptual version, which stores:
+# Actually calls the parataxic version, which stores:
 # (client_action=2, perceived_action=2)
 
 # Memory now:
@@ -1144,17 +1144,17 @@ class FrequencyAmplifierClient(BaseClientAgent):
 
 ```python
 # Multiple inheritance: left-to-right priority
-class PerceptualFrequencyClient(PerceptualClientMixin, FrequencyAmplifierClient):
+class parataxicFrequencyClient(parataxicClientMixin, FrequencyAmplifierClient):
     pass
 
 # Method Resolution Order (MRO):
-# 1. PerceptualFrequencyClient (empty, just combines)
-# 2. PerceptualClientMixin (overrides update_memory)
+# 1. parataxicFrequencyClient (empty, just combines)
+# 2. parataxicClientMixin (overrides update_memory)
 # 3. FrequencyAmplifierClient (overrides _calculate_expected_payoffs)
 # 4. BaseClientAgent (provides base functionality)
 
 # When you call client.update_memory():
-# - Finds it in PerceptualClientMixin (uses that version)
+# - Finds it in parataxicClientMixin (uses that version)
 # - That version calls super().update_memory()
 # - Which finds BaseClientAgent.update_memory()
 ```
@@ -1211,7 +1211,7 @@ from src.config import (
    - Process: Softmax → probabilities → sample
    - Output: Chosen client action (0-7)
 
-3. **Perception** (if perceptual client) (`_perceive_therapist_action`)
+3. **Perception** (if parataxic client) (`_perceive_therapist_action`)
    - Input: Actual therapist action, recent memory
    - Process: History-based perception (baseline path or frequency-weighted path)
    - Output: Perceived therapist action
@@ -1246,7 +1246,7 @@ from src.config import (
 - **RS calculation**: `src/agents/client_agents/base_client.py:100-121`
 - **Bond calculation**: `src/agents/client_agents/base_client.py:123-131`, `src/config.py:166-212`
 - **Action selection**: `src/agents/client_agents/base_client.py:172-193`
-- **Perception logic**: `src/agents/client_agents/perceptual_distortion.py:112-183`
+- **Perception logic**: `src/agents/client_agents/parataxic_distortion.py:112-183`
 - **Frequency amplification**: `src/agents/client_agents/frequency_amplifier_client.py:87-125`
 - **Utility matrix bounds**: `src/config.py:47-100`
 
@@ -1262,14 +1262,14 @@ from src.config import (
 | **BondWeightedFrequencyClient** | [`src/agents/client_agents/bond_weighted_frequency_amplifier_client.py`](../src/agents/client_agents/bond_weighted_frequency_amplifier_client.py) | History weight varies by bond | High bond → more history influence, Low bond → less history influence |
 | **BondWeightedConditionalClient** | [`src/agents/client_agents/bond_weighted_conditional_amplifier_client.py`](../src/agents/client_agents/bond_weighted_conditional_amplifier_client.py) | Conditional + bond-weighted | Combines conditional probabilities with bond-modulated history weight |
 
-**All five can be wrapped with `with_perception()` to add perceptual distortion!**
+**All five can be wrapped with `with_perception()` to add parataxic distortion!**
 
 ### Core Architecture Files
 
 | Component | File Location | Description |
 |-----------|---------------|-------------|
 | **Base Client** | [`src/agents/client_agents/base_client.py`](../src/agents/client_agents/base_client.py) | Shared functionality: memory, RS, bond, action selection, dropout |
-| **Perceptual Distortion** | [`src/agents/client_agents/perceptual_distortion.py`](../src/agents/client_agents/perceptual_distortion.py) | Mixin for adding history-based perception to any client type |
+| **parataxic Distortion** | [`src/agents/client_agents/parataxic_distortion.py`](../src/agents/client_agents/parataxic_distortion.py) | Mixin for adding history-based perception to any client type |
 | **Global Config** | [`src/config.py`](../src/config.py) | U-matrix, memory weights, bond calculations, global parameters |
 
 ---

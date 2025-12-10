@@ -26,7 +26,7 @@ class TestTrainingConfig:
         assert config.bond_alpha is None
         assert config.bond_offset == 0.7
         assert config.history_weight == 1.0
-        assert config.enable_perception is True
+        assert config.enable_parataxic is True
         assert config.baseline_accuracy == 0.5
         assert config.total_timesteps == 500_000
         assert config.n_envs == 8
@@ -196,7 +196,7 @@ class TestTrainingConfig:
             bond_alpha=0.3,
             bond_offset=0.6,
             history_weight=0.8,
-            enable_perception=False,
+            enable_parataxic=False,
             baseline_accuracy=0.7
         )
 
@@ -210,7 +210,7 @@ class TestTrainingConfig:
         assert env_kwargs['bond_alpha'] == 0.3
         assert env_kwargs['bond_offset'] == 0.6
         assert env_kwargs['history_weight'] == 0.8
-        assert env_kwargs['enable_perception'] is False
+        assert env_kwargs['enable_parataxic'] is False
         assert env_kwargs['baseline_accuracy'] == 0.7
 
         # Should not include RL or logging parameters
@@ -322,7 +322,7 @@ class TestConfigSaveLoad:
                 patterns=["cold_stuck"],
                 threshold=0.8,
                 max_sessions=100,
-                enable_perception=True,
+                enable_parataxic=True,
                 bond_alpha=None,
                 learning_rate=3e-4
             )
@@ -334,7 +334,7 @@ class TestConfigSaveLoad:
             assert isinstance(loaded_config.patterns, list)
             assert isinstance(loaded_config.threshold, float)
             assert isinstance(loaded_config.max_sessions, int)
-            assert isinstance(loaded_config.enable_perception, bool)
+            assert isinstance(loaded_config.enable_parataxic, bool)
             assert loaded_config.bond_alpha is None
             assert isinstance(loaded_config.learning_rate, float)
 

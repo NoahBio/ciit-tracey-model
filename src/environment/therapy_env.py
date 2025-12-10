@@ -20,7 +20,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from src.agents.client_agents import (
-    with_perception,
+    with_parataxic,
     BaseClientAgent,
     BondOnlyClient,
     FrequencyAmplifierClient,
@@ -98,10 +98,10 @@ class TherapyEnv(gymnasium.Env):
         Sigmoid steepness for bond calculation. If None, uses config.BOND_ALPHA
     bond_offset : float, default=0.7
         Sigmoid inflection point for bond calculation (0.7 = 70th percentile)
-    enable_perception : bool, default=True
-        Whether to enable perceptual distortion in client
+    enable_parataxic : bool, default=True
+        Whether to enable parataxic distortion in client (Sullivan's concept)
     baseline_accuracy : float, default=0.5
-        Baseline perception accuracy if perception enabled
+        Baseline accuracy for parataxic distortion if enabled
     random_state : int or None, default=None
         Random seed for reproducibility
 
@@ -132,7 +132,7 @@ class TherapyEnv(gymnasium.Env):
         history_weight: float = 1.0,
         bond_alpha: Optional[float] = None,
         bond_offset: float = 0.7,
-        enable_perception: bool = True,
+        enable_parataxic: bool = True,
         baseline_accuracy: float = 0.5,
         random_state: Optional[int] = None,
     ) -> None:
@@ -158,7 +158,7 @@ class TherapyEnv(gymnasium.Env):
         self._history_weight = history_weight
         self._bond_alpha = bond_alpha
         self._bond_offset = bond_offset
-        self._enable_perception = enable_perception
+        self._enable_parataxic = enable_parataxic
         self._baseline_accuracy = baseline_accuracy
 
         # Initialize random state
@@ -172,7 +172,7 @@ class TherapyEnv(gymnasium.Env):
         self._rs_threshold: float = 0.0
         self._interaction_history: deque = deque(maxlen=25)
 
-        # Perception tracking (for omniscient wrapper)
+        # Parataxic distortion tracking (for omniscient wrapper)
         self._last_actual_action: int = 8  # Sentinel for "none"
         self._last_perceived_action: int = 8  # Sentinel for "none"
 
@@ -293,7 +293,7 @@ class TherapyEnv(gymnasium.Env):
         if 'amplifier' in self._mechanism:
             client_kwargs['history_weight'] = self._history_weight
 
-        if self._enable_perception:
+        if self._enable_parataxic:
             client_kwargs['baseline_accuracy'] = self._baseline_accuracy
 
         # Create client
@@ -301,8 +301,8 @@ class TherapyEnv(gymnasium.Env):
         assert self._np_random is not None
 
         ClientClass = self._get_client_class(self._mechanism)
-        if self._enable_perception:
-            ClientClass = with_perception(ClientClass)
+        if self._enable_parataxic:
+            ClientClass = with_parataxic(ClientClass)
 
         self._client = ClientClass(**client_kwargs)
 
@@ -379,17 +379,17 @@ class TherapyEnv(gymnasium.Env):
         self._client.update_memory(client_action, therapist_action)
 
         # Track actual vs perceived actions (for omniscient wrapper)
-        if self._enable_perception and hasattr(self._client, 'perception_history'):
-            if len(self._client.perception_history) > 0:  # type: ignore[attr-defined]
-                last_record = self._client.perception_history[-1]  # type: ignore[attr-defined]
+        if self._enable_parataxic and hasattr(self._client, 'parataxic_history'):
+            if len(self._client.parataxic_history) > 0:  # type: ignore[attr-defined]
+                last_record = self._client.parataxic_history[-1]  # type: ignore[attr-defined]
                 self._last_actual_action = last_record.actual_therapist_action
                 self._last_perceived_action = last_record.perceived_therapist_action
             else:
-                # No perception history yet, treat as identical
+                # No parataxic history yet, treat as identical
                 self._last_actual_action = therapist_action
                 self._last_perceived_action = therapist_action
         else:
-            # Perception disabled or no perception history
+            # Parataxic distortion disabled or no history
             self._last_actual_action = therapist_action
             self._last_perceived_action = therapist_action
 
@@ -433,9 +433,9 @@ class TherapyEnv(gymnasium.Env):
             'max_reached': bool(max_reached),
         }
 
-        # Add perception stats if available
-        if self._enable_perception and hasattr(self._client, 'get_perception_stats'):
-            info['perception_stats'] = self._client.get_perception_stats() # type: ignore[attr-defined]
+        # Add parataxic distortion stats if available
+        if self._enable_parataxic and hasattr(self._client, 'get_parataxic_stats'):
+            info['parataxic_stats'] = self._client.get_parataxic_stats() # type: ignore[attr-defined]
 
         return obs, reward, terminated, truncated, info
 

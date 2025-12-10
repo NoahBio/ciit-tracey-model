@@ -31,8 +31,8 @@ class TrainingConfig:
     bond_alpha: Optional[float] = None  # None = use config.BOND_ALPHA
     bond_offset: float = 0.7
     history_weight: float = 1.0
-    enable_perception: bool = True
-    baseline_accuracy: float = 0.5
+    enable_parataxic: bool = True  # Enable parataxic distortion (Sullivan's concept)
+    baseline_accuracy: float = 0.5  # Baseline accuracy for parataxic distortion
 
     # === RL Algorithm Parameters (PPO defaults) ===
     total_timesteps: int = 500_000
@@ -110,7 +110,7 @@ class TrainingConfig:
             'history_weight': self.history_weight,
             'bond_alpha': self.bond_alpha,
             'bond_offset': self.bond_offset,
-            'enable_perception': self.enable_perception,
+            'enable_parataxic': self.enable_parataxic,
             'baseline_accuracy': self.baseline_accuracy,
         }
 
@@ -153,6 +153,10 @@ def load_config(path: str | Path) -> TrainingConfig:
     # Handle None case (empty YAML)
     if config_dict is None:
         config_dict = {}
+
+    # Backward compatibility: map old parameter names to new ones
+    if 'enable_perception' in config_dict and 'enable_parataxic' not in config_dict:
+        config_dict['enable_parataxic'] = config_dict.pop('enable_perception')
 
     try:
         return TrainingConfig(**config_dict)

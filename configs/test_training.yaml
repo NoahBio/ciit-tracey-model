@@ -12,7 +12,7 @@ entropy: 0.5
 bond_alpha: null
 bond_offset: 0.7
 history_weight: 1.0
-enable_perception: true
+enable_parataxic: true
 baseline_accuracy: 0.5
 
 # RL parameters (small for quick testing)
