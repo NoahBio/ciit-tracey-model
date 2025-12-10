@@ -2,10 +2,16 @@
 
 Computational validation of Tracey's Three-Step Model of therapy using Contemporary Integrative Interpersonal Theory (CIIT) and Reinforcement Learning.
 
-## Research Questions
+## Research Questions (10.12.2025)
 
-1. **Model-Free (RQ1)**: Does the Three-Step Model emerge naturally from a client-therapist interaction based in CIIT?
-2. **Model-Based (RQ2)**: Does Tracey's strategy work optimally given certain client dynamics?
+1. Specifying the assumption space for either side of the great psychotherapy debate through agent-based modeling.
+  -> Under which conditions does a strategic therapist outperform a simply complementary therapist?
+2. Under which conditions does the three-step pattern emerge even in a computationally simulated therapeutic dyad? 
+3. What is a parsimonious computational simulation of interpersonal transactional cycles to study the above question?
+4. What parts of CIIT relevant to Tracey’s-Three-Step model are formally underspecified? What parts of Tracey’s Model are too vague to test through ABM?
+5. Why was it so difficult to stop the always-complementary therapist from being successful?
+
+
 
 ## Technical Stack
 
