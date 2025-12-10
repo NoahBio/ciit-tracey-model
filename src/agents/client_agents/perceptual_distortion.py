@@ -1,5 +1,6 @@
 """
 Imperfect perception system for CIIT-Tracey client agents.
+Corresponds to "parataxic distortion" in interpersonal theory.
 
 Implements a two-stage perceptual distortion model where clients may misperceive
 therapist actions based on their interaction history.
