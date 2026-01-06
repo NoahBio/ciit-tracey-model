@@ -229,7 +229,7 @@ HISTORY_WEIGHT = 1.0  # Weighting factor for client history in utility calculati
 # Models Sullivan's concept of parataxic distortion - tendency to perceive present
 # relationships through the lens of past experiences
 PARATAXIC_WINDOW = 15                    # Number of recent interactions to consider for distortion
-PARATAXIC_BASELINE_ACCURACY = 0.2        # Base probability of correct perception (20%)
+PARATAXIC_BASELINE_ACCURACY = 0.5        # Base probability of correct perception (50%)
 
 # Backward compatibility aliases (deprecated)
 PERCEPTION_WINDOW = PARATAXIC_WINDOW
