@@ -118,6 +118,10 @@ class OmniscientStrategicTherapist:
         client_ref,
         perception_window: int = 15,
         baseline_accuracy: float = 0.2,
+        seeding_benefit_scaling: float = 0.3,
+        skip_seeding_accuracy_threshold: float = 0.9,
+        quick_seed_actions_threshold: int = 3,
+        abort_consecutive_failures_threshold: int = 5,
     ):
         """Initialize the omniscient strategic therapist.
 
@@ -125,10 +129,20 @@ class OmniscientStrategicTherapist:
             client_ref: Reference to client agent (for reading state)
             perception_window: Size of perception window for parataxic distortion
             baseline_accuracy: Baseline perception accuracy parameter
+            seeding_benefit_scaling: Scaling factor for expected seeding benefit (0.1-2.0)
+            skip_seeding_accuracy_threshold: Skip seeding if accuracy above this (0.75-0.95)
+            quick_seed_actions_threshold: "Just do it" if actions_needed <= this (1-5)
+            abort_consecutive_failures_threshold: Abort after this many failures (4-9)
         """
         self.client_ref = client_ref
         self.perception_window = perception_window
         self.baseline_accuracy = baseline_accuracy
+
+        # Seeding strategy hyperparameters
+        self.seeding_benefit_scaling = seeding_benefit_scaling
+        self.skip_seeding_accuracy_threshold = skip_seeding_accuracy_threshold
+        self.quick_seed_actions_threshold = quick_seed_actions_threshold
+        self.abort_consecutive_failures_threshold = abort_consecutive_failures_threshold
 
         # Phase management
         self.phase = "relationship_building"
@@ -352,7 +366,7 @@ class OmniscientStrategicTherapist:
         # If perception accuracy is already high, we don't need ladder-climbing
         if self.current_target_therapist_action is not None:
             seeding_req = self.calculate_seeding_requirement(self.current_target_therapist_action)
-            if seeding_req['perception_accuracy_estimate'] > 0.9:
+            if seeding_req['perception_accuracy_estimate'] > self.skip_seeding_accuracy_threshold:
                 return False
 
             # If no seeding is needed, stay in relationship_building
@@ -461,11 +475,11 @@ class OmniscientStrategicTherapist:
         actions_needed = seeding_req['adjusted_seeding_needed']
 
         # If perception is already high, no need to seed
-        if perception_accuracy > 0.9:
+        if perception_accuracy > self.skip_seeding_accuracy_threshold:
             return False
 
         # If very few actions needed, just do it
-        if actions_needed <= 3:
+        if actions_needed <= self.quick_seed_actions_threshold:
             return True
 
         # Calculate expected value of completing seeding
@@ -492,9 +506,9 @@ class OmniscientStrategicTherapist:
         if remaining_sessions < sessions_until_benefit:
             return False
 
-        # Calculate total expected value (more aggressive), scaling factor 0.3 determined through tuning
+        # Calculate total expected value (more aggressive)
         benefit_sessions = remaining_sessions - sessions_until_benefit
-        total_expected_value = expected_improvement * benefit_sessions * 0.3
+        total_expected_value = expected_improvement * benefit_sessions * self.seeding_benefit_scaling
 
         # Calculate total cost of seeding
         utility_cost_per_action = max(0, utility_complement - utility_seed)
@@ -712,15 +726,12 @@ class OmniscientStrategicTherapist:
 
         monitor = self.seeding_monitor
 
-        # Adjust thresholds based on perception window size
-        if self.perception_window < 10:
-            abort_consecutive_threshold = 7  # More lenient for small windows
-        else:
-            abort_consecutive_threshold = 5
+        # Use configured threshold (no longer adaptive)
+        abort_consecutive_threshold = self.abort_consecutive_failures_threshold
 
         # Criterion 1: Too many consecutive failures
         if monitor.consecutive_failures >= abort_consecutive_threshold:
-            return True, f"{abort_consecutive_threshold}+ consecutive failures (baseline_accuracy too low)"
+            return True, f"Consecutive failures ({monitor.consecutive_failures}) exceeded threshold"
 
         # Criterion 2: Competitor boosting outpacing target growth
         # Check if any competitor has gained more than target has

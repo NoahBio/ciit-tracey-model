@@ -117,6 +117,10 @@ def run_single_simulation(
     bond_alpha: float = 5.0,
     bond_offset: float = 0.8,
     recency_weighting_factor: int = 2,
+    seeding_benefit_scaling: float = 0.3,
+    skip_seeding_accuracy_threshold: float = 0.9,
+    quick_seed_actions_threshold: int = 3,
+    abort_consecutive_failures_threshold: int = 5,
     therapist_version: str = 'v2',  # 'v1' or 'v2'
 ) -> SimulationResult:
     """Run a single therapy simulation with specified therapist type."""
@@ -185,6 +189,10 @@ def run_single_simulation(
             client_ref=client,
             perception_window=perception_window,
             baseline_accuracy=baseline_accuracy,
+            seeding_benefit_scaling=seeding_benefit_scaling,
+            skip_seeding_accuracy_threshold=skip_seeding_accuracy_threshold,
+            quick_seed_actions_threshold=quick_seed_actions_threshold,
+            abort_consecutive_failures_threshold=abort_consecutive_failures_threshold,
         )
 
     # Track initial state
