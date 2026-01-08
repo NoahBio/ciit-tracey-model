@@ -123,6 +123,13 @@ class TestOmniscientTherapistInitialization:
         assert omniscient_therapist.current_target_client_action is None
         assert omniscient_therapist.current_target_therapist_action is None
 
+        # Feedback monitoring structures
+        assert omniscient_therapist.seeding_monitor is None
+        assert omniscient_therapist.last_seeding_action is None
+        assert omniscient_therapist.last_session_number == 0
+        assert omniscient_therapist.failed_targets == []
+        assert omniscient_therapist.max_target_failures == 3
+
     def test_complement_map_complete(self, omniscient_therapist):
         """Complement map should have all 8 octants."""
         assert len(omniscient_therapist.COMPLEMENT_MAP) == 8
@@ -558,6 +565,12 @@ class TestResetFunctionality:
         assert omniscient_therapist.current_target_client_action is None
         assert omniscient_therapist.current_target_therapist_action is None
 
+        # Feedback monitoring state should be cleared
+        assert omniscient_therapist.seeding_monitor is None
+        assert omniscient_therapist.last_seeding_action is None
+        assert omniscient_therapist.last_session_number == 0
+        assert omniscient_therapist.failed_targets == []
+
 
 # ==============================================================================
 # TEST INTEGRATION WITH PARATAXIC CLIENT
@@ -585,6 +598,48 @@ class TestParataxicIntegration:
 
 
 # ==============================================================================
+# TEST FEEDBACK MONITORING
+# ==============================================================================
+
+class TestFeedbackMonitoring:
+    """Test real-time feedback monitoring functionality."""
+
+    def test_feedback_monitoring_has_analysis_method(self, omniscient_therapist):
+        """Should have feedback monitoring summary method."""
+        summary = omniscient_therapist.get_feedback_monitoring_summary()
+        assert isinstance(summary, dict)
+
+    def test_feedback_monitoring_summary_structure(self, omniscient_therapist):
+        """Feedback monitoring summary should have expected structure."""
+        # Run some sessions first
+        for session in range(1, 20):
+            omniscient_therapist.decide_action(client_action=6, session=session)
+
+        summary = omniscient_therapist.get_feedback_monitoring_summary()
+
+        # Should have these keys (may be 0 if no seeding occurred)
+        expected_keys = [
+            'total_seeding_sessions',
+            'recalculations',
+            'aborts',
+            'abort_reasons',
+            'avg_success_rate',
+            'competitor_boost_rate'
+        ]
+
+        for key in expected_keys:
+            assert key in summary
+
+    def test_process_feedback_after_memory_update_exists(self, omniscient_therapist):
+        """Should have process_feedback_after_memory_update method."""
+        # Should not crash when called
+        omniscient_therapist.process_feedback_after_memory_update(session=1, client_action=6)
+
+        # Method should handle case with no seeding action gracefully
+        assert omniscient_therapist.last_seeding_action is None
+
+
+# ==============================================================================
 # TEST MULTI-SESSION SIMULATION
 # ==============================================================================
 
@@ -599,6 +654,9 @@ class TestMultiSessionSimulation:
 
             # Update client
             sample_client.update_memory(client_action, therapist_action)
+
+            # Process feedback (as done in actual simulation loop)
+            omniscient_therapist.process_feedback_after_memory_update(session, client_action)
 
             # Verify valid state
             assert_valid_octant(therapist_action)
@@ -625,6 +683,9 @@ class TestMultiSessionSimulation:
 
             # Update client
             sample_client.update_memory(client_action, therapist_action)
+
+            # Process feedback
+            therapist.process_feedback_after_memory_update(session, client_action)
 
         # Should have seen at least the initial phase
         assert 'relationship_building' in phases_seen
