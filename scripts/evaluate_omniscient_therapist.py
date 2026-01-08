@@ -40,7 +40,11 @@ from src.agents.client_agents import (
     BondWeightedFrequencyAmplifier,
     BaseClientAgent,
 )
-from src.agents.therapist_agents import OmniscientStrategicTherapist
+from src.agents.therapist_agents import (
+    OmniscientStrategicTherapist,
+    OmniscientStrategicTherapistV1,
+    OmniscientStrategicTherapistV2,
+)
 from src import config
 from src.config import (
     sample_u_matrix,
@@ -112,6 +116,8 @@ def run_single_simulation(
     bond_power: float = 1.0,
     bond_alpha: float = 5.0,
     bond_offset: float = 0.8,
+    recency_weighting_factor: int = 2,
+    therapist_version: str = 'v2',  # 'v1' or 'v2'
 ) -> SimulationResult:
     """Run a single therapy simulation with specified therapist type."""
 
@@ -129,6 +135,7 @@ def run_single_simulation(
     # Set global bond parameters
     config.BOND_ALPHA = bond_alpha
     config.BOND_OFFSET = bond_offset
+    config.RECENCY_WEIGHTING_FACTOR = recency_weighting_factor
 
     # Create client
     client_kwargs = {
@@ -172,7 +179,9 @@ def run_single_simulation(
     # Create therapist
     omniscient_therapist = None
     if therapist_type == 'omniscient':
-        omniscient_therapist = OmniscientStrategicTherapist(
+        # Select therapist version
+        TherapistClass = OmniscientStrategicTherapistV2 if therapist_version == 'v2' else OmniscientStrategicTherapistV1
+        omniscient_therapist = TherapistClass(
             client_ref=client,
             perception_window=perception_window,
             baseline_accuracy=baseline_accuracy,
@@ -215,6 +224,13 @@ def run_single_simulation(
 
         # Update client memory
         client.update_memory(client_action, therapist_action)
+
+        # Process feedback (only for v2 omniscient therapist)
+        if therapist_type == 'omniscient' and omniscient_therapist is not None:
+            # v2 has feedback monitoring capability
+            feedback_method = getattr(omniscient_therapist, 'process_feedback_after_memory_update', None)
+            if feedback_method is not None:
+                feedback_method(session, client_action)
 
         # Get new state
         new_rs = client.relationship_satisfaction
@@ -461,7 +477,9 @@ def run_evaluation(
     bond_power: float = 1.0,
     bond_alpha: float = 5.0,
     bond_offset: float = 0.7,
+    recency_weighting_factor: int = 2,
     verbose: bool = True,
+    therapist_version: str = 'v2',
 ):
     """Run evaluation comparing omniscient vs complementary therapist."""
 
@@ -470,6 +488,7 @@ def run_evaluation(
         'mechanism': mechanism,
         'initial_memory_pattern': initial_memory_pattern,
         'success_threshold_percentile': success_threshold_percentile,
+        'therapist_version': therapist_version,
         'enable_parataxic': enable_parataxic,
         'baseline_accuracy': baseline_accuracy if enable_parataxic else 'N/A',
         'perception_window': perception_window if enable_parataxic else 'N/A',
@@ -479,6 +498,7 @@ def run_evaluation(
         'bond_power': bond_power if 'bond_weighted' in mechanism else 'N/A',
         'bond_alpha': bond_alpha,
         'bond_offset': bond_offset,
+        'recency_weighting_factor': recency_weighting_factor,
     }
 
     if verbose:
@@ -509,6 +529,8 @@ def run_evaluation(
             bond_power=bond_power,
             bond_alpha=bond_alpha,
             bond_offset=bond_offset,
+            recency_weighting_factor=recency_weighting_factor,
+            therapist_version=therapist_version,
         )
         omniscient_results.append(result)
 
@@ -534,6 +556,8 @@ def run_evaluation(
             bond_power=bond_power,
             bond_alpha=bond_alpha,
             bond_offset=bond_offset,
+            recency_weighting_factor=recency_weighting_factor,
+            therapist_version=therapist_version,
         )
         complementary_results.append(result)
 
@@ -656,9 +680,25 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        '--recency-weighting-factor', '-rwf',
+        type=int,
+        default=2,
+        choices=[1, 2, 3, 4, 5],
+        help='Recency weighting factor (1=1.5x, 2=2.0x, 3=3.0x, 4=4.0x, 5=5.0x newest:oldest ratio)'
+    )
+
+    parser.add_argument(
         '--quiet', '-q',
         action='store_true',
         help='Suppress progress messages'
+    )
+
+    parser.add_argument(
+        '--therapist-version',
+        type=str,
+        default='v2',
+        choices=['v1', 'v2'],
+        help='Omniscient therapist version (v1=original, v2=with feedback monitoring)'
     )
 
     args = parser.parse_args()
@@ -679,7 +719,9 @@ if __name__ == "__main__":
         bond_power=args.bond_power,
         bond_alpha=args.bond_alpha,
         bond_offset=args.bond_offset,
+        recency_weighting_factor=args.recency_weighting_factor,
         verbose=not args.quiet,
+        therapist_version=args.therapist_version,
     )
 
     print()

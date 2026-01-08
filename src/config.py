@@ -135,22 +135,50 @@ U_MATRIX = (U_MIN + U_MAX) / 2  # Midpoint of ranges
 MEMORY_SIZE = 50  # Number of interaction pairs stored
 
 # Relationship Satisfaction weighting scheme: square root recency bias
-def get_memory_weights(n_interactions: int = MEMORY_SIZE) -> NDArray[np.float64]:
+def get_memory_weights(
+    n_interactions: int = MEMORY_SIZE,
+    recency_weighting_factor: int | None = None,
+) -> NDArray[np.float64]:
     """
-    Square root recency weighting: oldest memory has 50% weight of newest
-    
+    Recency-weighted memory with configurable newest:oldest ratio.
+
+    - Preserves the previous sqrt-shaped recency curve.
+    - `recency_weighting_factor` selects the newest:oldest weight ratio:
+        1 -> 1.5x, 2 -> 2.0x (default), 3 -> 3.0x, 4 -> 4.0x, 5 -> 5.0x
+    - If `recency_weighting_factor` is None, uses global config.RECENCY_WEIGHTING_FACTOR
+
     Parameters
     ----------
     n_interactions : int
         Number of interactions to weight
-        
+    recency_weighting_factor : int or None
+        Integer in [1..5] mapping to newest:oldest ratio {1.5, 2, 3, 4, 5}
+        If None, uses global config.RECENCY_WEIGHTING_FACTOR (default: 2)
+
     Returns
     -------
     NDArray[np.float64]
         Normalized weights that sum to 1.0
     """
+    if n_interactions <= 0:
+        return np.array([], dtype=float)
+    if n_interactions == 1:
+        return np.array([1.0], dtype=float)
+
+    # Use global config if not specified
+    if recency_weighting_factor is None:
+        recency_weighting_factor = RECENCY_WEIGHTING_FACTOR
+
+    if recency_weighting_factor not in (1, 2, 3, 4, 5):
+        raise ValueError(f"recency_weighting_factor must be in [1..5], got {recency_weighting_factor}")
+
+    ratio_map = {1: 1.5, 2: 2.0, 3: 3.0, 4: 4.0, 5: 5.0}
+    ratio = ratio_map[recency_weighting_factor]
+    # sqrt-shaped recency (oldest=1.0, newest=ratio)
     t = np.arange(n_interactions) / (n_interactions - 1)
-    weights = 1 + np.sqrt(t)
+    shape = np.sqrt(t)
+    weights = 1.0 + (ratio - 1.0) * shape
+
     return weights / weights.sum()
 
 # =============================================================================
@@ -220,6 +248,9 @@ CLIENT_ENTROPY_MIN = 1.5
 CLIENT_ENTROPY_MAX = 5
 
 HISTORY_WEIGHT = 1.0  # Weighting factor for client history in utility calculation (used in amplifier mechanisms)
+
+# Recency weighting for memory
+RECENCY_WEIGHTING_FACTOR = 2  # Default: 2.0x newest:oldest ratio
 
 # =============================================================================
 # PARATAXIC DISTORTION PARAMETERS

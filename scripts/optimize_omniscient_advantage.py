@@ -62,6 +62,7 @@ SEARCH_SPACE = {
     'threshold': ('float', 0.5, 0.95, 'uniform'),
     'bond_alpha': ('float', 1.0, 15.0, 'uniform'),
     'bond_offset': ('float', 0.5, 0.95, 'uniform'),
+    'recency_weighting_factor': ('int', 1, 5),
     'perception_window': ('int', 5, 30),
     'max_sessions': ('int', 50, 200),
 
@@ -96,7 +97,7 @@ def suggest_parameter(trial: optuna.Trial, param_name: str) -> Any:
         raise ValueError(f"Unknown parameter type: {param_type}")
 
 
-def objective(trial: optuna.Trial, n_seeds: int = 50) -> float:
+def objective(trial: optuna.Trial, n_seeds: int = 50, therapist_version: str = 'v2') -> float:
     """Objective function that maximizes (omniscient_success - complementary_success).
 
     Parameters
@@ -105,6 +106,8 @@ def objective(trial: optuna.Trial, n_seeds: int = 50) -> float:
         Optuna trial object
     n_seeds : int
         Number of random seeds per trial (default: 50)
+    therapist_version : str
+        Therapist version to use ('v1' or 'v2', default: 'v2')
 
     Returns
     -------
@@ -122,6 +125,7 @@ def objective(trial: optuna.Trial, n_seeds: int = 50) -> float:
     threshold = suggest_parameter(trial, 'threshold')
     bond_alpha = suggest_parameter(trial, 'bond_alpha')
     bond_offset = suggest_parameter(trial, 'bond_offset')
+    recency_weighting_factor = suggest_parameter(trial, 'recency_weighting_factor')
     perception_window = suggest_parameter(trial, 'perception_window')
     max_sessions = suggest_parameter(trial, 'max_sessions')
 
@@ -150,6 +154,7 @@ def objective(trial: optuna.Trial, n_seeds: int = 50) -> float:
         'bond_power': bond_power,
         'bond_alpha': bond_alpha,
         'bond_offset': bond_offset,
+        'recency_weighting_factor': recency_weighting_factor,
     }
 
     # Run BOTH therapists with same configuration
@@ -161,6 +166,7 @@ def objective(trial: optuna.Trial, n_seeds: int = 50) -> float:
         omni_result = run_single_simulation(
             seed=seed,
             therapist_type='omniscient',
+            therapist_version=therapist_version,
             **sim_kwargs
         )
         omniscient_results.append(omni_result)
@@ -169,6 +175,7 @@ def objective(trial: optuna.Trial, n_seeds: int = 50) -> float:
         comp_result = run_single_simulation(
             seed=seed,
             therapist_type='complementary',
+            therapist_version=therapist_version,
             **sim_kwargs
         )
         complementary_results.append(comp_result)
@@ -350,6 +357,14 @@ def main():
         help='Number of top configs to export'
     )
 
+    parser.add_argument(
+        '--therapist-version',
+        type=str,
+        default='v2',
+        choices=['v1', 'v2'],
+        help='Omniscient therapist version (v1=original, v2=with feedback monitoring)'
+    )
+
     args = parser.parse_args()
 
     # Setup paths
@@ -375,7 +390,7 @@ def main():
     # Run optimization
     try:
         study.optimize(
-            lambda trial: objective(trial, n_seeds=args.n_seeds),
+            lambda trial: objective(trial, n_seeds=args.n_seeds, therapist_version=args.therapist_version),
             n_trials=args.n_trials,
             timeout=args.timeout,
             show_progress_bar=True,
