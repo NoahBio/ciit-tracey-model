@@ -12,7 +12,10 @@ import pytest
 import numpy as np
 from typing import List, Tuple
 
-from src.agents.therapist_agents import OmniscientStrategicTherapist
+from src.agents.therapist_agents import (
+    OmniscientStrategicTherapistV1,
+    OmniscientStrategicTherapistV2,
+)
 from src.agents.client_agents import FrequencyAmplifierClient, with_parataxic
 from src.config import sample_u_matrix, MEMORY_SIZE
 from tests.conftest import assert_valid_octant
@@ -21,6 +24,15 @@ from tests.conftest import assert_valid_octant
 # ==============================================================================
 # FIXTURES
 # ==============================================================================
+
+@pytest.fixture(params=[
+    OmniscientStrategicTherapistV1,
+    OmniscientStrategicTherapistV2,
+], ids=["V1", "V2"])
+def therapist_class(request):
+    """Parametrize tests to run against both V1 and V2."""
+    return request.param
+
 
 @pytest.fixture
 def fixed_seed():
@@ -72,9 +84,9 @@ def parataxic_client(fixed_seed):
 
 
 @pytest.fixture
-def omniscient_therapist(sample_client):
+def omniscient_therapist(sample_client, therapist_class):
     """Create an omniscient therapist with sample client."""
-    return OmniscientStrategicTherapist(
+    return therapist_class(
         client_ref=sample_client,
         perception_window=15,
         baseline_accuracy=0.5
@@ -82,9 +94,9 @@ def omniscient_therapist(sample_client):
 
 
 @pytest.fixture
-def parataxic_therapist(parataxic_client):
+def parataxic_therapist(parataxic_client, therapist_class):
     """Create therapist for parataxic client."""
-    return OmniscientStrategicTherapist(
+    return therapist_class(
         client_ref=parataxic_client,
         perception_window=15,
         baseline_accuracy=0.5
@@ -98,9 +110,9 @@ def parataxic_therapist(parataxic_client):
 class TestOmniscientTherapistInitialization:
     """Test therapist initialization and setup."""
 
-    def test_init_with_valid_params(self, sample_client):
+    def test_init_with_valid_params(self, sample_client, therapist_class):
         """Should initialize successfully with valid parameters."""
-        therapist = OmniscientStrategicTherapist(
+        therapist = therapist_class(
             client_ref=sample_client,
             perception_window=15,
             baseline_accuracy=0.5
@@ -123,12 +135,13 @@ class TestOmniscientTherapistInitialization:
         assert omniscient_therapist.current_target_client_action is None
         assert omniscient_therapist.current_target_therapist_action is None
 
-        # Feedback monitoring structures
-        assert omniscient_therapist.seeding_monitor is None
-        assert omniscient_therapist.last_seeding_action is None
-        assert omniscient_therapist.last_session_number == 0
-        assert omniscient_therapist.failed_targets == []
-        assert omniscient_therapist.max_target_failures == 3
+        # Feedback monitoring structures (V2 only)
+        if isinstance(omniscient_therapist, OmniscientStrategicTherapistV2):
+            assert omniscient_therapist.seeding_monitor is None
+            assert omniscient_therapist.last_seeding_action is None
+            assert omniscient_therapist.last_session_number == 0
+            assert omniscient_therapist.failed_targets == []
+            assert omniscient_therapist.max_target_failures == 3
 
     def test_complement_map_complete(self, omniscient_therapist):
         """Complement map should have all 8 octants."""
@@ -318,12 +331,12 @@ class TestPhaseTransitions:
         # Result depends on current bond value
         assert isinstance(result, bool)
 
-    def test_current_interaction_achieves_success_when_rs_above_threshold(self, sample_client):
+    def test_current_interaction_achieves_success_when_rs_above_threshold(self, sample_client, therapist_class):
         """Should return True when RS >= success threshold."""
         # Manually set RS above threshold
         sample_client.success_threshold = 0.5
 
-        therapist = OmniscientStrategicTherapist(
+        therapist = therapist_class(
             client_ref=sample_client,
             perception_window=15,
             baseline_accuracy=0.5
@@ -565,11 +578,12 @@ class TestResetFunctionality:
         assert omniscient_therapist.current_target_client_action is None
         assert omniscient_therapist.current_target_therapist_action is None
 
-        # Feedback monitoring state should be cleared
-        assert omniscient_therapist.seeding_monitor is None
-        assert omniscient_therapist.last_seeding_action is None
-        assert omniscient_therapist.last_session_number == 0
-        assert omniscient_therapist.failed_targets == []
+        # Feedback monitoring state should be cleared (V2 only)
+        if isinstance(omniscient_therapist, OmniscientStrategicTherapistV2):
+            assert omniscient_therapist.seeding_monitor is None
+            assert omniscient_therapist.last_seeding_action is None
+            assert omniscient_therapist.last_session_number == 0
+            assert omniscient_therapist.failed_targets == []
 
 
 # ==============================================================================
@@ -602,15 +616,19 @@ class TestParataxicIntegration:
 # ==============================================================================
 
 class TestFeedbackMonitoring:
-    """Test real-time feedback monitoring functionality."""
+    """Test real-time feedback monitoring functionality (V2 only)."""
 
     def test_feedback_monitoring_has_analysis_method(self, omniscient_therapist):
-        """Should have feedback monitoring summary method."""
-        summary = omniscient_therapist.get_feedback_monitoring_summary()
-        assert isinstance(summary, dict)
+        """Should have feedback monitoring summary method (V2 only)."""
+        if isinstance(omniscient_therapist, OmniscientStrategicTherapistV2):
+            summary = omniscient_therapist.get_feedback_monitoring_summary()
+            assert isinstance(summary, dict)
 
     def test_feedback_monitoring_summary_structure(self, omniscient_therapist):
-        """Feedback monitoring summary should have expected structure."""
+        """Feedback monitoring summary should have expected structure (V2 only)."""
+        if not isinstance(omniscient_therapist, OmniscientStrategicTherapistV2):
+            pytest.skip("Feedback monitoring only available in V2")
+
         # Run some sessions first
         for session in range(1, 20):
             omniscient_therapist.decide_action(client_action=6, session=session)
@@ -631,7 +649,10 @@ class TestFeedbackMonitoring:
             assert key in summary
 
     def test_process_feedback_after_memory_update_exists(self, omniscient_therapist):
-        """Should have process_feedback_after_memory_update method."""
+        """Should have process_feedback_after_memory_update method (V2 only)."""
+        if not isinstance(omniscient_therapist, OmniscientStrategicTherapistV2):
+            pytest.skip("Feedback processing only available in V2")
+
         # Should not crash when called
         omniscient_therapist.process_feedback_after_memory_update(session=1, client_action=6)
 
@@ -655,18 +676,19 @@ class TestMultiSessionSimulation:
             # Update client
             sample_client.update_memory(client_action, therapist_action)
 
-            # Process feedback (as done in actual simulation loop)
-            omniscient_therapist.process_feedback_after_memory_update(session, client_action)
+            # Process feedback (V2 only)
+            if isinstance(omniscient_therapist, OmniscientStrategicTherapistV2):
+                omniscient_therapist.process_feedback_after_memory_update(session, client_action)
 
             # Verify valid state
             assert_valid_octant(therapist_action)
             assert omniscient_therapist.session_count == session
             assert len(omniscient_therapist.action_log) == session
 
-    def test_phase_progression_possible(self, sample_client):
+    def test_phase_progression_possible(self, sample_client, therapist_class):
         """Should be able to progress through phases."""
         # Create therapist with client
-        therapist = OmniscientStrategicTherapist(
+        therapist = therapist_class(
             client_ref=sample_client,
             perception_window=15,
             baseline_accuracy=0.5
@@ -684,12 +706,173 @@ class TestMultiSessionSimulation:
             # Update client
             sample_client.update_memory(client_action, therapist_action)
 
-            # Process feedback
-            therapist.process_feedback_after_memory_update(session, client_action)
+            # Process feedback (V2 only)
+            if isinstance(therapist, OmniscientStrategicTherapistV2):
+                therapist.process_feedback_after_memory_update(session, client_action)
 
         # Should have seen at least the initial phase
         assert 'relationship_building' in phases_seen
         # May or may not transition depending on dynamics
+
+
+# ==============================================================================
+# TEST PROBABILITY MATCHING
+# ==============================================================================
+
+class TestProbabilityMatching:
+    """Test that therapist-computed probabilities match client-computed probabilities."""
+
+    def test_therapist_probs_match_client_probs(self, sample_client):
+        """
+        Verify that probabilities calculated by therapist in _identify_target_interaction
+        (lines 302-304 of omniscient_therapist_v2.py) match what the client internally
+        computes when selecting actions.
+
+        This ensures the therapist's omniscience is accurate.
+        """
+        # Test both V1 and V2
+        for therapist_class in [OmniscientStrategicTherapistV1, OmniscientStrategicTherapistV2]:
+            therapist = therapist_class(
+                client_ref=sample_client,
+                perception_window=15,
+                baseline_accuracy=0.5
+            )
+
+            # Get probabilities as computed by therapist (lines 302-304)
+            payoffs_therapist = sample_client._calculate_expected_payoffs()
+            probs_therapist = therapist._softmax(payoffs_therapist / sample_client.entropy)
+
+            # Get probabilities as computed by client internally
+            payoffs_client = sample_client._calculate_expected_payoffs()
+            probs_client = sample_client._softmax(payoffs_client)
+
+            # These should be identical
+            np.testing.assert_allclose(
+                probs_therapist,
+                probs_client,
+                rtol=1e-10,
+                atol=1e-10,
+                err_msg=f"{therapist_class.__name__}: Therapist-computed probabilities do not match client-computed probabilities"
+            )
+
+            # Both should sum to 1.0
+            assert np.isclose(np.sum(probs_therapist), 1.0), f"{therapist_class.__name__}: Therapist probs don't sum to 1"
+            assert np.isclose(np.sum(probs_client), 1.0), f"{therapist_class.__name__}: Client probs don't sum to 1"
+
+            # All probabilities should be non-negative
+            assert np.all(probs_therapist >= 0), f"{therapist_class.__name__}: Therapist has negative probabilities"
+            assert np.all(probs_client >= 0), f"{therapist_class.__name__}: Client has negative probabilities"
+
+    def test_probs_remain_consistent_across_sessions(self, sample_client, therapist_class):
+        """
+        Test that probability calculations remain consistent as therapy progresses.
+
+        As memory updates, both therapist and client should agree on action probabilities.
+        """
+        therapist = therapist_class(
+            client_ref=sample_client,
+            perception_window=15,
+            baseline_accuracy=0.5
+        )
+
+        # Run several sessions and check consistency after each
+        for session in range(1, 11):
+            # Get client's action selection probabilities
+            client_payoffs = sample_client._calculate_expected_payoffs()
+            client_probs = sample_client._softmax(client_payoffs)
+
+            # Get therapist's calculation of same probabilities
+            therapist_payoffs = sample_client._calculate_expected_payoffs()
+            therapist_probs = therapist._softmax(therapist_payoffs / sample_client.entropy)
+
+            # Should match exactly
+            np.testing.assert_allclose(
+                therapist_probs,
+                client_probs,
+                rtol=1e-10,
+                atol=1e-10,
+                err_msg=f"Session {session}: Probability mismatch"
+            )
+
+            # Client selects action and therapist decides
+            client_action = sample_client.select_action()
+            therapist_action, _ = therapist.decide_action(client_action, session)
+
+            # Update memory
+            sample_client.update_memory(client_action, therapist_action)
+
+            # Process feedback (for V2)
+            if hasattr(therapist, 'process_feedback_after_memory_update'):
+                therapist.process_feedback_after_memory_update(session, client_action)
+
+    def test_probs_with_parataxic_client(self, parataxic_client, therapist_class):
+        """
+        Test probability matching with parataxic distortion enabled.
+
+        Even with parataxic distortion, therapist should correctly compute
+        client's action selection probabilities (which are based on perceived memory).
+        """
+        therapist = therapist_class(
+            client_ref=parataxic_client,
+            perception_window=15,
+            baseline_accuracy=0.5
+        )
+
+        # Client's internal probability calculation
+        client_payoffs = parataxic_client._calculate_expected_payoffs()
+        client_probs = parataxic_client._softmax(client_payoffs)
+
+        # Therapist's calculation of client's probabilities
+        therapist_payoffs = parataxic_client._calculate_expected_payoffs()
+        therapist_probs = therapist._softmax(therapist_payoffs / parataxic_client.entropy)
+
+        # Should match
+        np.testing.assert_allclose(
+            therapist_probs,
+            client_probs,
+            rtol=1e-10,
+            atol=1e-10,
+            err_msg="Probability mismatch with parataxic client"
+        )
+
+    def test_target_identification_uses_correct_probs(self, sample_client, therapist_class):
+        """
+        Test that _identify_target_interaction uses probabilities correctly.
+
+        The scoring should be: (utility - current_RS) * P(client_action)
+        where P(client_action) is computed from the softmax of payoffs/entropy.
+        """
+        therapist = therapist_class(
+            client_ref=sample_client,
+            perception_window=15,
+            baseline_accuracy=0.5
+        )
+
+        # Manually set up state to trigger target identification
+        therapist.session_count = 15  # Past dropout check
+
+        # Get client probabilities
+        payoffs = sample_client._calculate_expected_payoffs()
+        probs = therapist._softmax(payoffs / sample_client.entropy)
+
+        # Identify target
+        found_target = therapist._identify_target_interaction()
+
+        if found_target:
+            # Verify that target has reasonable probability
+            target_client_action = therapist.current_target_client_action
+            target_prob = probs[target_client_action]
+
+            # Target should have non-zero probability
+            assert target_prob > 0, "Target action has zero probability"
+
+            # Verify utility calculation
+            target_therapist_action = therapist.current_target_therapist_action
+            target_utility = sample_client.u_matrix[target_client_action, target_therapist_action]
+
+            # Should be targeting an improvement
+            assert target_utility > sample_client.relationship_satisfaction, \
+                "Target should improve RS"
 
 
 if __name__ == "__main__":
