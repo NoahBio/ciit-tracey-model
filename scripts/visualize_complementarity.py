@@ -26,6 +26,8 @@ from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass, field
 import argparse
 from tqdm import tqdm
+from datetime import datetime
+import json
 
 from src.agents.client_agents import (
     with_parataxic,
@@ -124,6 +126,126 @@ class AggregatedResults:
     std_cold_enacted: np.ndarray
     mean_cold_perceived: np.ndarray
     std_cold_perceived: np.ndarray
+
+    # Additional statistics
+    baseline_success_rate: float = 0.0  # Success rate of always-complementary therapist
+    overall_noncomplementarity_pct: float = 0.0  # % of non-complementary actions
+
+
+# Complementary action mapping (same as in therapist agents)
+COMPLEMENT_MAP = {
+    0: 4,  # D → S
+    1: 3,  # WD → WS
+    2: 2,  # W → W
+    3: 1,  # WS → WD
+    4: 0,  # S → D
+    5: 7,  # CS → CD
+    6: 6,  # C → C
+    7: 5,  # CD → CS
+}
+
+
+def always_complement(client_action: int) -> int:
+    """Simple complementary therapist strategy."""
+    return COMPLEMENT_MAP[client_action]
+
+
+def run_baseline_complementary_simulation(
+    seed: int,
+    mechanism: str,
+    pattern: str,
+    max_sessions: int = 100,
+    success_threshold_percentile: float = 0.8,
+    enable_parataxic: bool = False,
+    entropy: float = 0.1,
+    baseline_accuracy: float = 0.5,
+    history_weight: float = 1.0,
+    bond_power: float = 1.0,
+    bond_alpha: float = 5.0,
+    bond_offset: float = 0.7,
+    recency_weighting_factor: int = 2,
+) -> bool:
+    """Run a single simulation with always-complementary therapist.
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    # Setup
+    rng = np.random.RandomState(seed)
+    u_matrix = sample_u_matrix(random_state=seed)
+
+    # Generate initial memory
+    initial_memory = BaseClientAgent.generate_problematic_memory(
+        pattern_type=pattern,
+        n_interactions=50,
+        random_state=seed,
+    )
+
+    # Set global bond parameters
+    config.BOND_ALPHA = bond_alpha
+    config.BOND_OFFSET = bond_offset
+    config.RECENCY_WEIGHTING_FACTOR = recency_weighting_factor
+
+    # Create client
+    client_kwargs = {
+        'u_matrix': u_matrix,
+        'entropy': entropy,
+        'initial_memory': initial_memory,
+        'random_state': seed,
+    }
+
+    if 'amplifier' in mechanism:
+        client_kwargs['history_weight'] = history_weight
+
+    if 'bond_weighted' in mechanism:
+        client_kwargs['bond_power'] = bond_power
+
+    if enable_parataxic:
+        client_kwargs['baseline_accuracy'] = baseline_accuracy
+        client_kwargs['enable_parataxic'] = True
+
+    mechanisms = {
+        'bond_only': BondOnlyClient,
+        'frequency_amplifier': FrequencyAmplifierClient,
+        'conditional_amplifier': ConditionalAmplifierClient,
+        'bond_weighted_conditional_amplifier': BondWeightedConditionalAmplifier,
+        'bond_weighted_frequency_amplifier': BondWeightedFrequencyAmplifier,
+    }
+
+    ClientClass = mechanisms[mechanism]
+
+    if enable_parataxic:
+        ClientClass = with_parataxic(ClientClass)
+
+    client = ClientClass(**client_kwargs)
+
+    # Calculate RS threshold
+    rs_threshold = calculate_success_threshold(u_matrix, success_threshold_percentile)
+
+    # Run sessions with always-complementary therapist
+    success = False
+    for session in range(1, max_sessions + 1):
+        # Client selects action
+        client_action = client.select_action()
+
+        # Therapist responds with complementary action
+        therapist_action = always_complement(client_action)
+
+        # Update client memory
+        client.update_memory(client_action, therapist_action)
+
+        # Get new state
+        new_rs = client.relationship_satisfaction
+
+        # Check termination
+        if new_rs >= rs_threshold:
+            success = True
+            break
+
+        if client.check_dropout():
+            break
+
+    return success
 
 
 def run_simulation_with_complementarity_tracking(
@@ -325,11 +447,12 @@ def run_simulation_with_complementarity_tracking(
     )
 
 
-def aggregate_results(results: List[SimulationResult]) -> AggregatedResults:
+def aggregate_results(results: List[SimulationResult], baseline_success_rate: float = 0.0) -> AggregatedResults:
     """Aggregate results across multiple seeds.
 
     Args:
         results: List of SimulationResult from different seeds
+        baseline_success_rate: Success rate of baseline complementary therapist
 
     Returns:
         AggregatedResults with mean and std trajectories
@@ -366,6 +489,11 @@ def aggregate_results(results: List[SimulationResult]) -> AggregatedResults:
             warm_perceived_arr[i, :length] = result.warm_perceived_trajectory
             cold_perceived_arr[i, :length] = result.cold_perceived_trajectory
 
+    # Calculate overall non-complementarity percentage
+    # Average complementarity across all sessions and seeds
+    overall_mean_comp = np.nanmean(overall_enacted_arr)
+    overall_noncomplementarity_pct = 100.0 - overall_mean_comp
+
     # Calculate statistics
     return AggregatedResults(
         config_name=config_name,
@@ -386,6 +514,8 @@ def aggregate_results(results: List[SimulationResult]) -> AggregatedResults:
         std_cold_enacted=np.nanstd(cold_enacted_arr, axis=0),
         mean_cold_perceived=np.nanmean(cold_perceived_arr, axis=0),
         std_cold_perceived=np.nanstd(cold_perceived_arr, axis=0),
+        baseline_success_rate=baseline_success_rate,
+        overall_noncomplementarity_pct=overall_noncomplementarity_pct,
     )
 
 
@@ -505,13 +635,38 @@ class ComplementarityVisualizer:
                 )
 
         # Finalize complementarity plot
-        self.ax_comp.set_ylabel('Complementarity Rate (%)', fontsize=12, fontweight='bold')
+        self.ax_comp.set_xlabel('Session Number', fontsize=14, fontweight='bold')
+        self.ax_comp.set_ylabel('Complementarity Rate (%)', fontsize=14, fontweight='bold')
         self.ax_comp.set_ylim(0, 105)
         self.ax_comp.set_title(f'Complementarity Over Time ({self.filter_mode.capitalize()})',
-                                fontsize=14, fontweight='bold')
-        self.ax_comp.legend(loc='best', fontsize=9, ncol=2)
-        self.ax_comp.grid(True, alpha=0.3)
-        self.ax_comp.axhline(y=100, color='green', linestyle=':', alpha=0.5, label='Perfect complementarity')
+                                fontsize=16, fontweight='bold', pad=15)
+        self.ax_comp.legend(loc='best', fontsize=11, ncol=1, framealpha=0.9)
+        self.ax_comp.grid(True, alpha=0.3, linewidth=0.8)
+        self.ax_comp.axhline(y=100, color='green', linestyle=':', alpha=0.5, linewidth=2)
+        self.ax_comp.tick_params(axis='both', which='major', labelsize=12)
+
+        # Add descriptive statistics text box
+        if self.aggregated_results:
+            stats_text_lines = []
+            for agg_result in self.aggregated_results:
+                config_short = f"{agg_result.mechanism[:15]}_{agg_result.pattern[:10]}_{agg_result.therapist_version}"
+                stats_text_lines.append(
+                    f"{config_short}:\n"
+                    f"  Baseline: {agg_result.baseline_success_rate:.1f}%  "
+                    f"Non-comp: {agg_result.overall_noncomplementarity_pct:.2f}%"
+                )
+
+            stats_text = "\n".join(stats_text_lines)
+            # Place text box in upper right corner
+            self.ax_comp.text(
+                0.98, 0.98, stats_text,
+                transform=self.ax_comp.transAxes,
+                fontsize=9,
+                verticalalignment='top',
+                horizontalalignment='right',
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8, edgecolor='black', linewidth=1.5),
+                family='monospace'
+            )
 
         # Plot success rate
         config_names = [r.config_name for r in self.aggregated_results]
@@ -519,13 +674,14 @@ class ComplementarityVisualizer:
         colors = [MECHANISM_COLORS[r.mechanism] for r in self.aggregated_results]
 
         x_pos = np.arange(len(config_names))
-        self.ax_success.bar(x_pos, success_rates, color=colors, alpha=0.7)
+        self.ax_success.bar(x_pos, success_rates, color=colors, alpha=0.7, edgecolor='black', linewidth=1.5)
         self.ax_success.set_xticks(x_pos)
-        self.ax_success.set_xticklabels(config_names, rotation=45, ha='right', fontsize=9)
-        self.ax_success.set_xlabel('Configuration', fontsize=12, fontweight='bold')
-        self.ax_success.set_ylabel('Success Rate (%)', fontsize=12, fontweight='bold')
+        self.ax_success.set_xticklabels(config_names, rotation=45, ha='right', fontsize=11)
+        self.ax_success.set_xlabel('Configuration', fontsize=14, fontweight='bold')
+        self.ax_success.set_ylabel('Success Rate (%)', fontsize=14, fontweight='bold')
         self.ax_success.set_ylim(0, 105)
-        self.ax_success.grid(True, alpha=0.3, axis='y')
+        self.ax_success.grid(True, alpha=0.3, axis='y', linewidth=0.8)
+        self.ax_success.tick_params(axis='both', which='major', labelsize=12)
 
         # Add values on bars
         for i, (x, y) in enumerate(zip(x_pos, success_rates)):
@@ -590,8 +746,11 @@ def parse_arguments():
     parser.add_argument('--entropy', type=float, default=0.1,
                        help='Client entropy parameter')
 
-    parser.add_argument('--enable-parataxic', action='store_true',
-                       help='Enable parataxic distortion')
+    parser.add_argument('--enable-parataxic', action='store_true', default=True,
+                       help='Enable parataxic distortion (default: True)')
+
+    parser.add_argument('--disable-parataxic', dest='enable_parataxic', action='store_false',
+                       help='Disable parataxic distortion')
 
     parser.add_argument('--baseline-accuracy', type=float, default=0.5,
                        help='Baseline perception accuracy for parataxic distortion')
@@ -601,6 +760,24 @@ def parse_arguments():
 
     parser.add_argument('--bond-alpha', type=float, default=5.0,
                        help='Bond alpha parameter')
+
+    parser.add_argument('--recency-weighting-factor', type=int, default=2,
+                       help='Recency weighting factor for client memory')
+
+    parser.add_argument('--perception-window', type=int, default=15,
+                       help='Perception window size for therapist')
+
+    parser.add_argument('--seeding-benefit-scaling', type=float, default=0.3,
+                       help='Seeding benefit scaling for v2 therapist')
+
+    parser.add_argument('--skip-seeding-accuracy-threshold', type=float, default=0.9,
+                       help='Skip seeding accuracy threshold for v2 therapist')
+
+    parser.add_argument('--quick-seed-actions-threshold', type=int, default=3,
+                       help='Quick seed actions threshold for v2 therapist')
+
+    parser.add_argument('--abort-consecutive-failures-threshold', type=int, default=5,
+                       help='Abort consecutive failures threshold for v2 therapist')
 
     # Output
     parser.add_argument('--output', type=str, default=None,
@@ -613,9 +790,45 @@ def main():
     """Main execution function."""
     args = parse_arguments()
 
+    # Create timestamped output directory
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_dir = project_root / "results" / f"complementarity_{timestamp}"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save command that generated this run
+    command_info = {
+        "timestamp": timestamp,
+        "command": " ".join(sys.argv),
+        "parameters": {
+            "mechanisms": args.mechanisms,
+            "patterns": args.patterns,
+            "therapist_versions": args.therapist_versions,
+            "n_seeds": args.n_seeds,
+            "window_size": args.window_size,
+            "complementarity_type": args.complementarity_type,
+            "enable_parataxic": args.enable_parataxic,
+            "max_sessions": args.max_sessions,
+            "threshold": args.threshold,
+            "entropy": args.entropy,
+            "baseline_accuracy": args.baseline_accuracy,
+            "bond_offset": args.bond_offset,
+            "bond_alpha": args.bond_alpha,
+            "recency_weighting_factor": args.recency_weighting_factor,
+            "perception_window": args.perception_window,
+            "seeding_benefit_scaling": args.seeding_benefit_scaling,
+            "skip_seeding_accuracy_threshold": args.skip_seeding_accuracy_threshold,
+            "quick_seed_actions_threshold": args.quick_seed_actions_threshold,
+            "abort_consecutive_failures_threshold": args.abort_consecutive_failures_threshold,
+        }
+    }
+
+    with open(output_dir / "command.json", "w") as f:
+        json.dump(command_info, f, indent=2)
+
     print("=" * 70)
     print("Complementarity Visualization Script")
     print("=" * 70)
+    print(f"Output directory: {output_dir}")
     print(f"Mechanisms: {args.mechanisms}")
     print(f"Patterns: {args.patterns}")
     print(f"Therapist versions: {args.therapist_versions}")
@@ -641,8 +854,32 @@ def main():
         print(f"\nConfiguration: {mechanism} + {pattern} + {version}")
         print("-" * 70)
 
+        # Run baseline always-complementary therapist simulations
+        print("Running baseline always-complementary simulations...")
+        baseline_successes = []
+        for seed in tqdm(range(args.n_seeds), desc="Baseline"):
+            success = run_baseline_complementary_simulation(
+                seed=seed,
+                mechanism=mechanism,
+                pattern=pattern,
+                max_sessions=args.max_sessions,
+                success_threshold_percentile=args.threshold,
+                enable_parataxic=args.enable_parataxic,
+                entropy=args.entropy,
+                baseline_accuracy=args.baseline_accuracy,
+                bond_offset=args.bond_offset,
+                bond_alpha=args.bond_alpha,
+                recency_weighting_factor=args.recency_weighting_factor,
+            )
+            baseline_successes.append(success)
+
+        baseline_success_rate = sum(baseline_successes) / len(baseline_successes) * 100
+        print(f"Baseline success rate: {baseline_success_rate:.1f}%")
+
+        # Run omniscient therapist simulations
+        print("Running omniscient therapist simulations...")
         results = []
-        for seed in tqdm(range(args.n_seeds), desc=f"Seeds"):
+        for seed in tqdm(range(args.n_seeds), desc="Omniscient"):
             result = run_simulation_with_complementarity_tracking(
                 seed=seed,
                 mechanism=mechanism,
@@ -656,19 +893,44 @@ def main():
                 baseline_accuracy=args.baseline_accuracy,
                 bond_offset=args.bond_offset,
                 bond_alpha=args.bond_alpha,
+                recency_weighting_factor=args.recency_weighting_factor,
+                perception_window=args.perception_window,
+                seeding_benefit_scaling=args.seeding_benefit_scaling,
+                skip_seeding_accuracy_threshold=args.skip_seeding_accuracy_threshold,
+                quick_seed_actions_threshold=args.quick_seed_actions_threshold,
+                abort_consecutive_failures_threshold=args.abort_consecutive_failures_threshold,
             )
             results.append(result)
 
-        # Aggregate results
-        agg_result = aggregate_results(results)
+        # Aggregate results with baseline
+        agg_result = aggregate_results(results, baseline_success_rate=baseline_success_rate)
         all_aggregated_results.append(agg_result)
 
-        print(f"Success rate: {agg_result.success_rate:.1f}%")
+        print(f"Omniscient success rate: {agg_result.success_rate:.1f}%")
         print(f"Mean sessions: {np.mean([r.total_sessions for r in results]):.1f}")
+        print(f"Overall non-complementarity: {agg_result.overall_noncomplementarity_pct:.2f}%")
 
     print("\n" + "=" * 70)
     print("Creating visualization...")
     print("=" * 70)
+
+    # Add results summary to command info
+    command_info["results"] = []
+    for agg_result in all_aggregated_results:
+        command_info["results"].append({
+            "config_name": agg_result.config_name,
+            "mechanism": agg_result.mechanism,
+            "pattern": agg_result.pattern,
+            "therapist_version": agg_result.therapist_version,
+            "n_runs": agg_result.n_runs,
+            "omniscient_success_rate": agg_result.success_rate,
+            "baseline_success_rate": agg_result.baseline_success_rate,
+            "overall_noncomplementarity_pct": agg_result.overall_noncomplementarity_pct,
+        })
+
+    # Re-save command.json with results
+    with open(output_dir / "command.json", "w") as f:
+        json.dump(command_info, f, indent=2)
 
     # Create and display visualization
     viz = ComplementarityVisualizer(
@@ -677,10 +939,20 @@ def main():
         enable_parataxic=args.enable_parataxic
     )
 
+    # Save plot to timestamped directory
+    viz.plot()
+    plot_path = output_dir / "complementarity_plot.png"
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    print(f"\nPlot saved to: {plot_path}")
+
+    # Also save to custom path if specified
     if args.output:
-        viz.plot()
         plt.savefig(args.output, dpi=300, bbox_inches='tight')
-        print(f"\nPlot saved to: {args.output}")
+        print(f"Also saved to: {args.output}")
+
+    print(f"\nAll results saved to: {output_dir}")
+    print("  - complementarity_plot.png")
+    print("  - command.json (with results summary)")
 
     viz.show()
 
