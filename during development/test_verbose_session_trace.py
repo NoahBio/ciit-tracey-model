@@ -32,27 +32,8 @@ from src.config import (
     calculate_success_threshold,
     PARATAXIC_BASELINE_ACCURACY,
 )
+from src.agents.therapist_agents.omniscient_therapist_v2 import OmniscientStrategicTherapist
 import argparse
-
-
-def always_complement(client_action: int) -> int:
-    """
-    Simple complementary strategy:
-    - Dominant ↔ Submissive (0↔4, 1↔3, 7↔5)
-    - Warm ↔
-    - Cold ↔ Cold (6↔6)
-    """
-    complement_map = {
-        0: 4,  # D → S
-        1: 3,  # WD → WS
-        2: 2,  # W → W
-        3: 1,  # WS → WD
-        4: 0,  # S → D
-        5: 7,  # CS → CD
-        6: 6,  # C → C
-        7: 5,  # CD → CS
-    }
-    return complement_map[client_action]
 
 
 # Map legacy pattern names to BaseClientAgent names
@@ -61,43 +42,26 @@ PATTERN_ALIASES = {
 }
 
 
-def get_optimal_therapist_action(u_matrix: np.ndarray) -> int:
-    """
-    Find the therapist action that corresponds to the global maximum utility in the u_matrix.
-
-    Parameters
-    ----------
-    u_matrix : np.ndarray
-        Client's utility matrix (8x8)
-
-    Returns
-    -------
-    int
-        Therapist action (0-7) corresponding to global maximum
-    """
-    max_idx = np.unravel_index(np.argmax(u_matrix), u_matrix.shape)
-    return int(max_idx[1])
-
-
 def verbose_session_trace(
     mechanism: str,
     initial_memory_pattern: str,
     success_threshold_percentile: float,
     enable_parataxic: bool = False,
-    baseline_accuracy: float = 0.2,
+    baseline_accuracy: float = 0.5549619551286054,
     verbose_sessions: range = range(1, 6),
-    max_sessions: int = 100,
+    max_sessions: int = 1940,
     entropy: float = 3.0,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
-    bond_alpha: float = 5.0,
-    bond_offset: float = 0.8,
+    bond_alpha: float = 11.847676335038303,
+    bond_offset: float = 0.624462461360537,
     random_state: int = 42,
-    # Strategic therapist parameters
-    enable_strategic_therapist: bool = False,
-    rs_plateau_threshold: float = 5.0,
-    plateau_window: int = 15,
-    intervention_duration: int = 10,
+    # V2 Therapist parameters
+    perception_window: int = 10,
+    seeding_benefit_scaling: float = 1.8658722646107764,
+    skip_seeding_accuracy_threshold: float = 0.814677493978211,
+    quick_seed_actions_threshold: int = 1,
+    abort_consecutive_failures_threshold: int = 4,
 ):
     """
     Run therapy sessions with verbose diagnostic output for specified sessions.
@@ -135,14 +99,16 @@ def verbose_session_trace(
         Bond offset for sigmoid inflection point (0.0-1.0)
     random_state : int
         Random seed
-    enable_strategic_therapist : bool, default=False
-        Enable strategic therapist with plateau-triggered optimal interventions
-    rs_plateau_threshold : float, default=5.0
-        RS range threshold to detect plateau (default: 5.0 RS points)
-    plateau_window : int, default=15
-        Number of consecutive sessions to check for plateau
-    intervention_duration : int, default=10
-        Number of sessions to enact optimal action during intervention
+    perception_window : int, default=10
+        Memory window size for parataxic distortion (V2 therapist)
+    seeding_benefit_scaling : float, default=1.8658722646107764
+        Scaling factor for expected seeding benefit (0.1-2.0)
+    skip_seeding_accuracy_threshold : float, default=0.814677493978211
+        Skip seeding if accuracy above this threshold (0.75-0.95)
+    quick_seed_actions_threshold : int, default=1
+        "Just do it" if actions_needed <= this (1-5)
+    abort_consecutive_failures_threshold : int, default=4
+        Abort after this many consecutive failures (4-9)
     """
 
     print("=" * 100)
@@ -200,6 +166,17 @@ def verbose_session_trace(
     # Create client directly with the class (not create_client)
     client = ClientClass(**client_kwargs)
 
+    # Create V2 therapist with omniscient access
+    therapist = OmniscientStrategicTherapist(
+        client_ref=client,
+        perception_window=perception_window,
+        baseline_accuracy=baseline_accuracy,
+        seeding_benefit_scaling=seeding_benefit_scaling,
+        skip_seeding_accuracy_threshold=skip_seeding_accuracy_threshold,
+        quick_seed_actions_threshold=quick_seed_actions_threshold,
+        abort_consecutive_failures_threshold=abort_consecutive_failures_threshold,
+    )
+
     # Calculate RS threshold
     rs_threshold = calculate_success_threshold(u_matrix, success_threshold_percentile)
 
@@ -222,13 +199,12 @@ def verbose_session_trace(
     else:
         print(f"Parataxic distortion enabled: No (perfect perception)")
 
-    if enable_strategic_therapist:
-        print(f"Strategic therapist: Enabled")
-        print(f"  RS plateau threshold: {rs_plateau_threshold:.1f} points")
-        print(f"  Plateau window: {plateau_window} sessions")
-        print(f"  Intervention duration: {intervention_duration} sessions")
-    else:
-        print(f"Strategic therapist: Disabled (complementary only)")
+    print(f"V2 Therapist parameters:")
+    print(f"  Perception window: {perception_window}")
+    print(f"  Seeding benefit scaling: {seeding_benefit_scaling:.4f}")
+    print(f"  Skip seeding accuracy threshold: {skip_seeding_accuracy_threshold:.4f}")
+    print(f"  Quick seed actions threshold: {quick_seed_actions_threshold}")
+    print(f"  Abort consecutive failures threshold: {abort_consecutive_failures_threshold}")
     print()
 
     print("CLIENT U_MATRIX BOUNDS")
@@ -262,16 +238,6 @@ def verbose_session_trace(
     # Track if threshold is ever reached (matching comparison test criterion)
     threshold_ever_reached = False
     first_threshold_session = None
-
-    # Track intervention state (strategic therapist)
-    intervention_active = False
-    intervention_session_count = 0
-    intervention_count = 0
-    optimal_action = None
-    rs_history = []  # For plateau detection
-    intervention_sessions = []
-    intervention_rs_values = []
-    intervention_bond_values = []
 
     # Run sessions
     print("=" * 100)
@@ -324,55 +290,24 @@ def verbose_session_trace(
         # Select action
         client_action = client.select_action()
 
-        # Determine therapist action based on strategy
-        if enable_strategic_therapist:
-            # Check if we should trigger intervention (only if not already active)
-            if not intervention_active:
-                if len(rs_history) >= plateau_window:
-                    # Check if RS has plateaued (range within threshold)
-                    rs_range = max(rs_history) - min(rs_history)
-                    if rs_range <= rs_plateau_threshold:
-                        # Trigger intervention
-                        intervention_active = True
-                        intervention_session_count = 0
-                        intervention_count += 1
-                        optimal_action = get_optimal_therapist_action(u_matrix)
-                        # Clear RS history to prevent immediate re-triggering
-                        rs_history.clear()
-
-            # Execute intervention or complementary
-            if intervention_active:
-                if optimal_action is None:
-                    optimal_action = get_optimal_therapist_action(u_matrix)
-                therapist_action: int = int(optimal_action)
-                intervention_session_count += 1
-                intervention_sessions.append(session)
-
-                if intervention_session_count >= intervention_duration:
-                    intervention_active = False
-            else:
-                therapist_action = always_complement(client_action)
-        else:
-            therapist_action = always_complement(client_action)
+        # Get therapist decision using V2 strategy
+        therapist_action, metadata = therapist.decide_action(client_action, session)
 
         # Get utility of this interaction
         interaction_utility = u_matrix[client_action, therapist_action]
 
         if is_verbose:
             print(f"Client selects: {OCTANTS[client_action]:3s} ({client_action})")
-
-            # Show intervention status
-            if enable_strategic_therapist and intervention_active:
-                print(f"Therapist responds: {OCTANTS[therapist_action]:3s} ({therapist_action}) [INTERVENTION - optimal action]")
-                print(f"  Intervention {intervention_count}, session {intervention_session_count}/{intervention_duration}")
-            else:
-                print(f"Therapist responds: {OCTANTS[therapist_action]:3s} ({therapist_action}) [complementary]")
-
+            print(f"Therapist responds: {OCTANTS[therapist_action]:3s} ({therapist_action}) [Phase: {metadata['phase']}]")
+            print(f"Rationale: {metadata['rationale']}")
             print(f"Utility of interaction: {interaction_utility:7.2f}")
             print()
 
         # Update memory
         client.update_memory(client_action, therapist_action)
+
+        # Process feedback for seeding monitoring
+        therapist.process_feedback_after_memory_update(session, client_action)
 
         # Show parataxic distortion details if enabled
         if is_verbose and enable_parataxic:
@@ -405,15 +340,6 @@ def verbose_session_trace(
         new_bond = client.bond
         rs_change = new_rs - current_rs
         bond_change = new_bond - current_bond
-
-        # Track intervention RS/Bond values
-        if enable_strategic_therapist and session in intervention_sessions:
-            intervention_rs_values.append(new_rs)
-            intervention_bond_values.append(new_bond)
-
-        # Update RS history for plateau detection (only when not in intervention)
-        if enable_strategic_therapist and not intervention_active:
-            rs_history.append(new_rs)
 
         # Check if threshold reached this session
         reached_threshold_this_session = new_rs >= rs_threshold
@@ -548,31 +474,35 @@ def verbose_session_trace(
         print(f"Baseline path successes: {pstats['baseline_correct_count']} times")
         print()
 
-    # Intervention summary (strategic therapist)
-    if enable_strategic_therapist:
-        print("INTERVENTION SUMMARY (Strategic Therapist)")
-        print("-" * 100)
-        print(f"Total interventions triggered: {intervention_count}")
+    # V2 Therapist strategy summary
+    print("THERAPIST STRATEGY SUMMARY (OmniscientStrategicTherapist V2)")
+    print("-" * 100)
+    phase_summary = therapist.get_phase_summary()
+    print(f"Total sessions: {phase_summary['total_sessions']}")
+    print(f"Current phase: {phase_summary['current_phase']}")
+    print()
+    print("Time in each phase:")
+    for phase, count in phase_summary['phase_counts'].items():
+        pct = count / phase_summary['total_sessions'] * 100 if phase_summary['total_sessions'] > 0 else 0
+        print(f"  {phase:30s}: {count:3d} sessions ({pct:5.1f}%)")
+    print()
 
-        if intervention_count > 0:
-            print(f"Intervention sessions: {intervention_sessions}")
-            print()
-
-            print("RS During Interventions:")
-            print(f"  Mean: {np.mean(intervention_rs_values):.2f}")
-            print(f"  Std: {np.std(intervention_rs_values):.2f}")
-            print(f"  Min: {np.min(intervention_rs_values):.2f}")
-            print(f"  Max: {np.max(intervention_rs_values):.2f}")
-            print()
-
-            print("Bond During Interventions:")
-            print(f"  Mean: {np.mean(intervention_bond_values):.4f}")
-            print(f"  Std: {np.std(intervention_bond_values):.4f}")
-            print(f"  Min: {np.min(intervention_bond_values):.4f}")
-            print(f"  Max: {np.max(intervention_bond_values):.4f}")
-        else:
-            print("  No interventions triggered during this simulation")
+    seeding_summary = therapist.get_seeding_summary()
+    if seeding_summary['total_seeding_sessions'] > 0:
+        print("Seeding activity:")
+        print(f"  Total seeding sessions: {seeding_summary['total_seeding_sessions']}")
+        print(f"  Actions seeded: {seeding_summary['seeding_actions']}")
         print()
+
+    feedback_summary = therapist.get_feedback_monitoring_summary()
+    if feedback_summary:
+        print("Feedback monitoring:")
+        print(f"  Total seeding sessions: {feedback_summary.get('total_seeding_sessions', 0)}")
+        print(f"  Recalculations: {feedback_summary.get('recalculations', 0)}")
+        print(f"  Aborts: {feedback_summary.get('aborts', 0)}")
+        print(f"  Avg success rate: {feedback_summary.get('avg_success_rate', 0):.1%}")
+        print(f"  Competitor boost rate: {feedback_summary.get('competitor_boost_rate', 0):.1%}")
+    print()
 
     # Action distribution
     print("ACTION DISTRIBUTION")
@@ -731,8 +661,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '--baseline-accuracy',
         type=float,
-        default=0.2,
-        help='Baseline parataxic distortion accuracy (default: 0.2 = 20%% chance of correct perception via baseline path)'
+        default=0.5549619551286054,
+        help='Baseline parataxic distortion accuracy (default: 0.555 from optimized trial)'
     )
     parser.add_argument(
         '--pattern', '-p',
@@ -746,8 +676,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '--threshold', '-t',
         type=float,
-        default=0.8,
-        help='Success threshold percentile (0.0-1.0)'
+        default=0.9358603798762596,
+        help='Success threshold percentile (0.0-1.0, default: 0.936 from optimized trial)'
     )
     
     parser.add_argument(
@@ -774,50 +704,58 @@ if __name__ == "__main__":
     parser.add_argument(
         '--bond-alpha', '-ba',
         type=float,
-        default=5.0,
-        help='Bond alpha (sigmoid steepness parameter)'
+        default=11.847676335038303,
+        help='Bond alpha (sigmoid steepness parameter, default: 11.85 from optimized trial)'
     )
     
     parser.add_argument(
         '--bond-offset', '-bo',
         type=float,
-        default=0.8,
+        default=0.624462461360537,
         help='Bond offset for sigmoid inflection point (0.0-1.0)'
     )
 
-    # Strategic therapist arguments
+    # V2 Therapist arguments
     parser.add_argument(
-        '--enable-strategic-therapist',
-        action='store_true',
-        help='Enable strategic therapist with plateau-triggered optimal interventions'
-    )
-
-    parser.add_argument(
-        '--rs-plateau-threshold',
-        type=float,
-        default=5.0,
-        help='RS range threshold to detect plateau (default: 5.0 RS points)'
-    )
-
-    parser.add_argument(
-        '--plateau-window',
-        type=int,
-        default=15,
-        help='Number of consecutive sessions to check for plateau (default: 15)'
-    )
-
-    parser.add_argument(
-        '--intervention-duration',
+        '--perception-window',
         type=int,
         default=10,
-        help='Number of sessions to enact optimal action during intervention (default: 10)'
+        help='Memory window size for parataxic distortion (V2 therapist)'
+    )
+
+    parser.add_argument(
+        '--seeding-benefit-scaling',
+        type=float,
+        default=1.8658722646107764,
+        help='Scaling factor for expected seeding benefit (0.1-2.0)'
+    )
+
+    parser.add_argument(
+        '--skip-seeding-accuracy-threshold',
+        type=float,
+        default=0.814677493978211,
+        help='Skip seeding if accuracy above this (0.75-0.95)'
+    )
+
+    parser.add_argument(
+        '--quick-seed-actions-threshold',
+        type=int,
+        default=1,
+        help='"Just do it" if actions_needed <= this (1-5)'
+    )
+
+    parser.add_argument(
+        '--abort-consecutive-failures-threshold',
+        type=int,
+        default=4,
+        help='Abort after this many consecutive failures (4-9)'
     )
 
     parser.add_argument(
         '--max-sessions', '-s',
         type=int,
-        default=100,
-        help='Maximum number of therapy sessions'
+        default=1940,
+        help='Maximum number of therapy sessions (default: 1940 from optimized trial)'
     )
     
     parser.add_argument(
@@ -876,11 +814,12 @@ if __name__ == "__main__":
             'verbose_sessions': verbose_sessions,
             'max_sessions': args.max_sessions,
             'random_state': args.seed,
-            # Strategic therapist
-            'enable_strategic_therapist': args.enable_strategic_therapist,
-            'rs_plateau_threshold': args.rs_plateau_threshold,
-            'plateau_window': args.plateau_window,
-            'intervention_duration': args.intervention_duration,
+            # V2 Therapist parameters
+            'perception_window': args.perception_window,
+            'seeding_benefit_scaling': args.seeding_benefit_scaling,
+            'skip_seeding_accuracy_threshold': args.skip_seeding_accuracy_threshold,
+            'quick_seed_actions_threshold': args.quick_seed_actions_threshold,
+            'abort_consecutive_failures_threshold': args.abort_consecutive_failures_threshold,
         }
         
         verbose_session_trace(**kwargs)

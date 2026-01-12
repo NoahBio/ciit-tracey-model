@@ -38,6 +38,7 @@ from src.config import (
     OCTANTS,
     calculate_success_threshold,
 )
+from src.agents.therapist_agents.omniscient_therapist_v2 import OmniscientStrategicTherapist
 
 
 # Map legacy pattern names
@@ -77,11 +78,10 @@ class SimulationResult:
     # Perception stats (if enabled)
     perception_stats: Optional[Dict[str, Any]] = None
 
-    # Intervention data (strategic therapist)
-    intervention_count: int = 0
-    intervention_sessions: List[int] = field(default_factory=list)
-    intervention_rs_values: List[float] = field(default_factory=list)
-    intervention_bond_values: List[float] = field(default_factory=list)
+    # V2 Therapist data
+    therapist_phase_summary: Optional[Dict[str, Any]] = None
+    therapist_seeding_summary: Optional[Dict[str, Any]] = None
+    therapist_feedback_summary: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -130,42 +130,12 @@ class MultiSeedStatistics:
     failed_runs_closest_rs: List[float] = field(default_factory=list)
     failed_runs_gap: List[float] = field(default_factory=list)
 
-    # Intervention statistics (strategic therapist)
-    intervention_rate: Optional[float] = None
-    mean_interventions_per_run: Optional[float] = None
-    median_interventions_per_run: Optional[float] = None
-    max_interventions_in_run: Optional[int] = None
-    intervention_rs_change_stats: Optional[Dict[str, float]] = None
-    intervention_bond_change_stats: Optional[Dict[str, float]] = None
+    # V2 Therapist statistics
+    phase_distribution: Optional[Dict[str, float]] = None  # % time in each phase
+    seeding_frequency: Optional[float] = None  # avg % of sessions with seeding
+    seeding_success_rate: Optional[float] = None
 
 
-def always_complement(client_action: int) -> int:
-    """Simple complementary therapist strategy."""
-    complement_map = {
-        0: 4, 1: 3, 2: 2, 3: 1,
-        4: 0, 5: 7, 6: 6, 7: 5,
-    }
-    return complement_map[client_action]
-
-
-def get_optimal_therapist_action(u_matrix: np.ndarray) -> int:
-    """
-    Find the therapist action that corresponds to the global maximum utility in the u_matrix.
-
-    Parameters
-    ----------
-    u_matrix : np.ndarray
-        The client's 8x8 utility matrix (client_action x therapist_action)
-
-    Returns
-    -------
-    int
-        The therapist action (column index, 0-7) corresponding to the maximum utility
-    """
-    # Find the indices of the maximum value
-    max_idx = np.unravel_index(np.argmax(u_matrix), u_matrix.shape)
-    # Return the therapist action (column index)
-    return int(max_idx[1])
 
 
 def run_single_simulation(
@@ -174,17 +144,19 @@ def run_single_simulation(
     initial_memory_pattern: str,
     success_threshold_percentile: float,
     enable_parataxic: bool = False,
-    baseline_accuracy: float = 0.2,
-    max_sessions: int = 100,
+    baseline_accuracy: float = 0.5549619551286054,
+    max_sessions: int = 1940,
     entropy: float = 3.0,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
-    bond_alpha: float = 5.0,
-    bond_offset: float = 0.8,
-    enable_strategic_therapist: bool = False,
-    rs_plateau_threshold: float = 5.0,
-    plateau_window: int = 15,
-    intervention_duration: int = 10,
+    bond_alpha: float = 11.847676335038303,
+    bond_offset: float = 0.624462461360537,
+    # V2 Therapist parameters
+    perception_window: int = 10,
+    seeding_benefit_scaling: float = 1.8658722646107764,
+    skip_seeding_accuracy_threshold: float = 0.814677493978211,
+    quick_seed_actions_threshold: int = 1,
+    abort_consecutive_failures_threshold: int = 4,
 ) -> SimulationResult:
     """
     Run a single therapy simulation with specified configuration.
@@ -240,6 +212,17 @@ def run_single_simulation(
 
     client = ClientClass(**client_kwargs)
 
+    # Create V2 therapist with omniscient access
+    therapist = OmniscientStrategicTherapist(
+        client_ref=client,
+        perception_window=perception_window,
+        baseline_accuracy=baseline_accuracy,
+        seeding_benefit_scaling=seeding_benefit_scaling,
+        skip_seeding_accuracy_threshold=skip_seeding_accuracy_threshold,
+        quick_seed_actions_threshold=quick_seed_actions_threshold,
+        abort_consecutive_failures_threshold=abort_consecutive_failures_threshold,
+    )
+
     # Calculate RS threshold
     rs_threshold = calculate_success_threshold(u_matrix, success_threshold_percentile)
 
@@ -260,16 +243,6 @@ def run_single_simulation(
     first_threshold_session = None
     closest_rs = initial_rs
 
-    # Track intervention state (strategic therapist)
-    intervention_active = False
-    intervention_session_count = 0
-    intervention_count = 0
-    optimal_action = None
-    rs_history = []  # For plateau detection
-    intervention_sessions = []
-    intervention_rs_values = []
-    intervention_bond_values = []
-
     # Run sessions
     session = 0
     dropped_out = False
@@ -278,42 +251,8 @@ def run_single_simulation(
         # Select action
         client_action = client.select_action()
 
-        # Determine therapist action based on strategy
-        if enable_strategic_therapist:
-            # Check if we should trigger intervention (only if not already active)
-            if not intervention_active:
-                if len(rs_history) >= plateau_window:
-                    # Check if RS has plateaued (range within threshold)
-                    rs_range = max(rs_history) - min(rs_history)
-                    if rs_range <= rs_plateau_threshold:
-                        # Trigger intervention
-                        intervention_active = True
-                        intervention_session_count = 0
-                        intervention_count += 1
-                        optimal_action = get_optimal_therapist_action(u_matrix)
-                        # Clear RS history to prevent immediate re-triggering
-                        rs_history.clear()
-
-            # Execute intervention or complementary
-            if intervention_active:
-                # Safety: ensure optimal action is computed
-                if optimal_action is None:
-                    optimal_action = get_optimal_therapist_action(u_matrix)
-                therapist_action = optimal_action
-                intervention_session_count += 1
-
-                # Track intervention metrics
-                intervention_sessions.append(session)
-
-                # Check if intervention is complete
-                if intervention_session_count >= intervention_duration:
-                    intervention_active = False
-                    # Resume monitoring after intervention completes
-            else:
-                therapist_action = always_complement(client_action)
-        else:
-            # Default: complementary
-            therapist_action = always_complement(client_action)
+        # Get therapist decision using V2 strategy
+        therapist_action, metadata = therapist.decide_action(client_action, session)
 
         # Record actions
         client_actions.append(client_action)
@@ -322,6 +261,9 @@ def run_single_simulation(
         # Update memory
         client.update_memory(client_action, therapist_action)
 
+        # Process feedback for seeding monitoring
+        therapist.process_feedback_after_memory_update(session, client_action)
+
         # Get new state
         new_rs = client.relationship_satisfaction
         new_bond = client.bond
@@ -329,15 +271,6 @@ def run_single_simulation(
         # Track trajectories
         rs_trajectory.append(new_rs)
         bond_trajectory.append(new_bond)
-
-        # Track intervention RS/Bond values
-        if enable_strategic_therapist and session in intervention_sessions:
-            intervention_rs_values.append(new_rs)
-            intervention_bond_values.append(new_bond)
-
-        # Update RS history for plateau detection (only when not in intervention)
-        if enable_strategic_therapist and not intervention_active:
-            rs_history.append(new_rs)
 
         # Update closest RS
         if new_rs > closest_rs:
@@ -362,6 +295,11 @@ def run_single_simulation(
     if enable_parataxic and hasattr(client, 'get_parataxic_stats'):
         perception_stats = client.get_parataxic_stats()
 
+    # Get V2 therapist summaries
+    therapist_phase_summary = therapist.get_phase_summary()
+    therapist_seeding_summary = therapist.get_seeding_summary()
+    therapist_feedback_summary = therapist.get_feedback_monitoring_summary()
+
     # Calculate gap to threshold
     gap_to_threshold = rs_threshold - closest_rs
 
@@ -383,10 +321,9 @@ def run_single_simulation(
         client_actions=client_actions,
         therapist_actions=therapist_actions,
         perception_stats=perception_stats,
-        intervention_count=intervention_count,
-        intervention_sessions=intervention_sessions,
-        intervention_rs_values=intervention_rs_values,
-        intervention_bond_values=intervention_bond_values,
+        therapist_phase_summary=therapist_phase_summary,
+        therapist_seeding_summary=therapist_seeding_summary,
+        therapist_feedback_summary=therapist_feedback_summary,
     )
 
 
@@ -518,53 +455,41 @@ def compute_statistics(results: List[SimulationResult], config: Dict[str, Any]) 
     failed_runs_closest_rs = [r.closest_rs for r in failed_runs]
     failed_runs_gap = [r.gap_to_threshold for r in failed_runs]
 
-    # Intervention statistics (strategic therapist)
-    intervention_rate = None
-    mean_interventions_per_run = None
-    median_interventions_per_run = None
-    max_interventions_in_run = None
-    intervention_rs_change_stats = None
-    intervention_bond_change_stats = None
+    # V2 Therapist statistics
+    phase_distribution = None
+    seeding_frequency = None
+    seeding_success_rate = None
 
-    # Check if any run had interventions
-    runs_with_interventions = [r for r in results if r.intervention_count > 0]
-    if runs_with_interventions:
-        # Basic intervention metrics
-        intervention_rate = len(runs_with_interventions) / n_runs
-        intervention_counts = [r.intervention_count for r in results]
-        mean_interventions_per_run = float(np.mean(intervention_counts))
-        median_interventions_per_run = float(np.median(intervention_counts))
-        max_interventions_in_run = max(intervention_counts)
+    phase_summaries = [r.therapist_phase_summary for r in results
+                       if r.therapist_phase_summary is not None]
+    if phase_summaries:
+        # Calculate average time in each phase
+        total_sessions_all = sum(s['total_sessions'] for s in phase_summaries)
+        phase_totals = {}
+        for summary in phase_summaries:
+            for phase, count in summary['phase_counts'].items():
+                phase_totals[phase] = phase_totals.get(phase, 0) + count
 
-        # RS change during interventions
-        all_intervention_rs = []
-        for r in runs_with_interventions:
-            if r.intervention_rs_values:
-                all_intervention_rs.extend(r.intervention_rs_values)
+        phase_distribution = {
+            phase: (count / total_sessions_all * 100)
+            for phase, count in phase_totals.items()
+        }
 
-        if all_intervention_rs:
-            intervention_rs_change_stats = {
-                'mean': float(np.mean(all_intervention_rs)),
-                'std': float(np.std(all_intervention_rs)),
-                'min': float(np.min(all_intervention_rs)),
-                'max': float(np.max(all_intervention_rs)),
-                'median': float(np.median(all_intervention_rs)),
-            }
+        # Calculate seeding frequency
+        seeding_summaries = [r.therapist_seeding_summary for r in results
+                             if r.therapist_seeding_summary is not None]
+        if seeding_summaries:
+            total_seeding_sessions = sum(s['total_seeding_sessions'] for s in seeding_summaries)
+            seeding_frequency = (total_seeding_sessions / total_sessions_all * 100)
 
-        # Bond change during interventions
-        all_intervention_bond = []
-        for r in runs_with_interventions:
-            if r.intervention_bond_values:
-                all_intervention_bond.extend(r.intervention_bond_values)
-
-        if all_intervention_bond:
-            intervention_bond_change_stats = {
-                'mean': float(np.mean(all_intervention_bond)),
-                'std': float(np.std(all_intervention_bond)),
-                'min': float(np.min(all_intervention_bond)),
-                'max': float(np.max(all_intervention_bond)),
-                'median': float(np.median(all_intervention_bond)),
-            }
+        # Calculate average seeding success rate
+        feedback_summaries = [r.therapist_feedback_summary for r in results
+                              if r.therapist_feedback_summary]
+        if feedback_summaries:
+            success_rates = [s['avg_success_rate'] for s in feedback_summaries
+                            if 'avg_success_rate' in s]
+            if success_rates:
+                seeding_success_rate = float(np.mean(success_rates))
 
     return MultiSeedStatistics(
         n_runs=n_runs,
@@ -593,12 +518,9 @@ def compute_statistics(results: List[SimulationResult], config: Dict[str, Any]) 
         therapist_action_distribution=therapist_action_distribution,
         failed_runs_closest_rs=failed_runs_closest_rs,
         failed_runs_gap=failed_runs_gap,
-        intervention_rate=intervention_rate,
-        mean_interventions_per_run=mean_interventions_per_run,
-        median_interventions_per_run=median_interventions_per_run,
-        max_interventions_in_run=max_interventions_in_run,
-        intervention_rs_change_stats=intervention_rs_change_stats,
-        intervention_bond_change_stats=intervention_bond_change_stats,
+        phase_distribution=phase_distribution,
+        seeding_frequency=seeding_frequency,
+        seeding_success_rate=seeding_success_rate,
     )
 
 
@@ -703,39 +625,26 @@ def display_results(stats: MultiSeedStatistics, show_trajectories: bool = True,
         print(f"{'Computed accuracy (std):':<40} {stats.perception_stats['computed_accuracy_std']:>10.3f}")
         print()
 
-    # Intervention statistics (strategic therapist)
-    if stats.intervention_rate is not None:
+    # V2 Therapist strategy summary
+    if stats.phase_distribution is not None:
         print("=" * 100)
-        print("INTERVENTION ANALYSIS (Strategic Therapist)")
+        print("THERAPIST STRATEGY ANALYSIS (OmniscientStrategicTherapist V2)")
         print("=" * 100)
         print()
 
-        runs_with_interventions = int(stats.intervention_rate * stats.n_runs)
-        print(f"{'Runs with interventions:':<40} {stats.intervention_rate:.1%} ({runs_with_interventions}/{stats.n_runs})")
-        print(f"{'Mean interventions per run:':<40} {stats.mean_interventions_per_run:>10.2f}")
-        print(f"{'Median interventions per run:':<40} {stats.median_interventions_per_run:>10.1f}")
-        print(f"{'Max interventions in single run:':<40} {stats.max_interventions_in_run:>10d}")
+        print("PHASE DISTRIBUTION (% of sessions)")
+        print("-" * 100)
+        for phase, percentage in stats.phase_distribution.items():
+            bar = '█' * int(percentage / 2)  # 50 chars = 100%
+            print(f"{phase:30s}: {percentage:5.1f}% {bar}")
         print()
 
-        if stats.intervention_rs_change_stats:
-            print("INTERVENTION EFFECTS - Relationship Satisfaction")
-            print("-" * 100)
-            print(f"{'Mean RS during intervention:':<40} {stats.intervention_rs_change_stats['mean']:>10.2f}")
-            print(f"{'Std Dev:':<40} {stats.intervention_rs_change_stats['std']:>10.2f}")
-            print(f"{'Min RS during intervention:':<40} {stats.intervention_rs_change_stats['min']:>10.2f}")
-            print(f"{'Median RS during intervention:':<40} {stats.intervention_rs_change_stats['median']:>10.2f}")
-            print(f"{'Max RS during intervention:':<40} {stats.intervention_rs_change_stats['max']:>10.2f}")
-            print()
+        if stats.seeding_frequency is not None:
+            print(f"{'Seeding frequency:':<40} {stats.seeding_frequency:>10.1f}% of sessions")
 
-        if stats.intervention_bond_change_stats:
-            print("INTERVENTION EFFECTS - Bond")
-            print("-" * 100)
-            print(f"{'Mean Bond during intervention:':<40} {stats.intervention_bond_change_stats['mean']:>10.4f}")
-            print(f"{'Std Dev:':<40} {stats.intervention_bond_change_stats['std']:>10.4f}")
-            print(f"{'Min Bond during intervention:':<40} {stats.intervention_bond_change_stats['min']:>10.4f}")
-            print(f"{'Median Bond during intervention:':<40} {stats.intervention_bond_change_stats['median']:>10.4f}")
-            print(f"{'Max Bond during intervention:':<40} {stats.intervention_bond_change_stats['max']:>10.4f}")
-            print()
+        if stats.seeding_success_rate is not None:
+            print(f"{'Avg seeding success rate:':<40} {stats.seeding_success_rate:>10.1%}")
+        print()
 
     # Near-miss analysis for failed runs
     if stats.failed_runs_closest_rs:
@@ -812,19 +721,21 @@ def run_multi_seed_simulation(
     n_seeds: int,
     mechanism: str = 'bond_only',
     initial_memory_pattern: str = 'cold_warm',
-    success_threshold_percentile: float = 0.8,
+    success_threshold_percentile: float = 0.9358603798762596,
     enable_parataxic: bool = False,
-    baseline_accuracy: float = 0.2,
-    max_sessions: int = 100,
+    baseline_accuracy: float = 0.5549619551286054,
+    max_sessions: int = 1940,
     entropy: float = 3.0,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
-    bond_alpha: float = 5.0,
-    bond_offset: float = 0.8,
-    enable_strategic_therapist: bool = False,
-    rs_plateau_threshold: float = 5.0,
-    plateau_window: int = 15,
-    intervention_duration: int = 10,
+    bond_alpha: float = 11.847676335038303,
+    bond_offset: float = 0.624462461360537,
+    # V2 Therapist parameters
+    perception_window: int = 10,
+    seeding_benefit_scaling: float = 1.8658722646107764,
+    skip_seeding_accuracy_threshold: float = 0.814677493978211,
+    quick_seed_actions_threshold: int = 1,
+    abort_consecutive_failures_threshold: int = 4,
     show_trajectories: bool = True,
     show_actions: bool = True,
     verbose: bool = True,
@@ -891,10 +802,12 @@ def run_multi_seed_simulation(
         'bond_power': bond_power if 'bond_weighted' in mechanism else 'N/A',
         'bond_alpha': bond_alpha,
         'bond_offset': bond_offset,
-        'enable_strategic_therapist': enable_strategic_therapist,
-        'rs_plateau_threshold': rs_plateau_threshold if enable_strategic_therapist else 'N/A',
-        'plateau_window': plateau_window if enable_strategic_therapist else 'N/A',
-        'intervention_duration': intervention_duration if enable_strategic_therapist else 'N/A',
+        # V2 Therapist parameters
+        'perception_window': perception_window,
+        'seeding_benefit_scaling': seeding_benefit_scaling,
+        'skip_seeding_accuracy_threshold': skip_seeding_accuracy_threshold,
+        'quick_seed_actions_threshold': quick_seed_actions_threshold,
+        'abort_consecutive_failures_threshold': abort_consecutive_failures_threshold,
     }
 
     # Run all simulations
@@ -916,10 +829,12 @@ def run_multi_seed_simulation(
             bond_power=bond_power,
             bond_alpha=bond_alpha,
             bond_offset=bond_offset,
-            enable_strategic_therapist=enable_strategic_therapist,
-            rs_plateau_threshold=rs_plateau_threshold,
-            plateau_window=plateau_window,
-            intervention_duration=intervention_duration,
+            # V2 Therapist parameters
+            perception_window=perception_window,
+            seeding_benefit_scaling=seeding_benefit_scaling,
+            skip_seeding_accuracy_threshold=skip_seeding_accuracy_threshold,
+            quick_seed_actions_threshold=quick_seed_actions_threshold,
+            abort_consecutive_failures_threshold=abort_consecutive_failures_threshold,
         )
 
         results.append(result)
@@ -982,8 +897,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '--threshold', '-t',
         type=float,
-        default=0.8,
-        help='Success threshold percentile (0.0-1.0)'
+        default=0.9358603798762596,
+        help='Success threshold percentile (0.0-1.0, default: 0.936 from optimized trial)'
     )
 
     parser.add_argument(
@@ -1004,15 +919,15 @@ if __name__ == "__main__":
     parser.add_argument(
         '--baseline-accuracy',
         type=float,
-        default=0.2,
-        help='Baseline accuracy for parataxic distortion (if enabled)'
+        default=0.5549619551286054,
+        help='Baseline accuracy for parataxic distortion (default: 0.555 from optimized trial)'
     )
 
     parser.add_argument(
         '--max-sessions', '-s',
         type=int,
-        default=100,
-        help='Maximum number of therapy sessions per run'
+        default=1940,
+        help='Maximum number of therapy sessions per run (default: 1940 from optimized trial)'
     )
 
     parser.add_argument(
@@ -1039,42 +954,51 @@ if __name__ == "__main__":
     parser.add_argument(
         '--bond-alpha', '-ba',
         type=float,
-        default=5.0,
-        help='Bond alpha (sigmoid steepness parameter)'
+        default=11.847676335038303,
+        help='Bond alpha (sigmoid steepness parameter, default: 11.85 from optimized trial)'
     )
 
     parser.add_argument(
         '--bond-offset', '-bo',
         type=float,
-        default=0.8,
-        help='Bond offset for sigmoid inflection point (0.0-1.0)'
+        default=0.624462461360537,
+        help='Bond offset for sigmoid inflection point (default: 0.624 from optimized trial)'
     )
 
+    # V2 Therapist arguments
     parser.add_argument(
-        '--enable-strategic-therapist',
-        action='store_true',
-        help='Enable strategic therapist with plateau-triggered optimal interventions'
-    )
-
-    parser.add_argument(
-        '--rs-plateau-threshold',
-        type=float,
-        default=5.0,
-        help='RS range threshold to detect plateau (default: 5.0 RS points)'
-    )
-
-    parser.add_argument(
-        '--plateau-window',
-        type=int,
-        default=15,
-        help='Number of consecutive sessions to check for plateau (default: 15)'
-    )
-
-    parser.add_argument(
-        '--intervention-duration',
+        '--perception-window',
         type=int,
         default=10,
-        help='Number of sessions to enact optimal action during intervention (default: 10)'
+        help='Memory window size for parataxic distortion (V2 therapist)'
+    )
+
+    parser.add_argument(
+        '--seeding-benefit-scaling',
+        type=float,
+        default=1.8658722646107764,
+        help='Scaling factor for expected seeding benefit (0.1-2.0)'
+    )
+
+    parser.add_argument(
+        '--skip-seeding-accuracy-threshold',
+        type=float,
+        default=0.814677493978211,
+        help='Skip seeding if accuracy above this (0.75-0.95)'
+    )
+
+    parser.add_argument(
+        '--quick-seed-actions-threshold',
+        type=int,
+        default=1,
+        help='"Just do it" if actions_needed <= this (1-5)'
+    )
+
+    parser.add_argument(
+        '--abort-consecutive-failures-threshold',
+        type=int,
+        default=4,
+        help='Abort after this many consecutive failures (4-9)'
     )
 
     parser.add_argument(
@@ -1111,10 +1035,12 @@ if __name__ == "__main__":
         bond_power=args.bond_power,
         bond_alpha=args.bond_alpha,
         bond_offset=args.bond_offset,
-        enable_strategic_therapist=args.enable_strategic_therapist,
-        rs_plateau_threshold=args.rs_plateau_threshold,
-        plateau_window=args.plateau_window,
-        intervention_duration=args.intervention_duration,
+        # V2 Therapist parameters
+        perception_window=args.perception_window,
+        seeding_benefit_scaling=args.seeding_benefit_scaling,
+        skip_seeding_accuracy_threshold=args.skip_seeding_accuracy_threshold,
+        quick_seed_actions_threshold=args.quick_seed_actions_threshold,
+        abort_consecutive_failures_threshold=args.abort_consecutive_failures_threshold,
         show_trajectories=not args.no_trajectories,
         show_actions=not args.no_actions,
         verbose=not args.quiet,
