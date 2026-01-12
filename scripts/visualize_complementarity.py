@@ -558,15 +558,31 @@ class ComplementarityVisualizer:
         self.filter_mode = filter_map[label]
         self.plot()
 
-    def get_line_style(self, mechanism: str, pattern: str, version: str) -> Dict:
+    def get_line_style(self, mechanism: str, pattern: str, version: str, config_name: str = '') -> Dict:
         """Generate line style for a configuration."""
+        # Check if this is a V2 advantage or remaining group
+        if config_name.endswith('_v2_advantage'):
+            color = 'green'
+            linewidth = 2.5
+            alpha = 1.0
+        elif config_name.endswith('_remaining'):
+            color = 'black'
+            linewidth = 2.0
+            alpha = 0.6
+        else:
+            # Original behavior
+            color = MECHANISM_COLORS[mechanism]
+            linewidth = 2
+            alpha = 1.0
+
         return {
-            'color': MECHANISM_COLORS[mechanism],
+            'color': color,
             'linestyle': PATTERN_LINESTYLES[pattern],
             'marker': THERAPIST_MARKERS[version],
             'markevery': 10,
-            'linewidth': 2,
+            'linewidth': linewidth,
             'markersize': 6,
+            'alpha': alpha,
         }
 
     def plot(self):
@@ -596,7 +612,8 @@ class ComplementarityVisualizer:
             style = self.get_line_style(
                 agg_result.mechanism,
                 agg_result.pattern,
-                agg_result.therapist_version
+                agg_result.therapist_version,
+                agg_result.config_name
             )
 
             # Plot enacted complementarity
@@ -779,6 +796,10 @@ def parse_arguments():
     parser.add_argument('--abort-consecutive-failures-threshold', type=int, default=5,
                        help='Abort consecutive failures threshold for v2 therapist')
 
+    # Highlighting
+    parser.add_argument('--highlight-v2-advantage', action='store_true',
+                       help='Highlight seeds where V2 succeeded but baseline failed (green) vs all other seeds (black)')
+
     # Output
     parser.add_argument('--output', type=str, default=None,
                        help='Save plot to file (optional)')
@@ -819,6 +840,7 @@ def main():
             "skip_seeding_accuracy_threshold": args.skip_seeding_accuracy_threshold,
             "quick_seed_actions_threshold": args.quick_seed_actions_threshold,
             "abort_consecutive_failures_threshold": args.abort_consecutive_failures_threshold,
+            "highlight_v2_advantage": args.highlight_v2_advantage,
         }
     }
 
@@ -836,6 +858,7 @@ def main():
     print(f"Window size: {args.window_size}")
     print(f"Complementarity type: {args.complementarity_type}")
     print(f"Parataxic distortion: {args.enable_parataxic}")
+    print(f"Highlight V2 advantage: {args.highlight_v2_advantage}")
     print("=" * 70)
 
     all_aggregated_results = []
@@ -902,13 +925,47 @@ def main():
             )
             results.append(result)
 
-        # Aggregate results with baseline
-        agg_result = aggregate_results(results, baseline_success_rate=baseline_success_rate)
-        all_aggregated_results.append(agg_result)
+        # Split results if --highlight-v2-advantage is enabled
+        if args.highlight_v2_advantage:
+            # Split into V2 advantage seeds and remaining seeds
+            v2_advantage_results = [
+                r for r in results
+                if r.success and not baseline_successes[r.seed]
+            ]
+            remaining_results = [
+                r for r in results
+                if not (r.success and not baseline_successes[r.seed])
+            ]
 
-        print(f"Omniscient success rate: {agg_result.success_rate:.1f}%")
-        print(f"Mean sessions: {np.mean([r.total_sessions for r in results]):.1f}")
-        print(f"Overall non-complementarity: {agg_result.overall_noncomplementarity_pct:.2f}%")
+            print(f"\nV2 advantage seeds: {len(v2_advantage_results)}/{len(results)}")
+            print(f"Remaining seeds: {len(remaining_results)}/{len(results)}")
+
+            # Aggregate each group separately
+            if len(v2_advantage_results) > 0:
+                agg_v2_advantage = aggregate_results(v2_advantage_results, baseline_success_rate=baseline_success_rate)
+                # Mark this as V2 advantage group
+                agg_v2_advantage.config_name = f"{agg_v2_advantage.config_name}_v2_advantage"
+                all_aggregated_results.append(agg_v2_advantage)
+
+            if len(remaining_results) > 0:
+                agg_remaining = aggregate_results(remaining_results, baseline_success_rate=baseline_success_rate)
+                # Mark this as remaining group
+                agg_remaining.config_name = f"{agg_remaining.config_name}_remaining"
+                all_aggregated_results.append(agg_remaining)
+
+            # Overall stats (for display)
+            agg_overall = aggregate_results(results, baseline_success_rate=baseline_success_rate)
+            print(f"Overall omniscient success rate: {agg_overall.success_rate:.1f}%")
+            print(f"Mean sessions: {np.mean([r.total_sessions for r in results]):.1f}")
+            print(f"Overall non-complementarity: {agg_overall.overall_noncomplementarity_pct:.2f}%")
+        else:
+            # Aggregate all results together (original behavior)
+            agg_result = aggregate_results(results, baseline_success_rate=baseline_success_rate)
+            all_aggregated_results.append(agg_result)
+
+            print(f"Omniscient success rate: {agg_result.success_rate:.1f}%")
+            print(f"Mean sessions: {np.mean([r.total_sessions for r in results]):.1f}")
+            print(f"Overall non-complementarity: {agg_result.overall_noncomplementarity_pct:.2f}%")
 
     print("\n" + "=" * 70)
     print("Creating visualization...")
@@ -917,7 +974,7 @@ def main():
     # Add results summary to command info
     command_info["results"] = []
     for agg_result in all_aggregated_results:
-        command_info["results"].append({
+        result_dict = {
             "config_name": agg_result.config_name,
             "mechanism": agg_result.mechanism,
             "pattern": agg_result.pattern,
@@ -926,7 +983,12 @@ def main():
             "omniscient_success_rate": agg_result.success_rate,
             "baseline_success_rate": agg_result.baseline_success_rate,
             "overall_noncomplementarity_pct": agg_result.overall_noncomplementarity_pct,
-        })
+        }
+        if agg_result.config_name.endswith('_v2_advantage'):
+            result_dict["group"] = "V2 advantage (green)"
+        elif agg_result.config_name.endswith('_remaining'):
+            result_dict["group"] = "Remaining trials (black)"
+        command_info["results"].append(result_dict)
 
     # Re-save command.json with results
     with open(output_dir / "command.json", "w") as f:
