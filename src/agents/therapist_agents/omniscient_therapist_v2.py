@@ -116,23 +116,24 @@ class OmniscientStrategicTherapist:
     def __init__(
         self,
         client_ref,
-        perception_window: int = 15,
-        baseline_accuracy: float = 0.2,
-        seeding_benefit_scaling: float = 0.3,
-        skip_seeding_accuracy_threshold: float = 0.9,
-        quick_seed_actions_threshold: int = 3,
-        abort_consecutive_failures_threshold: int = 5,
+        # Defaults from best Optuna trial (rank 1, trial 2643: 88% vs 73.3% baseline)
+        perception_window: int = 10,
+        baseline_accuracy: float = 0.5549619551286054,
+        seeding_benefit_scaling: float = 1.8658722646107764,
+        skip_seeding_accuracy_threshold: float = 0.814677493978211,
+        quick_seed_actions_threshold: int = 1,
+        abort_consecutive_failures_threshold: int = 4,
     ):
         """Initialize the omniscient strategic therapist.
 
         Args:
             client_ref: Reference to client agent (for reading state)
-            perception_window: Size of perception window for parataxic distortion
-            baseline_accuracy: Baseline perception accuracy parameter
-            seeding_benefit_scaling: Scaling factor for expected seeding benefit (0.1-2.0)
-            skip_seeding_accuracy_threshold: Skip seeding if accuracy above this (0.75-0.95)
-            quick_seed_actions_threshold: "Just do it" if actions_needed <= this (1-5)
-            abort_consecutive_failures_threshold: Abort after this many failures (4-9)
+            perception_window: Size of perception window for parataxic distortion (default: 10)
+            baseline_accuracy: Baseline perception accuracy parameter (default: 0.555)
+            seeding_benefit_scaling: Scaling factor for expected seeding benefit (default: 1.87)
+            skip_seeding_accuracy_threshold: Skip seeding if accuracy above this (default: 0.815)
+            quick_seed_actions_threshold: "Just do it" if actions_needed <= this (default: 1)
+            abort_consecutive_failures_threshold: Abort after this many failures (default: 4)
         """
         self.client_ref = client_ref
         self.perception_window = perception_window

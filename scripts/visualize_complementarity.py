@@ -561,16 +561,17 @@ class ComplementarityVisualizer:
     def get_line_style(self, mechanism: str, pattern: str, version: str, config_name: str = '') -> Dict:
         """Generate line style for a configuration."""
         # Check if this is a V2 advantage or remaining group
+        # Use very distinct colors to make groups visually obvious
         if config_name.endswith('_v2_advantage'):
-            color = 'green'
-            linewidth = 2.5
+            color = '#00AA00'  # Bright green - clearly distinct from teal
+            linewidth = 3.0
             alpha = 1.0
         elif config_name.endswith('_remaining'):
-            color = 'black'
+            color = '#333333'  # Dark gray (nearly black)
             linewidth = 2.0
-            alpha = 0.6
+            alpha = 0.8
         else:
-            # Original behavior
+            # Original behavior - use mechanism colors
             color = MECHANISM_COLORS[mechanism]
             linewidth = 2
             alpha = 1.0
@@ -685,10 +686,19 @@ class ComplementarityVisualizer:
                 family='monospace'
             )
 
-        # Plot success rate
+        # Plot success rate - use green/black if highlight mode, otherwise mechanism colors
         config_names = [r.config_name for r in self.aggregated_results]
         success_rates = [r.success_rate for r in self.aggregated_results]
-        colors = [MECHANISM_COLORS[r.mechanism] for r in self.aggregated_results]
+
+        # Determine bar colors based on config_name suffix
+        colors = []
+        for r in self.aggregated_results:
+            if r.config_name.endswith('_v2_advantage'):
+                colors.append('green')
+            elif r.config_name.endswith('_remaining'):
+                colors.append('black')
+            else:
+                colors.append(MECHANISM_COLORS[r.mechanism])
 
         x_pos = np.arange(len(config_names))
         self.ax_success.bar(x_pos, success_rates, color=colors, alpha=0.7, edgecolor='black', linewidth=1.5)
@@ -753,12 +763,13 @@ def parse_arguments():
     parser.add_argument('--n-seeds', type=int, default=30,
                        help='Number of random seeds per configuration')
 
-    # Simulation parameters
-    parser.add_argument('--max-sessions', type=int, default=100,
-                       help='Maximum therapy sessions')
+    # Simulation parameters - defaults from best Optuna trial (rank 1, trial 2643)
+    # Achieved 88% omniscient success vs 73.3% baseline (14.7% advantage)
+    parser.add_argument('--max-sessions', type=int, default=1940,
+                       help='Maximum therapy sessions (default: 1940 from best Optuna trial)')
 
-    parser.add_argument('--threshold', type=float, default=0.8,
-                       help='Success threshold percentile')
+    parser.add_argument('--threshold', type=float, default=0.9358603798762596,
+                       help='Success threshold percentile (default: 0.936 from best Optuna trial)')
 
     parser.add_argument('--entropy', type=float, default=0.1,
                        help='Client entropy parameter')
@@ -769,32 +780,32 @@ def parse_arguments():
     parser.add_argument('--disable-parataxic', dest='enable_parataxic', action='store_false',
                        help='Disable parataxic distortion')
 
-    parser.add_argument('--baseline-accuracy', type=float, default=0.5,
-                       help='Baseline perception accuracy for parataxic distortion')
+    parser.add_argument('--baseline-accuracy', type=float, default=0.5549619551286054,
+                       help='Baseline perception accuracy (default: 0.555 from best Optuna trial)')
 
-    parser.add_argument('--bond-offset', type=float, default=0.7,
-                       help='Bond offset parameter')
+    parser.add_argument('--bond-offset', type=float, default=0.624462461360537,
+                       help='Bond offset parameter (default: 0.624 from best Optuna trial)')
 
-    parser.add_argument('--bond-alpha', type=float, default=5.0,
-                       help='Bond alpha parameter')
+    parser.add_argument('--bond-alpha', type=float, default=11.847676335038303,
+                       help='Bond alpha parameter (default: 11.85 from best Optuna trial)')
 
     parser.add_argument('--recency-weighting-factor', type=int, default=2,
                        help='Recency weighting factor for client memory')
 
-    parser.add_argument('--perception-window', type=int, default=15,
-                       help='Perception window size for therapist')
+    parser.add_argument('--perception-window', type=int, default=10,
+                       help='Perception window size for therapist (default: 10 from best Optuna trial)')
 
-    parser.add_argument('--seeding-benefit-scaling', type=float, default=0.3,
-                       help='Seeding benefit scaling for v2 therapist')
+    parser.add_argument('--seeding-benefit-scaling', type=float, default=1.8658722646107764,
+                       help='Seeding benefit scaling (default: 1.87 from best Optuna trial)')
 
-    parser.add_argument('--skip-seeding-accuracy-threshold', type=float, default=0.9,
-                       help='Skip seeding accuracy threshold for v2 therapist')
+    parser.add_argument('--skip-seeding-accuracy-threshold', type=float, default=0.814677493978211,
+                       help='Skip seeding accuracy threshold (default: 0.815 from best Optuna trial)')
 
-    parser.add_argument('--quick-seed-actions-threshold', type=int, default=3,
-                       help='Quick seed actions threshold for v2 therapist')
+    parser.add_argument('--quick-seed-actions-threshold', type=int, default=1,
+                       help='Quick seed actions threshold (default: 1 from best Optuna trial)')
 
-    parser.add_argument('--abort-consecutive-failures-threshold', type=int, default=5,
-                       help='Abort consecutive failures threshold for v2 therapist')
+    parser.add_argument('--abort-consecutive-failures-threshold', type=int, default=4,
+                       help='Abort consecutive failures threshold (default: 4 from best Optuna trial)')
 
     # Highlighting
     parser.add_argument('--highlight-v2-advantage', action='store_true',
