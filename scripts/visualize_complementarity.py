@@ -338,15 +338,24 @@ def run_simulation_with_complementarity_tracking(
 
     # Create therapist
     TherapistClass = OmniscientStrategicTherapistV2 if therapist_version == 'v2' else OmniscientStrategicTherapistV1
-    therapist = TherapistClass(
-        client_ref=client,
-        perception_window=perception_window,
-        baseline_accuracy=baseline_accuracy,
-        seeding_benefit_scaling=seeding_benefit_scaling,
-        skip_seeding_accuracy_threshold=skip_seeding_accuracy_threshold,
-        quick_seed_actions_threshold=quick_seed_actions_threshold,
-        abort_consecutive_failures_threshold=abort_consecutive_failures_threshold,
-    )
+    
+    # Base parameters for both V1 and V2
+    therapist_kwargs = {
+        'client_ref': client,
+        'perception_window': perception_window,
+        'baseline_accuracy': baseline_accuracy,
+    }
+    
+    # V2-specific parameters
+    if therapist_version == 'v2':
+        therapist_kwargs.update({
+            'seeding_benefit_scaling': seeding_benefit_scaling,
+            'skip_seeding_accuracy_threshold': skip_seeding_accuracy_threshold,
+            'quick_seed_actions_threshold': quick_seed_actions_threshold,
+            'abort_consecutive_failures_threshold': abort_consecutive_failures_threshold,
+        })
+    
+    therapist = TherapistClass(**therapist_kwargs)
 
     # Initialize complementarity tracker
     comp_tracker = ComplementarityTracker(window_size=window_size)
@@ -414,7 +423,7 @@ def run_simulation_with_complementarity_tracking(
 
         # Process feedback (v2 only)
         if hasattr(therapist, 'process_feedback_after_memory_update'):
-            therapist.process_feedback_after_memory_update(session, client_action)
+            therapist.process_feedback_after_memory_update(session, client_action)  # type: ignore[attr-defined]
 
         # Get new state
         new_rs = client.relationship_satisfaction
@@ -515,7 +524,7 @@ def aggregate_results(results: List[SimulationResult], baseline_success_rate: fl
         mean_cold_perceived=np.nanmean(cold_perceived_arr, axis=0),
         std_cold_perceived=np.nanstd(cold_perceived_arr, axis=0),
         baseline_success_rate=baseline_success_rate,
-        overall_noncomplementarity_pct=overall_noncomplementarity_pct,
+        overall_noncomplementarity_pct=overall_noncomplementarity_pct,  # type: ignore[arg-type]
     )
 
 
@@ -548,7 +557,7 @@ class ComplementarityVisualizer:
 
     def setup_filter_buttons(self):
         """Setup radio buttons for warm/cold/overall filtering."""
-        rax = plt.axes([0.02, 0.4, 0.15, 0.15])
+        rax = plt.axes([0.02, 0.4, 0.15, 0.15])  # type: ignore[arg-type]
         self.radio = RadioButtons(rax, ('Overall', 'Warm Only', 'Cold Only'))
         self.radio.on_clicked(self.update_filter)
 
@@ -714,7 +723,7 @@ class ComplementarityVisualizer:
         for i, (x, y) in enumerate(zip(x_pos, success_rates)):
             self.ax_success.text(x, y + 2, f'{y:.1f}%', ha='center', va='bottom', fontsize=9)
 
-        self.fig.tight_layout(rect=[0.18, 0, 1, 1])
+        self.fig.tight_layout(rect=[0.18, 0, 1, 1])  # type: ignore[arg-type]
         self.fig.canvas.draw()
 
     def show(self):
