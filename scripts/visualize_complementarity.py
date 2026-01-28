@@ -86,13 +86,21 @@ class SimulationResult:
     total_sessions: int
     rs_threshold: float
 
-    # Complementarity trajectories
+    # Complementarity rate trajectories (0-100%)
     overall_enacted_trajectory: List[float]
     warm_enacted_trajectory: List[float]
     cold_enacted_trajectory: List[float]
     overall_perceived_trajectory: List[float] = field(default_factory=list)
     warm_perceived_trajectory: List[float] = field(default_factory=list)
     cold_perceived_trajectory: List[float] = field(default_factory=list)
+
+    # Distance trajectories (0-4 scale, where 0 = perfectly complementary)
+    overall_enacted_distance_trajectory: List[float] = field(default_factory=list)
+    warm_enacted_distance_trajectory: List[float] = field(default_factory=list)
+    cold_enacted_distance_trajectory: List[float] = field(default_factory=list)
+    overall_perceived_distance_trajectory: List[float] = field(default_factory=list)
+    warm_perceived_distance_trajectory: List[float] = field(default_factory=list)
+    cold_perceived_distance_trajectory: List[float] = field(default_factory=list)
 
     # Additional tracking
     final_rs: float = 0.0
@@ -109,27 +117,46 @@ class AggregatedResults:
     n_runs: int
     success_rate: float
 
-    # Overall complementarity
+    # Overall complementarity rate (0-100%)
     mean_overall_enacted: np.ndarray
     std_overall_enacted: np.ndarray
     mean_overall_perceived: np.ndarray
     std_overall_perceived: np.ndarray
 
-    # Warm complementarity
+    # Warm complementarity rate
     mean_warm_enacted: np.ndarray
     std_warm_enacted: np.ndarray
     mean_warm_perceived: np.ndarray
     std_warm_perceived: np.ndarray
 
-    # Cold complementarity
+    # Cold complementarity rate
     mean_cold_enacted: np.ndarray
     std_cold_enacted: np.ndarray
     mean_cold_perceived: np.ndarray
     std_cold_perceived: np.ndarray
 
+    # Overall distance (0-4 scale)
+    mean_overall_enacted_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+    std_overall_enacted_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+    mean_overall_perceived_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+    std_overall_perceived_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+
+    # Warm distance
+    mean_warm_enacted_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+    std_warm_enacted_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+    mean_warm_perceived_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+    std_warm_perceived_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+
+    # Cold distance
+    mean_cold_enacted_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+    std_cold_enacted_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+    mean_cold_perceived_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+    std_cold_perceived_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+
     # Additional statistics
     baseline_success_rate: float = 0.0  # Success rate of always-complementary therapist
     overall_noncomplementarity_pct: float = 0.0  # % of non-complementary actions
+    overall_mean_distance: float = 0.0  # Mean distance across all sessions and seeds
 
 
 # Complementary action mapping (same as in therapist agents)
@@ -364,13 +391,21 @@ def run_simulation_with_complementarity_tracking(
     initial_rs = client.relationship_satisfaction
     initial_bond = client.bond
 
-    # Complementarity trajectories
+    # Complementarity rate trajectories
     overall_enacted_traj = []
     warm_enacted_traj = []
     cold_enacted_traj = []
     overall_perceived_traj = []
     warm_perceived_traj = []
     cold_perceived_traj = []
+
+    # Distance trajectories
+    overall_enacted_dist_traj = []
+    warm_enacted_dist_traj = []
+    cold_enacted_dist_traj = []
+    overall_perceived_dist_traj = []
+    warm_perceived_dist_traj = []
+    cold_perceived_dist_traj = []
 
     # Run sessions
     success = False
@@ -415,11 +450,23 @@ def run_simulation_with_complementarity_tracking(
         warm_enacted_traj.append(warm_enacted)
         cold_enacted_traj.append(cold_enacted)
 
+        # Record distances
+        overall_dist, warm_dist, cold_dist = comp_tracker.get_all_distances('enacted')
+        overall_enacted_dist_traj.append(overall_dist)
+        warm_enacted_dist_traj.append(warm_dist)
+        cold_enacted_dist_traj.append(cold_dist)
+
         if enable_parataxic:
             overall_perceived, warm_perceived, cold_perceived = comp_tracker.get_all_rates('perceived')
             overall_perceived_traj.append(overall_perceived)
             warm_perceived_traj.append(warm_perceived)
             cold_perceived_traj.append(cold_perceived)
+
+            # Also record perceived distances
+            overall_perc_dist, warm_perc_dist, cold_perc_dist = comp_tracker.get_all_distances('perceived')
+            overall_perceived_dist_traj.append(overall_perc_dist)
+            warm_perceived_dist_traj.append(warm_perc_dist)
+            cold_perceived_dist_traj.append(cold_perc_dist)
 
         # Process feedback (v2 only)
         if hasattr(therapist, 'process_feedback_after_memory_update'):
@@ -451,6 +498,12 @@ def run_simulation_with_complementarity_tracking(
         overall_perceived_trajectory=overall_perceived_traj,
         warm_perceived_trajectory=warm_perceived_traj,
         cold_perceived_trajectory=cold_perceived_traj,
+        overall_enacted_distance_trajectory=overall_enacted_dist_traj,
+        warm_enacted_distance_trajectory=warm_enacted_dist_traj,
+        cold_enacted_distance_trajectory=cold_enacted_dist_traj,
+        overall_perceived_distance_trajectory=overall_perceived_dist_traj,
+        warm_perceived_distance_trajectory=warm_perceived_dist_traj,
+        cold_perceived_distance_trajectory=cold_perceived_dist_traj,
         final_rs=new_rs,
         final_bond=new_bond,
     )
@@ -478,13 +531,21 @@ def aggregate_results(results: List[SimulationResult], baseline_success_rate: fl
     # Pad trajectories to same length
     max_length = max(len(r.overall_enacted_trajectory) for r in results)
 
-    # Initialize arrays with NaN
+    # Initialize rate arrays with NaN
     overall_enacted_arr = np.full((n_runs, max_length), np.nan)
     warm_enacted_arr = np.full((n_runs, max_length), np.nan)
     cold_enacted_arr = np.full((n_runs, max_length), np.nan)
     overall_perceived_arr = np.full((n_runs, max_length), np.nan)
     warm_perceived_arr = np.full((n_runs, max_length), np.nan)
     cold_perceived_arr = np.full((n_runs, max_length), np.nan)
+
+    # Initialize distance arrays with NaN
+    overall_enacted_dist_arr = np.full((n_runs, max_length), np.nan)
+    warm_enacted_dist_arr = np.full((n_runs, max_length), np.nan)
+    cold_enacted_dist_arr = np.full((n_runs, max_length), np.nan)
+    overall_perceived_dist_arr = np.full((n_runs, max_length), np.nan)
+    warm_perceived_dist_arr = np.full((n_runs, max_length), np.nan)
+    cold_perceived_dist_arr = np.full((n_runs, max_length), np.nan)
 
     # Fill arrays
     for i, result in enumerate(results):
@@ -498,10 +559,24 @@ def aggregate_results(results: List[SimulationResult], baseline_success_rate: fl
             warm_perceived_arr[i, :length] = result.warm_perceived_trajectory
             cold_perceived_arr[i, :length] = result.cold_perceived_trajectory
 
+        # Fill distance arrays
+        if result.overall_enacted_distance_trajectory:
+            overall_enacted_dist_arr[i, :length] = result.overall_enacted_distance_trajectory
+            warm_enacted_dist_arr[i, :length] = result.warm_enacted_distance_trajectory
+            cold_enacted_dist_arr[i, :length] = result.cold_enacted_distance_trajectory
+
+        if result.overall_perceived_distance_trajectory:
+            overall_perceived_dist_arr[i, :length] = result.overall_perceived_distance_trajectory
+            warm_perceived_dist_arr[i, :length] = result.warm_perceived_distance_trajectory
+            cold_perceived_dist_arr[i, :length] = result.cold_perceived_distance_trajectory
+
     # Calculate overall non-complementarity percentage
     # Average complementarity across all sessions and seeds
     overall_mean_comp = np.nanmean(overall_enacted_arr)
     overall_noncomplementarity_pct = 100.0 - overall_mean_comp
+
+    # Calculate overall mean distance
+    overall_mean_dist = np.nanmean(overall_enacted_dist_arr)
 
     # Calculate statistics
     return AggregatedResults(
@@ -511,6 +586,7 @@ def aggregate_results(results: List[SimulationResult], baseline_success_rate: fl
         therapist_version=results[0].therapist_version,
         n_runs=n_runs,
         success_rate=success_rate,
+        # Rate statistics
         mean_overall_enacted=np.nanmean(overall_enacted_arr, axis=0),
         std_overall_enacted=np.nanstd(overall_enacted_arr, axis=0),
         mean_overall_perceived=np.nanmean(overall_perceived_arr, axis=0),
@@ -523,8 +599,23 @@ def aggregate_results(results: List[SimulationResult], baseline_success_rate: fl
         std_cold_enacted=np.nanstd(cold_enacted_arr, axis=0),
         mean_cold_perceived=np.nanmean(cold_perceived_arr, axis=0),
         std_cold_perceived=np.nanstd(cold_perceived_arr, axis=0),
+        # Distance statistics
+        mean_overall_enacted_distance=np.nanmean(overall_enacted_dist_arr, axis=0),
+        std_overall_enacted_distance=np.nanstd(overall_enacted_dist_arr, axis=0),
+        mean_overall_perceived_distance=np.nanmean(overall_perceived_dist_arr, axis=0),
+        std_overall_perceived_distance=np.nanstd(overall_perceived_dist_arr, axis=0),
+        mean_warm_enacted_distance=np.nanmean(warm_enacted_dist_arr, axis=0),
+        std_warm_enacted_distance=np.nanstd(warm_enacted_dist_arr, axis=0),
+        mean_warm_perceived_distance=np.nanmean(warm_perceived_dist_arr, axis=0),
+        std_warm_perceived_distance=np.nanstd(warm_perceived_dist_arr, axis=0),
+        mean_cold_enacted_distance=np.nanmean(cold_enacted_dist_arr, axis=0),
+        std_cold_enacted_distance=np.nanstd(cold_enacted_dist_arr, axis=0),
+        mean_cold_perceived_distance=np.nanmean(cold_perceived_dist_arr, axis=0),
+        std_cold_perceived_distance=np.nanstd(cold_perceived_dist_arr, axis=0),
+        # Additional statistics
         baseline_success_rate=baseline_success_rate,
         overall_noncomplementarity_pct=overall_noncomplementarity_pct,  # type: ignore[arg-type]
+        overall_mean_distance=overall_mean_dist,
     )
 
 
@@ -533,17 +624,20 @@ class ComplementarityVisualizer:
 
     def __init__(self, aggregated_results: List[AggregatedResults],
                  complementarity_type: str = 'both',
-                 enable_parataxic: bool = False):
+                 enable_parataxic: bool = False,
+                 metric: str = 'complementarity_rate'):
         """Initialize the visualizer.
 
         Args:
             aggregated_results: List of aggregated results to plot
             complementarity_type: 'enacted', 'perceived', or 'both'
             enable_parataxic: Whether parataxic distortion was enabled
+            metric: 'complementarity_rate' (0-100%) or 'octant_distance' (0-4)
         """
         self.aggregated_results = aggregated_results
         self.complementarity_type = complementarity_type
         self.enable_parataxic = enable_parataxic
+        self.metric = metric
         self.filter_mode = 'overall'
 
         # Create figure
@@ -601,22 +695,41 @@ class ComplementarityVisualizer:
         self.ax_success.clear()
 
         for agg_result in self.aggregated_results:
-            # Select data based on filter mode
-            if self.filter_mode == 'overall':
-                mean_enacted = agg_result.mean_overall_enacted
-                std_enacted = agg_result.std_overall_enacted
-                mean_perceived = agg_result.mean_overall_perceived
-                std_perceived = agg_result.std_overall_perceived
-            elif self.filter_mode == 'warm':
-                mean_enacted = agg_result.mean_warm_enacted
-                std_enacted = agg_result.std_warm_enacted
-                mean_perceived = agg_result.mean_warm_perceived
-                std_perceived = agg_result.std_warm_perceived
-            else:  # cold
-                mean_enacted = agg_result.mean_cold_enacted
-                std_enacted = agg_result.std_cold_enacted
-                mean_perceived = agg_result.mean_cold_perceived
-                std_perceived = agg_result.std_cold_perceived
+            # Select data based on filter mode and metric
+            if self.metric == 'octant_distance':
+                # Use distance data (0-4 scale)
+                if self.filter_mode == 'overall':
+                    mean_enacted = agg_result.mean_overall_enacted_distance
+                    std_enacted = agg_result.std_overall_enacted_distance
+                    mean_perceived = agg_result.mean_overall_perceived_distance
+                    std_perceived = agg_result.std_overall_perceived_distance
+                elif self.filter_mode == 'warm':
+                    mean_enacted = agg_result.mean_warm_enacted_distance
+                    std_enacted = agg_result.std_warm_enacted_distance
+                    mean_perceived = agg_result.mean_warm_perceived_distance
+                    std_perceived = agg_result.std_warm_perceived_distance
+                else:  # cold
+                    mean_enacted = agg_result.mean_cold_enacted_distance
+                    std_enacted = agg_result.std_cold_enacted_distance
+                    mean_perceived = agg_result.mean_cold_perceived_distance
+                    std_perceived = agg_result.std_cold_perceived_distance
+            else:
+                # Use rate data (0-100%)
+                if self.filter_mode == 'overall':
+                    mean_enacted = agg_result.mean_overall_enacted
+                    std_enacted = agg_result.std_overall_enacted
+                    mean_perceived = agg_result.mean_overall_perceived
+                    std_perceived = agg_result.std_overall_perceived
+                elif self.filter_mode == 'warm':
+                    mean_enacted = agg_result.mean_warm_enacted
+                    std_enacted = agg_result.std_warm_enacted
+                    mean_perceived = agg_result.mean_warm_perceived
+                    std_perceived = agg_result.std_warm_perceived
+                else:  # cold
+                    mean_enacted = agg_result.mean_cold_enacted
+                    std_enacted = agg_result.std_cold_enacted
+                    mean_perceived = agg_result.mean_cold_perceived
+                    std_perceived = agg_result.std_cold_perceived
 
             sessions = np.arange(len(mean_enacted)) + 1
             style = self.get_line_style(
@@ -661,15 +774,24 @@ class ComplementarityVisualizer:
                     color=style['color']
                 )
 
-        # Finalize complementarity plot
+        # Finalize complementarity plot - adjust labels and limits based on metric
         self.ax_comp.set_xlabel('Session Number', fontsize=14, fontweight='bold')
-        self.ax_comp.set_ylabel('Complementarity Rate (%)', fontsize=14, fontweight='bold')
-        self.ax_comp.set_ylim(0, 105)
-        self.ax_comp.set_title(f'Complementarity Over Time ({self.filter_mode.capitalize()})',
-                                fontsize=16, fontweight='bold', pad=15)
+        if self.metric == 'octant_distance':
+            self.ax_comp.set_ylabel('Mean Octant Distance', fontsize=14, fontweight='bold')
+            self.ax_comp.set_ylim(-0.2, 4.2)
+            self.ax_comp.set_title(f'Octant Distance Over Time ({self.filter_mode.capitalize()})',
+                                    fontsize=16, fontweight='bold', pad=15)
+            # Reference line at 0 (perfect complementarity)
+            self.ax_comp.axhline(y=0, color='green', linestyle=':', alpha=0.5, linewidth=2)
+        else:
+            self.ax_comp.set_ylabel('Complementarity Rate (%)', fontsize=14, fontweight='bold')
+            self.ax_comp.set_ylim(0, 105)
+            self.ax_comp.set_title(f'Complementarity Over Time ({self.filter_mode.capitalize()})',
+                                    fontsize=16, fontweight='bold', pad=15)
+            # Reference line at 100 (perfect complementarity)
+            self.ax_comp.axhline(y=100, color='green', linestyle=':', alpha=0.5, linewidth=2)
         self.ax_comp.legend(loc='best', fontsize=11, ncol=1, framealpha=0.9)
         self.ax_comp.grid(True, alpha=0.3, linewidth=0.8)
-        self.ax_comp.axhline(y=100, color='green', linestyle=':', alpha=0.5, linewidth=2)
         self.ax_comp.tick_params(axis='both', which='major', labelsize=12)
 
         # Add descriptive statistics text box
@@ -677,11 +799,18 @@ class ComplementarityVisualizer:
             stats_text_lines = []
             for agg_result in self.aggregated_results:
                 config_short = f"{agg_result.mechanism[:15]}_{agg_result.pattern[:10]}_{agg_result.therapist_version}"
-                stats_text_lines.append(
-                    f"{config_short}:\n"
-                    f"  Baseline: {agg_result.baseline_success_rate:.1f}%  "
-                    f"Non-comp: {agg_result.overall_noncomplementarity_pct:.2f}%"
-                )
+                if self.metric == 'octant_distance':
+                    stats_text_lines.append(
+                        f"{config_short}:\n"
+                        f"  Baseline: {agg_result.baseline_success_rate:.1f}%  "
+                        f"Mean dist: {agg_result.overall_mean_distance:.2f}"
+                    )
+                else:
+                    stats_text_lines.append(
+                        f"{config_short}:\n"
+                        f"  Baseline: {agg_result.baseline_success_rate:.1f}%  "
+                        f"Non-comp: {agg_result.overall_noncomplementarity_pct:.2f}%"
+                    )
 
             stats_text = "\n".join(stats_text_lines)
             # Place text box in upper right corner
@@ -767,6 +896,10 @@ def parse_arguments():
     parser.add_argument('--complementarity-type', type=str, default='both',
                        choices=['enacted', 'perceived', 'both'],
                        help='Display enacted, perceived, or both complementarity')
+
+    parser.add_argument('--metric', type=str, default='complementarity_rate',
+                       choices=['complementarity_rate', 'octant_distance'],
+                       help='Metric to visualize: complementarity_rate (0-100%%) or octant_distance (0-4 scale)')
 
     # Statistical parameters
     parser.add_argument('--n-seeds', type=int, default=30,
@@ -861,6 +994,7 @@ def main():
             "quick_seed_actions_threshold": args.quick_seed_actions_threshold,
             "abort_consecutive_failures_threshold": args.abort_consecutive_failures_threshold,
             "highlight_v2_advantage": args.highlight_v2_advantage,
+            "metric": args.metric,
         }
     }
 
@@ -877,6 +1011,7 @@ def main():
     print(f"Number of seeds: {args.n_seeds}")
     print(f"Window size: {args.window_size}")
     print(f"Complementarity type: {args.complementarity_type}")
+    print(f"Metric: {args.metric}")
     print(f"Parataxic distortion: {args.enable_parataxic}")
     print(f"Highlight V2 advantage: {args.highlight_v2_advantage}")
     print("=" * 70)
@@ -1003,6 +1138,7 @@ def main():
             "omniscient_success_rate": agg_result.success_rate,
             "baseline_success_rate": agg_result.baseline_success_rate,
             "overall_noncomplementarity_pct": agg_result.overall_noncomplementarity_pct,
+            "overall_mean_distance": agg_result.overall_mean_distance,
         }
         if agg_result.config_name.endswith('_v2_advantage'):
             result_dict["group"] = "V2 advantage (green)"
@@ -1018,7 +1154,8 @@ def main():
     viz = ComplementarityVisualizer(
         all_aggregated_results,
         complementarity_type=args.complementarity_type,
-        enable_parataxic=args.enable_parataxic
+        enable_parataxic=args.enable_parataxic,
+        metric=args.metric
     )
 
     # Save plot to timestamped directory
