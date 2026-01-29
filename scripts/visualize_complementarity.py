@@ -625,7 +625,8 @@ class ComplementarityVisualizer:
     def __init__(self, aggregated_results: List[AggregatedResults],
                  complementarity_type: str = 'both',
                  enable_parataxic: bool = False,
-                 metric: str = 'complementarity_rate'):
+                 metric: str = 'complementarity_rate',
+                 seed_breakdown: Optional[Dict[str, int]] = None):
         """Initialize the visualizer.
 
         Args:
@@ -633,33 +634,30 @@ class ComplementarityVisualizer:
             complementarity_type: 'enacted', 'perceived', or 'both'
             enable_parataxic: Whether parataxic distortion was enabled
             metric: 'complementarity_rate' (0-100%) or 'octant_distance' (0-4)
+            seed_breakdown: Optional dict with keys 'v2_advantage', 'baseline_advantage',
+                           'both_success', 'both_fail' containing counts
         """
         self.aggregated_results = aggregated_results
         self.complementarity_type = complementarity_type
         self.enable_parataxic = enable_parataxic
         self.metric = metric
         self.filter_mode = 'overall'
+        self.seed_breakdown = seed_breakdown
 
-        # Create figure
-        self.fig, self.axes = plt.subplots(2, 1, figsize=(14, 10),
-                                            gridspec_kw={'height_ratios': [3, 1]})
-        self.ax_comp = self.axes[0]
-        self.ax_success = self.axes[1]
+        # Create figure - add extra row for breakdown table if provided
+        if seed_breakdown:
+            self.fig, self.axes = plt.subplots(3, 1, figsize=(14, 12),
+                                                gridspec_kw={'height_ratios': [3, 1, 0.6]})
+            self.ax_comp = self.axes[0]
+            self.ax_success = self.axes[1]
+            self.ax_table = self.axes[2]
+        else:
+            self.fig, self.axes = plt.subplots(2, 1, figsize=(14, 10),
+                                                gridspec_kw={'height_ratios': [3, 1]})
+            self.ax_comp = self.axes[0]
+            self.ax_success = self.axes[1]
+            self.ax_table = None
 
-        # Add filter radio buttons
-        self.setup_filter_buttons()
-
-    def setup_filter_buttons(self):
-        """Setup radio buttons for warm/cold/overall filtering."""
-        rax = plt.axes([0.02, 0.4, 0.15, 0.15])  # type: ignore[arg-type]
-        self.radio = RadioButtons(rax, ('Overall', 'Warm Only', 'Cold Only'))
-        self.radio.on_clicked(self.update_filter)
-
-    def update_filter(self, label):
-        """Update plot based on filter selection."""
-        filter_map = {'Overall': 'overall', 'Warm Only': 'warm', 'Cold Only': 'cold'}
-        self.filter_mode = filter_map[label]
-        self.plot()
 
     def get_line_style(self, mechanism: str, pattern: str, version: str, config_name: str = '') -> Dict:
         """Generate line style for a configuration."""
@@ -667,6 +665,10 @@ class ComplementarityVisualizer:
         # Use very distinct colors to make groups visually obvious
         if config_name.endswith('_v2_advantage'):
             color = '#00AA00'  # Bright green - clearly distinct from teal
+            linewidth = 3.0
+            alpha = 1.0
+        elif config_name.endswith('_v2_disadvantage'):
+            color = '#CC0000'  # Red - V2 performed worse than baseline
             linewidth = 3.0
             alpha = 1.0
         elif config_name.endswith('_remaining'):
@@ -739,9 +741,17 @@ class ComplementarityVisualizer:
                 agg_result.config_name
             )
 
+            # Determine display name for legend
+            if agg_result.config_name.endswith('_v2_advantage'):
+                display_name = f"V2 Advantage (n={agg_result.n_runs})"
+            elif agg_result.config_name.endswith('_remaining'):
+                display_name = f"Remaining (n={agg_result.n_runs})"
+            else:
+                display_name = agg_result.config_name
+
             # Plot enacted complementarity
             if self.complementarity_type in ['enacted', 'both']:
-                label = f"{agg_result.config_name}"
+                label = display_name
                 if self.complementarity_type == 'both':
                     label += " (enacted)"
 
@@ -756,7 +766,7 @@ class ComplementarityVisualizer:
 
             # Plot perceived complementarity if enabled
             if self.complementarity_type in ['perceived', 'both'] and self.enable_parataxic:
-                label = f"{agg_result.config_name}"
+                label = display_name
                 if self.complementarity_type == 'both':
                     label += " (perceived)"
 
@@ -798,16 +808,23 @@ class ComplementarityVisualizer:
         if self.aggregated_results:
             stats_text_lines = []
             for agg_result in self.aggregated_results:
-                config_short = f"{agg_result.mechanism[:15]}_{agg_result.pattern[:10]}_{agg_result.therapist_version}"
+                # Use friendly group name if available, otherwise use config_name
+                if agg_result.config_name.endswith('_v2_advantage'):
+                    display_name = f"V2 Advantage (n={agg_result.n_runs})"
+                elif agg_result.config_name.endswith('_remaining'):
+                    display_name = f"Remaining (n={agg_result.n_runs})"
+                else:
+                    display_name = f"{agg_result.mechanism[:15]}_{agg_result.pattern[:10]}_{agg_result.therapist_version}"
+
                 if self.metric == 'octant_distance':
                     stats_text_lines.append(
-                        f"{config_short}:\n"
+                        f"{display_name}:\n"
                         f"  Baseline: {agg_result.baseline_success_rate:.1f}%  "
                         f"Mean dist: {agg_result.overall_mean_distance:.2f}"
                     )
                 else:
                     stats_text_lines.append(
-                        f"{config_short}:\n"
+                        f"{display_name}:\n"
                         f"  Baseline: {agg_result.baseline_success_rate:.1f}%  "
                         f"Non-comp: {agg_result.overall_noncomplementarity_pct:.2f}%"
                     )
@@ -825,23 +842,29 @@ class ComplementarityVisualizer:
             )
 
         # Plot success rate - use green/black if highlight mode, otherwise mechanism colors
-        config_names = [r.config_name for r in self.aggregated_results]
         success_rates = [r.success_rate for r in self.aggregated_results]
 
-        # Determine bar colors based on config_name suffix
+        # Determine bar colors and labels based on config_name suffix
         colors = []
+        bar_labels = []
         for r in self.aggregated_results:
             if r.config_name.endswith('_v2_advantage'):
                 colors.append('green')
+                bar_labels.append(f'V2 Advantage (n={r.n_runs})')
+            elif r.config_name.endswith('_v2_disadvantage'):
+                colors.append('red')
+                bar_labels.append(f'V2 Disadvantage (n={r.n_runs})')
             elif r.config_name.endswith('_remaining'):
                 colors.append('black')
+                bar_labels.append(f'Remaining (n={r.n_runs})')
             else:
                 colors.append(MECHANISM_COLORS[r.mechanism])
+                bar_labels.append(r.config_name)
 
-        x_pos = np.arange(len(config_names))
+        x_pos = np.arange(len(bar_labels))
         self.ax_success.bar(x_pos, success_rates, color=colors, alpha=0.7, edgecolor='black', linewidth=1.5)
         self.ax_success.set_xticks(x_pos)
-        self.ax_success.set_xticklabels(config_names, rotation=45, ha='right', fontsize=11)
+        self.ax_success.set_xticklabels(bar_labels, rotation=45, ha='right', fontsize=11)
         self.ax_success.set_xlabel('Configuration', fontsize=14, fontweight='bold')
         self.ax_success.set_ylabel('Success Rate (%)', fontsize=14, fontweight='bold')
         self.ax_success.set_ylim(0, 105)
@@ -852,7 +875,46 @@ class ComplementarityVisualizer:
         for i, (x, y) in enumerate(zip(x_pos, success_rates)):
             self.ax_success.text(x, y + 2, f'{y:.1f}%', ha='center', va='bottom', fontsize=9)
 
-        self.fig.tight_layout(rect=[0.18, 0, 1, 1])  # type: ignore[arg-type]
+        # Render seed breakdown table if provided
+        if self.ax_table is not None and self.seed_breakdown:
+            self.ax_table.clear()
+            self.ax_table.axis('off')
+
+            total_seeds = sum(self.seed_breakdown.values())
+
+            # Build table data
+            table_data = [
+                ['V2 Advantage', 'Baseline Advantage', 'Both Success', 'Both Fail', 'Total'],
+                [
+                    f"{self.seed_breakdown['v2_advantage']} ({100*self.seed_breakdown['v2_advantage']/total_seeds:.1f}%)",
+                    f"{self.seed_breakdown['baseline_advantage']} ({100*self.seed_breakdown['baseline_advantage']/total_seeds:.1f}%)",
+                    f"{self.seed_breakdown['both_success']} ({100*self.seed_breakdown['both_success']/total_seeds:.1f}%)",
+                    f"{self.seed_breakdown['both_fail']} ({100*self.seed_breakdown['both_fail']/total_seeds:.1f}%)",
+                    f"{total_seeds}",
+                ],
+            ]
+
+            # Create table with colored cells
+            cell_colors = [
+                ['#E8E8E8', '#E8E8E8', '#E8E8E8', '#E8E8E8', '#E8E8E8'],  # Header row
+                ['#90EE90', '#FFCCCB', '#ADD8E6', '#D3D3D3', 'white'],     # Data row: green, red, blue, gray
+            ]
+
+            table = self.ax_table.table(
+                cellText=[table_data[1]],
+                colLabels=table_data[0],
+                cellColours=[cell_colors[1]],
+                colColours=cell_colors[0],
+                loc='center',
+                cellLoc='center',
+            )
+            table.auto_set_font_size(False)
+            table.set_fontsize(11)
+            table.scale(1.0, 1.8)
+
+            self.ax_table.set_title('Seed Breakdown by Outcome', fontsize=12, fontweight='bold', pad=10)
+
+        self.fig.tight_layout()  # type: ignore[arg-type]
         self.fig.canvas.draw()
 
     def show(self):
@@ -953,6 +1015,9 @@ def parse_arguments():
     parser.add_argument('--highlight-v2-advantage', action='store_true',
                        help='Highlight seeds where V2 succeeded but baseline failed (green) vs all other seeds (black)')
 
+    parser.add_argument('--highlight-v2-disadvantage', action='store_true',
+                       help='Highlight seeds where baseline succeeded but V2 failed (red) vs remaining seeds (black)')
+
     # Output
     parser.add_argument('--output', type=str, default=None,
                        help='Save plot to file (optional)')
@@ -994,6 +1059,7 @@ def main():
             "quick_seed_actions_threshold": args.quick_seed_actions_threshold,
             "abort_consecutive_failures_threshold": args.abort_consecutive_failures_threshold,
             "highlight_v2_advantage": args.highlight_v2_advantage,
+            "highlight_v2_disadvantage": args.highlight_v2_disadvantage,
             "metric": args.metric,
         }
     }
@@ -1014,9 +1080,16 @@ def main():
     print(f"Metric: {args.metric}")
     print(f"Parataxic distortion: {args.enable_parataxic}")
     print(f"Highlight V2 advantage: {args.highlight_v2_advantage}")
+    print(f"Highlight V2 disadvantage: {args.highlight_v2_disadvantage}")
     print("=" * 70)
 
     all_aggregated_results = []
+
+    # Initialize seed breakdown counters (used when --highlight-v2-advantage is set)
+    v2_advantage_results = []
+    baseline_advantage_results = []
+    both_success_results = []
+    both_fail_results = []
 
     # Generate all configuration combinations
     configs = [
@@ -1080,31 +1153,55 @@ def main():
             )
             results.append(result)
 
-        # Split results if --highlight-v2-advantage is enabled
-        if args.highlight_v2_advantage:
-            # Split into V2 advantage seeds and remaining seeds
-            v2_advantage_results = [
-                r for r in results
-                if r.success and not baseline_successes[r.seed]
-            ]
-            remaining_results = [
-                r for r in results
-                if not (r.success and not baseline_successes[r.seed])
-            ]
+        # Handle highlight modes - can enable both simultaneously
+        if args.highlight_v2_advantage or args.highlight_v2_disadvantage:
+            # Categorize all seeds into 4 groups
+            config_v2_adv = []
+            config_baseline_adv = []
+            config_both_success = []
+            config_both_fail = []
 
-            print(f"\nV2 advantage seeds: {len(v2_advantage_results)}/{len(results)}")
-            print(f"Remaining seeds: {len(remaining_results)}/{len(results)}")
+            for r in results:
+                v2_success = r.success
+                baseline_success = baseline_successes[r.seed]
 
-            # Aggregate each group separately
-            if len(v2_advantage_results) > 0:
-                agg_v2_advantage = aggregate_results(v2_advantage_results, baseline_success_rate=baseline_success_rate)
-                # Mark this as V2 advantage group
-                agg_v2_advantage.config_name = f"{agg_v2_advantage.config_name}_v2_advantage"
-                all_aggregated_results.append(agg_v2_advantage)
+                if v2_success and not baseline_success:
+                    config_v2_adv.append(r)
+                elif baseline_success and not v2_success:
+                    config_baseline_adv.append(r)
+                elif v2_success and baseline_success:
+                    config_both_success.append(r)
+                else:  # neither succeeded
+                    config_both_fail.append(r)
+
+            # Accumulate into global lists for the breakdown table
+            v2_advantage_results.extend(config_v2_adv)
+            baseline_advantage_results.extend(config_baseline_adv)
+            both_success_results.extend(config_both_success)
+            both_fail_results.extend(config_both_fail)
+
+            # Remaining = both succeeded OR both failed
+            remaining_results = config_both_success + config_both_fail
+
+            print(f"\nSeed breakdown:")
+            print(f"  V2 advantage: {len(config_v2_adv)}/{len(results)}")
+            print(f"  V2 disadvantage (baseline adv): {len(config_baseline_adv)}/{len(results)}")
+            print(f"  Both success: {len(config_both_success)}/{len(results)}")
+            print(f"  Both fail: {len(config_both_fail)}/{len(results)}")
+
+            # Aggregate groups based on which flags are enabled
+            if args.highlight_v2_advantage and len(config_v2_adv) > 0:
+                agg_v2_adv = aggregate_results(config_v2_adv, baseline_success_rate=baseline_success_rate)
+                agg_v2_adv.config_name = f"{agg_v2_adv.config_name}_v2_advantage"
+                all_aggregated_results.append(agg_v2_adv)
+
+            if args.highlight_v2_disadvantage and len(config_baseline_adv) > 0:
+                agg_v2_disadv = aggregate_results(config_baseline_adv, baseline_success_rate=baseline_success_rate)
+                agg_v2_disadv.config_name = f"{agg_v2_disadv.config_name}_v2_disadvantage"
+                all_aggregated_results.append(agg_v2_disadv)
 
             if len(remaining_results) > 0:
                 agg_remaining = aggregate_results(remaining_results, baseline_success_rate=baseline_success_rate)
-                # Mark this as remaining group
                 agg_remaining.config_name = f"{agg_remaining.config_name}_remaining"
                 all_aggregated_results.append(agg_remaining)
 
@@ -1113,8 +1210,9 @@ def main():
             print(f"Overall omniscient success rate: {agg_overall.success_rate:.1f}%")
             print(f"Mean sessions: {np.mean([r.total_sessions for r in results]):.1f}")
             print(f"Overall non-complementarity: {agg_overall.overall_noncomplementarity_pct:.2f}%")
+
         else:
-            # Aggregate all results together (original behavior)
+            # Neither flag enabled - aggregate all together (original behavior)
             agg_result = aggregate_results(results, baseline_success_rate=baseline_success_rate)
             all_aggregated_results.append(agg_result)
 
@@ -1142,6 +1240,8 @@ def main():
         }
         if agg_result.config_name.endswith('_v2_advantage'):
             result_dict["group"] = "V2 advantage (green)"
+        elif agg_result.config_name.endswith('_v2_disadvantage'):
+            result_dict["group"] = "V2 disadvantage (red)"
         elif agg_result.config_name.endswith('_remaining'):
             result_dict["group"] = "Remaining trials (black)"
         command_info["results"].append(result_dict)
@@ -1150,12 +1250,23 @@ def main():
     with open(output_dir / "command.json", "w") as f:
         json.dump(command_info, f, indent=2)
 
+    # Prepare seed breakdown if highlight mode was used
+    seed_breakdown = None
+    if args.highlight_v2_advantage:
+        seed_breakdown = {
+            'v2_advantage': len(v2_advantage_results),
+            'baseline_advantage': len(baseline_advantage_results),
+            'both_success': len(both_success_results),
+            'both_fail': len(both_fail_results),
+        }
+
     # Create and display visualization
     viz = ComplementarityVisualizer(
         all_aggregated_results,
         complementarity_type=args.complementarity_type,
         enable_parataxic=args.enable_parataxic,
-        metric=args.metric
+        metric=args.metric,
+        seed_breakdown=seed_breakdown
     )
 
     # Save plot to timestamped directory
