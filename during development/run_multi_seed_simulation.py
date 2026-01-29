@@ -35,6 +35,8 @@ from src.agents.client_agents import (
 from src import config
 from src.config import (
     sample_u_matrix,
+    get_u_matrix_by_name,
+    list_available_u_matrices,
     OCTANTS,
     calculate_success_threshold,
 )
@@ -151,6 +153,7 @@ def run_single_simulation(
     bond_power: float = 1.0,
     bond_alpha: float = 11.847676335038303,
     bond_offset: float = 0.624462461360537,
+    u_matrix_name: Optional[str] = None,
     # V2 Therapist parameters
     perception_window: int = 10,
     seeding_benefit_scaling: float = 1.8658722646107764,
@@ -165,7 +168,17 @@ def run_single_simulation(
     """
     # Setup
     rng = np.random.RandomState(seed)
-    u_matrix = sample_u_matrix(random_state=seed)
+
+    # Get U-matrix: use named matrix if specified, otherwise sample
+    if u_matrix_name is not None:
+        u_matrix = get_u_matrix_by_name(u_matrix_name)
+        if u_matrix is None:
+            raise ValueError(
+                f"Unknown U-matrix name: '{u_matrix_name}'. "
+                f"Available names: {list_available_u_matrices()}"
+            )
+    else:
+        u_matrix = sample_u_matrix(random_state=seed)
 
     # Map legacy pattern names and generate memory
     pattern_type = PATTERN_ALIASES.get(initial_memory_pattern, initial_memory_pattern)
@@ -730,6 +743,7 @@ def run_multi_seed_simulation(
     bond_power: float = 1.0,
     bond_alpha: float = 11.847676335038303,
     bond_offset: float = 0.624462461360537,
+    u_matrix_name: Optional[str] = None,
     # V2 Therapist parameters
     perception_window: int = 10,
     seeding_benefit_scaling: float = 1.8658722646107764,
@@ -793,6 +807,7 @@ def run_multi_seed_simulation(
         'n_seeds': n_seeds,
         'mechanism': mechanism,
         'initial_memory_pattern': initial_memory_pattern,
+        'u_matrix_name': u_matrix_name if u_matrix_name else 'random_sampled',
         'success_threshold_percentile': success_threshold_percentile,
         'enable_parataxic': enable_parataxic,
         'baseline_accuracy': baseline_accuracy if enable_parataxic else 'N/A',
@@ -829,6 +844,7 @@ def run_multi_seed_simulation(
             bond_power=bond_power,
             bond_alpha=bond_alpha,
             bond_offset=bond_offset,
+            u_matrix_name=u_matrix_name,
             # V2 Therapist parameters
             perception_window=perception_window,
             seeding_benefit_scaling=seeding_benefit_scaling,
@@ -965,6 +981,14 @@ if __name__ == "__main__":
         help='Bond offset for sigmoid inflection point (default: 0.624 from optimized trial)'
     )
 
+    parser.add_argument(
+        '--u-matrix',
+        type=str,
+        default=None,
+        help=f'Named U-matrix to use (default: random sampling). '
+             f'Available: {", ".join(list_available_u_matrices())}'
+    )
+
     # V2 Therapist arguments
     parser.add_argument(
         '--perception-window',
@@ -1035,6 +1059,7 @@ if __name__ == "__main__":
         bond_power=args.bond_power,
         bond_alpha=args.bond_alpha,
         bond_offset=args.bond_offset,
+        u_matrix_name=args.u_matrix,
         # V2 Therapist parameters
         perception_window=args.perception_window,
         seeding_benefit_scaling=args.seeding_benefit_scaling,

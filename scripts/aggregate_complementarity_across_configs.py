@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import optuna
 import argparse
 from tqdm import tqdm
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 import json
@@ -35,6 +35,7 @@ from visualize_complementarity import (
     run_baseline_complementary_simulation,
     ComplementarityVisualizer,
 )
+from src.config import get_u_matrix_by_name, list_available_u_matrices
 
 
 @dataclass
@@ -123,6 +124,7 @@ def run_config_simulations(
     mechanism: str = 'frequency_amplifier',
     pattern: str = 'cold_stuck',
     window_size: int = 10,
+    u_matrix_name: Optional[str] = None,
 ) -> ConfigResult:
     """Run simulations for a single config across all seeds.
 
@@ -186,6 +188,7 @@ def run_config_simulations(
         # Baseline complementary therapist
         baseline_success = run_baseline_complementary_simulation(
             seed=seed,
+            u_matrix_name=u_matrix_name,
             **baseline_kwargs
         )
         result.baseline_successes.append(baseline_success)
@@ -193,6 +196,7 @@ def run_config_simulations(
         # V2 omniscient therapist with complementarity tracking
         v2_result = run_simulation_with_complementarity_tracking(
             seed=seed,
+            u_matrix_name=u_matrix_name,
             **v2_kwargs
         )
 
@@ -211,9 +215,9 @@ def run_config_simulations(
 
 def process_config_wrapper(args):
     """Wrapper for multiprocessing."""
-    config, n_seeds, max_sessions, mechanism, pattern, window_size = args
+    config, n_seeds, max_sessions, mechanism, pattern, window_size, u_matrix_name = args
     return run_config_simulations(
-        config, n_seeds, max_sessions, mechanism, pattern, window_size
+        config, n_seeds, max_sessions, mechanism, pattern, window_size, u_matrix_name
     )
 
 
@@ -400,6 +404,10 @@ def main():
     parser.add_argument('--pattern', type=str, default='cold_stuck',
                        help='Initial memory pattern')
 
+    parser.add_argument('--u-matrix', type=str, default=None,
+                       help=f'Named U-matrix to use (default: random sampling). '
+                            f'Available: {", ".join(list_available_u_matrices())}')
+
     # Performance parameters
     parser.add_argument('--n-workers', type=int, default=None,
                        help='Number of parallel workers (default: CPU count)')
@@ -445,6 +453,7 @@ def main():
         'timestamp': datetime.now().isoformat(),
         'n_configs': len(configs),
         'n_seeds_per_config': args.n_seeds,
+        'u_matrix_name': args.u_matrix if args.u_matrix else "random_sampled",
         'total_simulations': len(configs) * args.n_seeds * 2,  # x2 for baseline + V2
         'configs': [
             {
@@ -472,7 +481,7 @@ def main():
         # Submit all tasks
         task_args = [
             (config, args.n_seeds, args.max_sessions,
-             args.mechanism, args.pattern, args.window_size)
+             args.mechanism, args.pattern, args.window_size, args.u_matrix)
             for config in configs
         ]
 

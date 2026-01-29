@@ -4,7 +4,7 @@ Global configuration and parameters for the agent layer of this CIIT transaction
 
 import numpy as np
 from numpy.typing import NDArray
-from typing import Optional
+from typing import Optional, List
 
 # =============================================================================
 # OCTANT DEFINITIONS
@@ -127,6 +127,75 @@ def sample_u_matrix(random_state: Optional[int | np.random.RandomState] = None) 
 
 # Keep a default/mean matrix for reference
 U_MATRIX = (U_MIN + U_MAX) / 2  # Midpoint of ranges
+
+# =============================================================================
+# NAMED U-MATRICES
+# =============================================================================
+
+"""
+Named U-matrix configurations for controlled experiments.
+
+To add a new U-matrix:
+1. Define an 8x8 numpy array below
+2. Add it to NAMED_U_MATRICES dictionary with a descriptive name
+3. Use via CLI: --u-matrix <name>
+
+Format: rows = client behavior (D, WD, W, WS, S, CS, C, CD)
+        cols = therapist behavior (D, WD, W, WS, S, CS, C, CD)
+"""
+
+# Example 1: Average/midpoint of bounds (same as default U_MATRIX)
+U_MATRIX_AVERAGE = (U_MIN + U_MAX) / 2
+
+# Example 2: Highly complementary - strong preference for complementary actions
+U_MATRIX_HIGHLY_COMPLEMENTARY = np.array([
+    # Therapist:  D      WD      W      WS      S      CS      C      CD
+    # Client D (Dominant)
+    [           -30,    -40,      0,    +30,    +40,    +30,      0,    -40 ],
+    # Client WD (Warm-Dominant)
+    [           -20,    +10,    +40,    +60,    +20,    -20,   -40,    -60 ],
+    # Client W (Warm)
+    [             0,    +40,    +50,    +40,      0,    -60,   -50,    -60 ],
+    # Client WS (Warm-Submissive)
+    [           +20,    +60,    +40,    +10,    -20,    -60,   -40,    -20 ],
+    # Client S (Submissive)
+    [           +40,    +30,      0,    -40,    -30,    -40,      0,    +30 ],
+    # Client CS (Cold-Submissive)
+    [           +20,      0,    -20,    -30,    -10,      0,   +20,    +30 ],
+    # Client C (Cold)
+    [             0,    -30,    -20,    -30,      0,    +20,   +30,    +20 ],
+    # Client CD (Cold-Dominant)
+    [           -20,    -30,    -10,      0,    +20,    +30,   +20,      0 ],
+])
+
+# Registry of all named U-matrices
+NAMED_U_MATRICES = {
+    'average': U_MATRIX_AVERAGE,
+    'highly_complementary': U_MATRIX_HIGHLY_COMPLEMENTARY,
+    # Add more matrices here as needed
+}
+
+
+def get_u_matrix_by_name(name: str) -> Optional[NDArray[np.float64]]:
+    """
+    Retrieve a named U-matrix from the registry.
+
+    Parameters
+    ----------
+    name : str
+        Name of the U-matrix to retrieve
+
+    Returns
+    -------
+    NDArray[np.float64] or None
+        The requested U-matrix, or None if name not found
+    """
+    return NAMED_U_MATRICES.get(name)
+
+
+def list_available_u_matrices() -> List[str]:
+    """Return a list of all available named U-matrix names."""
+    return sorted(NAMED_U_MATRICES.keys())
 
 # =============================================================================
 # MEMORY AND SATISFACTION PARAMETERS

@@ -44,6 +44,7 @@ from src.agents.therapist_agents import (
 )
 from src import config
 from src.config import sample_u_matrix, calculate_success_threshold
+from src.config import get_u_matrix_by_name, list_available_u_matrices
 from src.analysis.complementarity_tracker import ComplementarityTracker
 
 
@@ -191,6 +192,7 @@ def run_baseline_complementary_simulation(
     bond_alpha: float = 5.0,
     bond_offset: float = 0.7,
     recency_weighting_factor: int = 2,
+    u_matrix_name: Optional[str] = None,
 ) -> bool:
     """Run a single simulation with always-complementary therapist.
 
@@ -199,7 +201,17 @@ def run_baseline_complementary_simulation(
     """
     # Setup
     rng = np.random.RandomState(seed)
-    u_matrix = sample_u_matrix(random_state=seed)
+
+    # Get U-matrix: use named matrix if specified, otherwise sample
+    if u_matrix_name is not None:
+        u_matrix = get_u_matrix_by_name(u_matrix_name)
+        if u_matrix is None:
+            raise ValueError(
+                f"Unknown U-matrix name: '{u_matrix_name}'. "
+                f"Available names: {list_available_u_matrices()}"
+            )
+    else:
+        u_matrix = sample_u_matrix(random_state=seed)
 
     # Generate initial memory
     initial_memory = BaseClientAgent.generate_problematic_memory(
@@ -296,6 +308,7 @@ def run_simulation_with_complementarity_tracking(
     skip_seeding_accuracy_threshold: float = 0.9,
     quick_seed_actions_threshold: int = 3,
     abort_consecutive_failures_threshold: int = 5,
+    u_matrix_name: Optional[str] = None,
 ) -> SimulationResult:
     """Run a single simulation with complementarity tracking.
 
@@ -312,7 +325,17 @@ def run_simulation_with_complementarity_tracking(
     """
     # Setup
     rng = np.random.RandomState(seed)
-    u_matrix = sample_u_matrix(random_state=seed)
+
+    # Get U-matrix: use named matrix if specified, otherwise sample
+    if u_matrix_name is not None:
+        u_matrix = get_u_matrix_by_name(u_matrix_name)
+        if u_matrix is None:
+            raise ValueError(
+                f"Unknown U-matrix name: '{u_matrix_name}'. "
+                f"Available names: {list_available_u_matrices()}"
+            )
+    else:
+        u_matrix = sample_u_matrix(random_state=seed)
 
     # Generate initial memory
     initial_memory = BaseClientAgent.generate_problematic_memory(
@@ -1018,6 +1041,10 @@ def parse_arguments():
     parser.add_argument('--highlight-v2-disadvantage', action='store_true',
                        help='Highlight seeds where baseline succeeded but V2 failed (red) vs remaining seeds (black)')
 
+    parser.add_argument('--u-matrix', type=str, default=None,
+                       help=f'Named U-matrix to use (default: random sampling). '
+                            f'Available: {", ".join(list_available_u_matrices())}')
+
     # Output
     parser.add_argument('--output', type=str, default=None,
                        help='Save plot to file (optional)')
@@ -1043,6 +1070,7 @@ def main():
             "patterns": args.patterns,
             "therapist_versions": args.therapist_versions,
             "n_seeds": args.n_seeds,
+            "u_matrix_name": args.u_matrix if args.u_matrix else "random_sampled",
             "window_size": args.window_size,
             "complementarity_type": args.complementarity_type,
             "enable_parataxic": args.enable_parataxic,
@@ -1121,6 +1149,7 @@ def main():
                 bond_offset=args.bond_offset,
                 bond_alpha=args.bond_alpha,
                 recency_weighting_factor=args.recency_weighting_factor,
+                u_matrix_name=args.u_matrix,
             )
             baseline_successes.append(success)
 
@@ -1150,6 +1179,7 @@ def main():
                 skip_seeding_accuracy_threshold=args.skip_seeding_accuracy_threshold,
                 quick_seed_actions_threshold=args.quick_seed_actions_threshold,
                 abort_consecutive_failures_threshold=args.abort_consecutive_failures_threshold,
+                u_matrix_name=args.u_matrix,
             )
             results.append(result)
 
