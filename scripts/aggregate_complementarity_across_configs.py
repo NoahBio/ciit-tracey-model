@@ -29,6 +29,10 @@ from datetime import datetime
 import json
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
+import gc
+import psutil
+import os
+import pickle
 
 from visualize_complementarity import (
     run_simulation_with_complementarity_tracking,
@@ -36,6 +40,100 @@ from visualize_complementarity import (
     ComplementarityVisualizer,
 )
 from src.config import get_u_matrix_by_name, list_available_u_matrices
+
+
+def log_memory_usage(label: str = ""):
+    """Log current memory usage for monitoring."""
+    try:
+        process = psutil.Process(os.getpid())
+        mem_info = process.memory_info()
+        mem_mb = mem_info.rss / (1024 ** 2)
+        print(f"[MEMORY] {label}: {mem_mb:.1f} MB")
+    except NameError:
+        # psutil not available
+        pass
+
+
+class IncrementalTrajectoryStats:
+    """Online computation of mean and std for trajectories using Welford's algorithm.
+
+    This allows computing statistics incrementally without storing all trajectories in memory.
+    Memory usage: O(max_length) instead of O(n_results * max_length).
+
+    Example:
+        stats = IncrementalTrajectoryStats(max_length=300)
+        for trajectory in trajectories:
+            stats.update(trajectory)
+        mean, std = stats.get_stats()
+    """
+
+    def __init__(self, max_length: int = 500):
+        """Initialize with maximum expected trajectory length.
+
+        Args:
+            max_length: Initial capacity for trajectory length (will expand if needed)
+        """
+        self.max_length = max_length
+        self.count = np.zeros(max_length, dtype=np.int64)
+        self.mean = np.zeros(max_length, dtype=np.float64)
+        self.m2 = np.zeros(max_length, dtype=np.float64)  # Sum of squared differences
+
+    def update(self, trajectory: List[float]) -> None:
+        """Add a single trajectory to the running statistics.
+
+        Uses Welford's online algorithm for numerical stability.
+
+        Args:
+            trajectory: List of float values (variable length OK)
+        """
+        n = len(trajectory)
+
+        # Dynamically expand arrays if needed
+        if n > self.max_length:
+            new_size = n
+            self.count = np.pad(self.count, (0, new_size - self.max_length))
+            self.mean = np.pad(self.mean, (0, new_size - self.max_length))
+            self.m2 = np.pad(self.m2, (0, new_size - self.max_length))
+            self.max_length = new_size
+
+        # Welford's algorithm
+        for i in range(n):
+            if not np.isnan(trajectory[i]):
+                self.count[i] += 1
+                delta = trajectory[i] - self.mean[i]
+                self.mean[i] += delta / self.count[i]
+                delta2 = trajectory[i] - self.mean[i]
+                self.m2[i] += delta * delta2
+
+    def get_stats(self) -> Tuple[np.ndarray, np.ndarray]:
+        """Get current mean and std arrays.
+
+        Returns:
+            Tuple of (mean_array, std_array)
+        """
+        # Find actual max length used
+        actual_length = int(np.max(np.where(self.count > 0)[0]) + 1) if np.any(self.count > 0) else 0
+
+        if actual_length == 0:
+            return np.array([]), np.array([])
+
+        mean = self.mean[:actual_length].copy()
+
+        # Calculate std with numerical stability check
+        variance = np.zeros(actual_length)
+        mask = self.count[:actual_length] > 0
+        variance[mask] = self.m2[:actual_length][mask] / self.count[:actual_length][mask]
+        std = np.sqrt(variance)
+
+        # Set to NaN where no data
+        mean[~mask] = np.nan
+        std[~mask] = np.nan
+
+        return mean, std
+
+    def get_count(self) -> int:
+        """Return total number of trajectories added."""
+        return int(self.count[0]) if len(self.count) > 0 and self.count[0] > 0 else 0
 
 
 @dataclass
@@ -221,8 +319,44 @@ def process_config_wrapper(args):
     )
 
 
+def save_config_checkpoint(result: ConfigResult, output_dir: Path) -> None:
+    """Save a single ConfigResult to disk as a checkpoint.
+
+    Uses pickle for fast serialization. This enables recovery from failures
+    and reduces memory pressure.
+
+    Args:
+        result: ConfigResult to save
+        output_dir: Directory to save checkpoint files
+    """
+    checkpoint_dir = output_dir / "checkpoints"
+    checkpoint_dir.mkdir(exist_ok=True)
+
+    checkpoint_path = checkpoint_dir / f"config_{result.config_idx:04d}_trial_{result.trial_number}.pkl"
+
+    with open(checkpoint_path, 'wb') as f:
+        pickle.dump(result, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def load_config_checkpoint(checkpoint_path: Path) -> ConfigResult:
+    """Load a ConfigResult from checkpoint file.
+
+    Args:
+        checkpoint_path: Path to checkpoint pickle file
+
+    Returns:
+        Loaded ConfigResult
+    """
+    with open(checkpoint_path, 'rb') as f:
+        return pickle.load(f)
+
+
 def aggregate_trajectories(all_results: List) -> Tuple[np.ndarray, np.ndarray]:
     """Aggregate complementarity trajectories across multiple simulation results.
+
+    NOTE: This function is DEPRECATED for large-scale aggregation. Use
+    IncrementalTrajectoryStats for memory-efficient online aggregation.
+    Kept for backward compatibility with small datasets.
 
     Args:
         all_results: List of SimulationResult objects
@@ -250,6 +384,20 @@ def aggregate_trajectories(all_results: List) -> Tuple[np.ndarray, np.ndarray]:
     std_traj = np.nanstd(trajectories, axis=0)
 
     return mean_traj, std_traj
+
+
+def aggregate_trajectories_online(stats: IncrementalTrajectoryStats) -> Tuple[np.ndarray, np.ndarray]:
+    """Aggregate trajectories using pre-computed online statistics.
+
+    Memory-efficient replacement for aggregate_trajectories() for large datasets.
+
+    Args:
+        stats: IncrementalTrajectoryStats object with accumulated statistics
+
+    Returns:
+        Tuple of (mean_trajectory, std_trajectory) as numpy arrays
+    """
+    return stats.get_stats()
 
 
 def visualize_aggregated_results(
@@ -474,10 +622,31 @@ def main():
     print(f"Total simulations: {len(configs) * args.n_seeds * 2:,}")
     print(f"(This will take a while...)\n")
 
-    # Process configs in batches
-    all_config_results = []
+    # Initialize online statistics accumulators (memory-efficient approach)
+    print("\nInitializing online statistics accumulators...")
+    v2_adv_stats = IncrementalTrajectoryStats(max_length=args.max_sessions)
+    baseline_adv_stats = IncrementalTrajectoryStats(max_length=args.max_sessions)
+    both_success_stats = IncrementalTrajectoryStats(max_length=args.max_sessions)
+    both_fail_stats = IncrementalTrajectoryStats(max_length=args.max_sessions)
 
-    with ProcessPoolExecutor(max_workers=n_workers) as executor:
+    # Counters for breakdown
+    breakdown_counts = {
+        'v2_advantage': 0,
+        'baseline_advantage': 0,
+        'both_success': 0,
+        'both_fail': 0,
+    }
+
+    log_memory_usage("After initializing online stats")
+
+    # Process configs in parallel with online aggregation
+    print(f"\nProcessing configs with {n_workers} workers (memory-efficient mode)...")
+    print(f"Total simulations: {len(configs) * args.n_seeds * 2:,}")
+    print(f"Checkpoints will be saved to: {output_dir / 'checkpoints'}")
+    print(f"(This will take a while...)\n")
+
+    ctx = mp.get_context('spawn')
+    with ProcessPoolExecutor(max_workers=n_workers, mp_context=ctx) as executor:
         # Submit all tasks
         task_args = [
             (config, args.n_seeds, args.max_sessions,
@@ -490,43 +659,63 @@ def main():
             for i, task_arg in enumerate(task_args)
         }
 
-        # Collect results with progress bar
+        # Collect results with progress bar and immediate online aggregation
         with tqdm(total=len(configs), desc="Processing configs") as pbar:
             for future in as_completed(futures):
                 try:
-                    result = future.result()
-                    all_config_results.append(result)
+                    config_result = future.result(timeout=600)  # 10 minute timeout per config
+
+                    # Save checkpoint to disk immediately
+                    save_config_checkpoint(config_result, output_dir)
+
+                    # Update online statistics (memory-efficient aggregation)
+                    for sim_result in config_result.v2_advantage_results:
+                        v2_adv_stats.update(sim_result.overall_enacted_distance_trajectory)
+                        breakdown_counts['v2_advantage'] += 1
+
+                    for sim_result in config_result.baseline_advantage_results:
+                        baseline_adv_stats.update(sim_result.overall_enacted_distance_trajectory)
+                        breakdown_counts['baseline_advantage'] += 1
+
+                    for sim_result in config_result.both_success_results:
+                        both_success_stats.update(sim_result.overall_enacted_distance_trajectory)
+                        breakdown_counts['both_success'] += 1
+
+                    for sim_result in config_result.both_fail_results:
+                        both_fail_stats.update(sim_result.overall_enacted_distance_trajectory)
+                        breakdown_counts['both_fail'] += 1
+
+                    # Free memory immediately - don't keep ConfigResult in RAM!
+                    del config_result
+
+                    # Remove future from dict to allow garbage collection
+                    del futures[future]
+
+                    # Periodic garbage collection and memory logging
+                    if pbar.n % 100 == 0 and pbar.n > 0:
+                        gc.collect()
+                        log_memory_usage(f"After {pbar.n} configs")
+
+                    pbar.update(1)
+
+                except TimeoutError:
+                    config_idx = futures[future]
+                    print(f"\nTimeout processing config {config_idx}")
+                    del futures[future]  # Free future even on timeout
                     pbar.update(1)
                 except Exception as e:
                     config_idx = futures[future]
                     print(f"\nError processing config {config_idx}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    del futures[future]  # Free future even on error
                     pbar.update(1)
 
-    print(f"\nSuccessfully processed {len(all_config_results)} configs")
-
-    # Aggregate results across all configs
-    print("\nAggregating results...")
-
-    v2_adv_all = []
-    baseline_adv_all = []
-    both_success_all = []
-    both_fail_all = []
-
-    for config_result in all_config_results:
-        v2_adv_all.extend(config_result.v2_advantage_results)
-        baseline_adv_all.extend(config_result.baseline_advantage_results)
-        both_success_all.extend(config_result.both_success_results)
-        both_fail_all.extend(config_result.both_fail_results)
-
-    remaining_all = both_success_all + both_fail_all
+    print(f"\nSuccessfully processed {sum(breakdown_counts.values()):,} total simulations")
+    log_memory_usage("After all configs processed")
 
     # Calculate breakdown
-    breakdown = {
-        'v2_advantage': len(v2_adv_all),
-        'baseline_advantage': len(baseline_adv_all),
-        'both_success': len(both_success_all),
-        'both_fail': len(both_fail_all),
-    }
+    breakdown = breakdown_counts
 
     print(f"\nSeed breakdown across all configs:")
     print(f"  V2 advantage: {breakdown['v2_advantage']:,}")
@@ -535,11 +724,42 @@ def main():
     print(f"  Both fail: {breakdown['both_fail']:,}")
     print(f"  Total: {sum(breakdown.values()):,}")
 
-    # Aggregate trajectories
-    print("\nAggregating trajectories...")
-    v2_adv_mean, v2_adv_std = aggregate_trajectories(v2_adv_all)
-    baseline_adv_mean, baseline_adv_std = aggregate_trajectories(baseline_adv_all)
-    remaining_mean, remaining_std = aggregate_trajectories(remaining_all)
+    # Extract mean/std from online stats (NO LARGE ARRAY CREATION!)
+    print("\nExtracting aggregated trajectories from online statistics...")
+    v2_adv_mean, v2_adv_std = aggregate_trajectories_online(v2_adv_stats)
+    baseline_adv_mean, baseline_adv_std = aggregate_trajectories_online(baseline_adv_stats)
+
+    # Combine both_success and both_fail for "remaining" category
+    print("Combining both_success and both_fail into 'remaining' category...")
+    remaining_stats = IncrementalTrajectoryStats(max_length=args.max_sessions)
+
+    # Re-aggregate from checkpoints for remaining category
+    # (This is the only place we reload from disk, but just to combine two categories)
+    checkpoint_dir = output_dir / "checkpoints"
+    checkpoint_files = sorted(checkpoint_dir.glob("config_*.pkl"))
+
+    print(f"Re-aggregating {len(checkpoint_files)} configs for 'remaining' category...")
+    for checkpoint_path in tqdm(checkpoint_files, desc="Merging remaining"):
+        config_result = load_config_checkpoint(checkpoint_path)
+
+        # Add both_success and both_fail to remaining stats
+        for sim_result in config_result.both_success_results:
+            remaining_stats.update(sim_result.overall_enacted_distance_trajectory)
+
+        for sim_result in config_result.both_fail_results:
+            remaining_stats.update(sim_result.overall_enacted_distance_trajectory)
+
+        # Free memory
+        del config_result
+
+    remaining_mean, remaining_std = aggregate_trajectories_online(remaining_stats)
+
+    # Free the large stats objects
+    del v2_adv_stats, baseline_adv_stats, both_success_stats, both_fail_stats, remaining_stats
+    gc.collect()
+
+    log_memory_usage("After aggregation complete")
+    print("\nMemory-efficient aggregation complete!")
 
     # Save aggregated data
     np.savez(

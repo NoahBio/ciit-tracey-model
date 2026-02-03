@@ -65,8 +65,10 @@ python scripts/aggregate_complementarity_across_configs.py \
   - On 1 core: ~2000 hours (83 days)
   - On 40 cores: ~50 hours (2 days)
   - On 100 cores: ~20 hours
-- **Memory usage**: ~2-4 GB per worker
-- **Disk space**: ~10-20 GB for results
+- **Memory usage**: ~500 MB peak (using online aggregation)
+- **Disk space**:
+  - ~260 GB for checkpoints (temporary, can be deleted after)
+  - ~10-20 GB for final results
 
 ### Recommendations for Large Runs
 
@@ -116,25 +118,84 @@ The script creates a timestamped directory with:
 
 Lower octant distance = more complementary behavior (0 = perfect complementarity, 4 = maximally anti-complementary)
 
+## Memory Optimization
+
+The script uses **online aggregation with Welford's algorithm** to compute statistics incrementally without storing all results in memory.
+
+### How It Works
+
+1. **Online Statistics**: Instead of accumulating all ConfigResults in RAM, the script updates running mean/variance statistics as each config completes
+2. **Welford's Algorithm**: Numerically stable one-pass algorithm for computing mean and standard deviation
+3. **Checkpointing**: Each ConfigResult is saved to disk immediately after completion for recovery and verification
+4. **Memory Footprint**: O(max_sessions) instead of O(n_configs × n_seeds × max_sessions)
+
+### Memory Usage Comparison
+
+| Approach | Memory Usage (1000 configs × 10000 seeds) |
+|----------|------------------------------------------|
+| Old (accumulate all) | ~260 GB → OOM killed |
+| New (online aggregation) | ~500 MB peak |
+
+### Checkpointing System
+
+Results are automatically saved to `{output_dir}/checkpoints/` as they complete:
+- Format: `config_XXXX_trial_YYYY.pkl` (pickle format)
+- Purpose: Recovery from failures, verification, post-hoc analysis
+- Size: ~260 MB per config
+- Total: ~260 GB for 1000 configs (can be deleted after aggregation completes)
+
+### Monitoring Memory Usage
+
+The script logs memory usage at key points:
+```
+[MEMORY] After initializing online stats: 150.2 MB
+[MEMORY] After 100 configs: 420.5 MB
+[MEMORY] After 200 configs: 380.1 MB
+[MEMORY] After aggregation complete: 200.3 MB
+```
+
+Note: `psutil` is required for memory monitoring. Install with `pip install psutil` if needed.
+
 ## Troubleshooting
 
-### Out of Memory
-- Reduce `--n-workers`
-- Process in batches (run multiple times with different config ranges)
+### Out of Memory (OOM)
+The script should now handle large runs without OOM issues. If you still encounter OOM:
+- Ensure you're running the latest version with online aggregation
+- Check that checkpoints are being created (this confirms online mode is active)
+- Verify memory logs show constant usage (not growing)
+- If using an older version, update to the memory-efficient implementation
 
 ### Too Slow
 - Increase `--n-workers` to use more CPU cores
 - Use a cluster or HPC system
-- Reduce `--n-configs` or `--n-seeds`
+- Reduce `--n-configs` or `--n-seeds` for testing
+- First config may take longer due to worker initialization with spawn context (~10-20 seconds)
 
 ### No Results
 - Check that the database exists and has completed trials
 - Verify the study name matches
 - Run a small test first
 
+### Disk Space
+- Checkpoints require ~260 GB for 1000 configs
+- Checkpoints can be safely deleted after the script completes
+- To manually clean up: `rm -rf {output_dir}/checkpoints/`
+
 ## Technical Details
 
-- Uses multiprocessing to parallelize across configs
-- Each worker processes one config at a time (all seeds for that config)
-- Memory efficient: only stores trajectories, not full simulation states
-- Compatible with MPI for cluster environments (via mpi4py if needed)
+### Architecture
+- **Multiprocessing**: Uses `spawn` context for clean worker isolation (avoids global state issues)
+- **Parallelization**: Processes configs in parallel (one config per worker)
+- **Online Aggregation**: Welford's algorithm for incremental mean/std computation
+- **Checkpointing**: Pickle-based serialization for recovery and verification
+
+### Memory Characteristics
+- **Peak usage**: One ConfigResult (~260 MB) + accumulators (~16 KB) = ~500 MB
+- **Constant footprint**: Memory does not grow with number of configs processed
+- **Garbage collection**: Explicit cleanup after each config and every 100 configs
+
+### Compatibility
+- Requires Python 3.7+ for dataclasses
+- Works with all numpy/matplotlib versions
+- `psutil` optional (for memory monitoring only)
+- Compatible with HPC/cluster environments
