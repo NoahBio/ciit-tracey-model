@@ -168,10 +168,42 @@ U_MATRIX_HIGHLY_COMPLEMENTARY = np.array([
     [           -20,    -30,    -10,      0,    +20,    +30,   +20,      0 ],
 ])
 
+# Cold-Trap Matrix: Frequency amplifier creates inescapable local optimum
+# Trapped at RS≈+22 (bond≈0.42), need RS≥+56 for success
+U_MATRIX_COLD_TRAP = np.array([
+    # Therapist:  D      WD      W      WS      S      CS      C      CD
+    # Client D (Dominant)
+    [           -20,    -30,     -5,    +15,    +35,    +15,    -5,    -30 ],
+    
+    # Client WD (Warm-Dominant) - high complementary but unreachable
+    [           -15,    +10,    +45,    +65,    +25,    -10,   -30,    -45 ],
+    
+    # Client W (Warm) - Very high complementary but unreachable
+    # KEY: Cold responses (C/CS/CD) must be severely punishing at indices 0-3
+    [            -5,    +45,    +68,    +45,     -5,    -50,   -45,    -52 ],
+    
+    # Client WS (Warm-Submissive) - high complementary but unreachable
+    [           +15,    +65,    +45,    +10,    -10,    -48,   -30,    -10 ],
+    
+    # Client S (Submissive)
+    [           +35,    +15,     -5,    -30,    -20,    -30,    -5,    +15 ],
+    
+    # Client CS (Cold-Submissive) - TRAP zone
+    [           +10,     -5,    -18,    -28,     -5,     +8,   +15,    +20 ],
+    
+    # Client C (Cold) - TRAP: narrow spread, moderate complementary
+    # KEY: Warm responses punishing but not catastrophic (prevents early escape)
+    [            +5,    -12,    -18,    -28,     -5,    +15,   +23,    +18 ],
+    
+    # Client CD (Cold-Dominant) - TRAP zone
+    [            -5,    -22,    -15,     -8,    +10,    +20,   +18,     +5 ],
+])
+
 # Registry of all named U-matrices
 NAMED_U_MATRICES = {
     'average': U_MATRIX_AVERAGE,
     'highly_complementary': U_MATRIX_HIGHLY_COMPLEMENTARY,
+    'cold_trap': U_MATRIX_COLD_TRAP,
     # Add more matrices here as needed
 }
 
