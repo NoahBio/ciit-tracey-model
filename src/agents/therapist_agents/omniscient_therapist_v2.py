@@ -10,12 +10,29 @@ The strategy operates in three phases:
 
 The therapist reads the client's PERCEIVED memory (after parataxic distortion)
 to understand what the client actually stored, not just what the therapist did.
+
+Forward Projection for Target Selection:
+----------------------------------------
+When selecting which (client_action, therapist_action) target to pursue, the
+therapist uses PROJECTED probabilities rather than current probabilities. This
+accounts for how seeding will shift client behavior:
+
+1. Seeding changes the client's perceived memory
+2. Changed memory changes the frequency distribution of therapist actions
+3. Changed frequencies affect the client's expected payoffs (via amplification)
+4. Changed expected payoffs change which client actions become more/less likely
+
+The projection simulates what the client's action distribution would look like
+AFTER successful seeding, enabling the therapist to select targets that will
+actually be reachable once seeding is complete.
 """
 
 from typing import Dict, Any, List, Tuple, Optional
 from dataclasses import dataclass, field
 from collections import deque, Counter
 import numpy as np
+
+from src.config import get_memory_weights, MAX_SESSIONS, PARATAXIC_WINDOW
 
 
 @dataclass
@@ -117,27 +134,30 @@ class OmniscientStrategicTherapist:
         self,
         client_ref,
         # Defaults from best Optuna trial (rank 1, trial 2643: 88% vs 73.3% baseline)
-        perception_window: int = 10,
+        perception_window: int | None = None,  # Defaults to PARATAXIC_WINDOW
         baseline_accuracy: float = 0.5549619551286054,
         seeding_benefit_scaling: float = 1.8658722646107764,
         skip_seeding_accuracy_threshold: float = 0.814677493978211,
         quick_seed_actions_threshold: int = 1,
         abort_consecutive_failures_threshold: int = 4,
+        max_sessions: int | None = None,  # Defaults to MAX_SESSIONS from config
     ):
         """Initialize the omniscient strategic therapist.
 
         Args:
             client_ref: Reference to client agent (for reading state)
-            perception_window: Size of perception window for parataxic distortion (default: 10)
+            perception_window: Size of parataxic window for seeding (default: PARATAXIC_WINDOW from config)
             baseline_accuracy: Baseline perception accuracy parameter (default: 0.555)
             seeding_benefit_scaling: Scaling factor for expected seeding benefit (default: 1.87)
             skip_seeding_accuracy_threshold: Skip seeding if accuracy above this (default: 0.815)
             quick_seed_actions_threshold: "Just do it" if actions_needed <= this (default: 1)
             abort_consecutive_failures_threshold: Abort after this many failures (default: 4)
+            max_sessions: Maximum therapy sessions (default: MAX_SESSIONS from config)
         """
         self.client_ref = client_ref
-        self.perception_window = perception_window
+        self.perception_window = perception_window if perception_window is not None else PARATAXIC_WINDOW
         self.baseline_accuracy = baseline_accuracy
+        self.max_sessions = max_sessions if max_sessions is not None else MAX_SESSIONS
 
         # Seeding strategy hyperparameters
         self.seeding_benefit_scaling = seeding_benefit_scaling
@@ -219,6 +239,237 @@ class OmniscientStrategicTherapist:
         history_correct = 1.0 if (recent_mode is not None and actual_action == recent_mode) else 0.0
         return self.baseline_accuracy + (1 - self.baseline_accuracy) * history_correct
 
+    def _get_current_weighted_frequencies(self) -> np.ndarray:
+        """Get current therapist action frequencies using client's weighting scheme.
+
+        Matches the client's _calculate_marginal_frequencies() method exactly:
+        uses FULL memory (not just perception_window) with recency weighting.
+
+        Returns:
+            Array of 8 frequencies matching what client uses for expectations
+        """
+        full_memory = list(self.client_ref.memory)
+        if not full_memory:
+            return np.ones(8) / 8
+
+        memory_weights = get_memory_weights(len(full_memory))
+        weighted_counts = np.zeros(8)
+
+        for idx, (client_oct, therapist_oct) in enumerate(full_memory):
+            weighted_counts[therapist_oct] += memory_weights[idx]
+
+        total_weight = sum(memory_weights)
+        if total_weight == 0:
+            return np.ones(8) / 8
+
+        return weighted_counts / total_weight
+
+    def _project_therapist_frequencies(self, target_action: int) -> np.ndarray:
+        """Project therapist action frequencies after successful seeding.
+
+        IMPORTANT: Two different memory contexts at play:
+        1. SEEDING uses perception_window (parataxic window) - to make target the mode
+        2. CLIENT EXPECTATIONS use full memory with recency weighting
+
+        This method projects what the FULL memory frequencies will look like after
+        seeding succeeds (since client expectations use full memory).
+
+        The current mode (what failed seeds perceive) is determined from
+        perception_window (matching parataxic distortion logic).
+
+        Args:
+            target_action: The therapist action being seeded
+
+        Returns:
+            Array of 8 frequencies for client expectation calculation (full memory)
+        """
+        full_memory = list(self.client_ref.memory)
+        if not full_memory:
+            frequencies = np.zeros(8)
+            frequencies[target_action] = 1.0
+            return frequencies
+
+        # Get current weighted frequencies from FULL memory (for client expectations)
+        current_frequencies = self._get_current_weighted_frequencies()
+
+        # Identify current mode from PERCEPTION_WINDOW (for parataxic distortion)
+        # This is what failed seeds will be perceived as
+        recent_memory = full_memory[-self.perception_window:]
+        recent_therapist_actions = [t for c, t in recent_memory]
+        recent_counts = np.array([recent_therapist_actions.count(a) for a in range(8)])
+        max_recent_count = max(recent_counts)
+        tied_actions = {a for a in range(8) if recent_counts[a] == max_recent_count}
+
+        current_mode = None
+        for action in reversed(recent_therapist_actions):
+            if action in tied_actions:
+                current_mode = action
+                break
+        if current_mode is None:
+            current_mode = int(np.argmax(recent_counts))
+
+        # Get seeding sessions needed (uses perception_window internally)
+        seeding_sessions = self._estimate_seeding_sessions(target_action)
+
+        if seeding_sessions == 0:
+            # Target already dominant in parataxic window
+            return current_frequencies
+
+        # Calculate expected successes and failures
+        raw_seeds_needed = int(np.ceil(seeding_sessions * self.baseline_accuracy))
+        expected_successes = raw_seeds_needed
+        expected_failures = raw_seeds_needed * (1 - self.baseline_accuracy) / self.baseline_accuracy
+
+        # Project frequency changes in FULL memory
+        # Each new entry affects full memory frequency with recency weighting
+        memory_size = len(full_memory)
+        avg_recent_weight = np.mean(get_memory_weights(memory_size)[-10:])
+        freq_per_seed = avg_recent_weight / memory_size
+
+        projected_frequencies = current_frequencies.copy()
+        success_freq_boost = expected_successes * freq_per_seed
+        failure_freq_boost = expected_failures * freq_per_seed
+
+        projected_frequencies[target_action] += success_freq_boost
+        projected_frequencies[current_mode] += failure_freq_boost
+
+        # Normalize
+        total = projected_frequencies.sum()
+        if total > 0:
+            projected_frequencies = projected_frequencies / total
+
+        return projected_frequencies
+
+    def _project_bond_after_seeding(self, target_therapist_action: int) -> float:
+        """Project what bond will be after seeding completes.
+
+        During seeding, interactions may be suboptimal (seeding action ≠ complement),
+        which affects RS and thus bond. This estimates the bond level after seeding.
+
+        IMPORTANT: Uses FULL memory for RS/bond calculation (matching client logic),
+        but uses _estimate_seeding_sessions which considers perception_window for
+        determining how many seeds are needed.
+
+        Args:
+            target_therapist_action: The therapist action being seeded
+
+        Returns:
+            Projected bond value after seeding
+        """
+        from src.config import rs_to_bond, BOND_ALPHA, BOND_OFFSET
+
+        u_matrix = self.client_ref.u_matrix
+        current_rs = self.client_ref.relationship_satisfaction
+
+        # Get seeding sessions needed (uses perception_window internally)
+        total_seeding_sessions = self._estimate_seeding_sessions(target_therapist_action)
+
+        if total_seeding_sessions == 0:
+            # Already dominant in parataxic window, no seeding needed
+            return self.client_ref.bond
+
+        # Estimate average utility during seeding sessions
+        # During seeding, client takes various actions; therapist plays target_therapist_action
+        current_payoffs = self.client_ref._calculate_expected_payoffs()
+        current_probs = self._softmax(current_payoffs / self.client_ref.entropy)
+
+        # Expected utility per seeding session
+        seeding_utilities = []
+        for client_action in range(8):
+            utility = u_matrix[client_action, target_therapist_action]
+            seeding_utilities.append(utility * current_probs[client_action])
+        avg_seeding_utility = sum(seeding_utilities)
+
+        # Project RS change using FULL memory size (matching client RS calculation)
+        memory_size = len(self.client_ref.memory)
+        seeding_weight = min(0.3, total_seeding_sessions / memory_size)  # cap influence
+        projected_rs = (1 - seeding_weight) * current_rs + seeding_weight * avg_seeding_utility
+
+        # Convert to bond
+        projected_bond = rs_to_bond(
+            rs=projected_rs,
+            rs_min=self.client_ref.rs_min,
+            rs_max=self.client_ref.rs_max,
+            alpha=BOND_ALPHA,
+            offset=BOND_OFFSET
+        )
+
+        return projected_bond
+
+    def _project_client_expected_payoffs(self, target_therapist_action: int) -> np.ndarray:
+        """Project client's expected payoffs after successful seeding.
+
+        Uses the frequency-amplifier formula to estimate what the client's
+        expected payoffs would be once target_therapist_action dominates memory.
+
+        IMPORTANT: Now uses PROJECTED bond (not current bond) to account for
+        how seeding sessions will affect RS and thus the client's optimism level.
+
+        Formula: adjusted[i,j] = U[i,j] + (U[i,j] * P(j) * history_weight)
+        Then bond-based percentile selection over sorted adjusted utilities.
+
+        Args:
+            target_therapist_action: The therapist action being seeded
+
+        Returns:
+            Array of 8 expected payoffs (one per client action)
+        """
+        u_matrix = self.client_ref.u_matrix
+
+        # Use PROJECTED bond, not current bond
+        projected_bond = self._project_bond_after_seeding(target_therapist_action)
+
+        # Get history_weight from client if available, else use default
+        history_weight = getattr(self.client_ref, 'history_weight', 1.0)
+
+        # Project frequency distribution after seeding
+        projected_frequencies = self._project_therapist_frequencies(target_therapist_action)
+
+        expected_payoffs = np.zeros(8)
+
+        for client_action in range(8):
+            raw_utilities = u_matrix[client_action, :]
+
+            # Amplify using projected frequencies (frequency-amplifier formula)
+            adjusted_utilities = raw_utilities + (
+                raw_utilities * projected_frequencies * history_weight
+            )
+
+            # Sort adjusted utilities for bond-based selection
+            sorted_adjusted = np.sort(adjusted_utilities)
+
+            # Bond-based percentile interpolation using PROJECTED bond
+            position = projected_bond * 7
+            lower_idx = int(position)
+            upper_idx = min(lower_idx + 1, 7)
+            interpolation_weight = position - lower_idx
+
+            expected_payoffs[client_action] = (
+                (1 - interpolation_weight) * sorted_adjusted[lower_idx] +
+                interpolation_weight * sorted_adjusted[upper_idx]
+            )
+
+        return expected_payoffs
+
+    def _project_client_probabilities(self, target_therapist_action: int) -> np.ndarray:
+        """Project client action probabilities after successful seeding.
+
+        Combines projected expected payoffs with softmax to estimate how
+        client behavior will shift once seeding is complete.
+
+        This enables forward-looking target selection: instead of choosing
+        targets based on current probabilities, we choose based on what
+        probabilities will look like AFTER seeding succeeds.
+
+        Args:
+            target_therapist_action: The therapist action being seeded
+
+        Returns:
+            Array of 8 probabilities (one per client action)
+        """
+        projected_payoffs = self._project_client_expected_payoffs(target_therapist_action)
+        return self._softmax(projected_payoffs / self.client_ref.entropy)
+
     def calculate_seeding_requirement(self, target_action: int) -> Dict[str, Any]:
         """Calculate actions needed to make `target_action` dominant in perceived memory.
 
@@ -286,53 +537,196 @@ class OmniscientStrategicTherapist:
         exp_values = np.exp(shifted)
         return exp_values / np.sum(exp_values)
 
+    def _estimate_seeding_sessions(self, target_therapist_action: int) -> int:
+        """Estimate number of sessions needed to seed a target action.
+
+        IMPORTANT: Uses perception_window (parataxic window) for mode detection,
+        because seeding is about making an action the mode within the parataxic
+        distortion window, not the full memory.
+
+        Args:
+            target_therapist_action: The therapist action to seed
+
+        Returns:
+            Estimated number of seeding sessions required
+        """
+        # Use perception_window for seeding (matches parataxic distortion logic)
+        recent_memory = list(self.client_ref.memory)[-self.perception_window:]
+        if not recent_memory:
+            return self.perception_window // 2 + 1
+
+        # Simple counts within parataxic window (no recency weighting - matches parataxic logic)
+        therapist_actions = [t for c, t in recent_memory]
+        counts = np.array([therapist_actions.count(a) for a in range(8)])
+
+        current_target_count = counts[target_therapist_action]
+        max_other_count = max(counts[a] for a in range(8) if a != target_therapist_action)
+
+        if current_target_count > max_other_count:
+            return 0  # Already dominant in parataxic window
+
+        # Raw seeds needed to exceed max_other_count
+        raw_seeds_needed = max(1, max_other_count + 1 - current_target_count)
+
+        # Adjust for baseline_accuracy (some seeds will fail)
+        total_sessions = int(np.ceil(raw_seeds_needed / self.baseline_accuracy))
+
+        return total_sessions
+
+    def _calculate_target_net_value(
+        self,
+        client_action: int,
+        therapist_action: int,
+    ) -> Tuple[float, Dict[str, Any]]:
+        """Calculate net expected value of pursuing a target, integrating seeding cost.
+
+        This combines target selection with cost-benefit analysis. Instead of
+        picking a target then checking if seeding is beneficial, we calculate
+        the NET value accounting for:
+
+        1. Seeding cost: sessions × utility sacrificed during seeding
+        2. Post-seeding benefit: remaining sessions × utility improvement × P(client action)
+        3. Bond dynamics: bond may decrease during seeding (floor) vs current (ceiling)
+
+        Args:
+            client_action: Target client octant
+            therapist_action: Target therapist octant (to seed)
+
+        Returns:
+            Tuple of (net_value, metadata_dict)
+            net_value must be > 0 to be worth pursuing
+        """
+        u_matrix = self.client_ref.u_matrix
+        current_bond = self.client_ref.bond
+        current_rs = self.client_ref.relationship_satisfaction
+        remaining_sessions = self.max_sessions - self.session_count
+
+        # Target utility (raw U-matrix value)
+        target_utility = u_matrix[client_action, therapist_action]
+
+        # Quick reject: target must improve over current RS
+        if target_utility <= current_rs:
+            return float('-inf'), {'reason': 'no_improvement'}
+
+        # Estimate seeding requirements
+        seeding_sessions = self._estimate_seeding_sessions(therapist_action)
+        projected_bond = self._project_bond_after_seeding(therapist_action)
+
+        # Bond range: [floor=projected_bond, ceiling=current_bond]
+        # During seeding, bond moves from current toward projected
+        bond_floor = min(projected_bond, current_bond)
+        bond_ceiling = max(projected_bond, current_bond)
+
+        # Not enough time to benefit after seeding
+        sessions_after_seeding = remaining_sessions - seeding_sessions
+        if sessions_after_seeding <= 3:  # Need at least a few sessions to benefit
+            return float('-inf'), {'reason': 'insufficient_time'}
+
+        # Calculate seeding cost
+        # During seeding, therapist plays target_action regardless of client action
+        # Cost = sum over client actions of: P(client_action) × [U(complement) - U(target)]
+        current_payoffs = self.client_ref._calculate_expected_payoffs()
+        current_probs = self._softmax(current_payoffs / self.client_ref.entropy)
+
+        seeding_cost_per_session = 0.0
+        for c_act in range(8):
+            complement = self.COMPLEMENT_MAP[c_act]
+            utility_if_complement = u_matrix[c_act, complement]
+            utility_if_seed = u_matrix[c_act, therapist_action]
+            # Cost is opportunity cost: what we give up by not complementing
+            opportunity_cost = max(0, utility_if_complement - utility_if_seed)
+            seeding_cost_per_session += current_probs[c_act] * opportunity_cost
+
+        total_seeding_cost = seeding_cost_per_session * seeding_sessions
+
+        # Calculate post-seeding benefit using bond floor (conservative)
+        # Project client probabilities at projected bond level
+        projected_probs = self._project_client_probabilities(therapist_action)
+        prob_target_client_action = projected_probs[client_action]
+
+        # Utility improvement when target interaction occurs
+        utility_improvement = target_utility - current_rs
+
+        # Expected benefit per session after seeding
+        benefit_per_session = utility_improvement * prob_target_client_action
+
+        # Scale benefit by projected bond to account for accessibility
+        # Lower bond = client more pessimistic = less likely to "reach" high utility
+        # Use bond_floor as conservative estimate
+        bond_accessibility_factor = bond_floor
+
+        # Total expected benefit (scaled by bond accessibility)
+        total_benefit = benefit_per_session * sessions_after_seeding * bond_accessibility_factor
+
+        # Apply seeding benefit scaling (hyperparameter)
+        total_benefit *= self.seeding_benefit_scaling
+
+        # Net value
+        net_value = total_benefit - total_seeding_cost
+
+        metadata = {
+            'target_utility': target_utility,
+            'current_rs': current_rs,
+            'utility_improvement': utility_improvement,
+            'seeding_sessions': seeding_sessions,
+            'sessions_after_seeding': sessions_after_seeding,
+            'seeding_cost_per_session': seeding_cost_per_session,
+            'total_seeding_cost': total_seeding_cost,
+            'prob_target_client_action': prob_target_client_action,
+            'benefit_per_session': benefit_per_session,
+            'bond_floor': bond_floor,
+            'bond_ceiling': bond_ceiling,
+            'total_benefit': total_benefit,
+            'net_value': net_value,
+        }
+
+        return net_value, metadata
+
     def _identify_target_interaction(self) -> bool:
-        """Find best (client_action, therapist_action) pair to work toward.
+        """Find best (client_action, therapist_action) pair with integrated cost-benefit.
 
         This is called when entering or continuing ladder_climbing phase.
-        Scores each possible interaction by:
-        - utility_improvement: How much better than current RS
-        - probability: How likely client is to take that action
+
+        IMPORTANT: Now integrates seeding cost into target selection.
+        Instead of picking a target then checking if beneficial, we calculate
+        the NET expected value for each candidate:
+
+        Net Value = (post-seeding benefit) - (seeding cost)
+
+        Only targets with positive net value are considered. The target with
+        highest net value is selected.
+
+        Also considers bond dynamics:
+        - Bond may decrease during seeding (conservative floor)
+        - Current bond sets the ceiling
 
         Returns:
             True if a valid target was found, False if no improving target exists
         """
-        u_matrix = self.client_ref.u_matrix
-        current_rs = self.client_ref.relationship_satisfaction
-
-        # Get client action probabilities at current bond
-        payoffs = self.client_ref._calculate_expected_payoffs()
-        probs = self._softmax(payoffs / self.client_ref.entropy)
-
-        best_score = float('-inf')
+        best_net_value = 0.0  # Must be positive to be worth pursuing
         best_client_action = None
         best_therapist_action = None
+        best_metadata = None
 
+        # Consider ALL (client_action, therapist_action) pairs
         for client_oct in range(8):
-            complement = self.COMPLEMENT_MAP[client_oct]
-            utility = u_matrix[client_oct, complement]
+            for therapist_oct in range(8):
+                net_value, metadata = self._calculate_target_net_value(
+                    client_oct, therapist_oct
+                )
 
-            # Skip if utility doesn't improve over current RS
-            if utility <= current_rs:
-                continue
-
-            # Score = utility_improvement × P(client_action)
-            improvement = utility - current_rs
-            prob = probs[client_oct]
-
-            score = improvement * prob
-
-            if score > best_score:
-                best_score = score
-                best_client_action = client_oct
-                best_therapist_action = complement
+                if net_value > best_net_value:
+                    best_net_value = net_value
+                    best_client_action = client_oct
+                    best_therapist_action = therapist_oct
+                    best_metadata = metadata
 
         if best_client_action is not None:
             self.current_target_client_action = best_client_action
             self.current_target_therapist_action = best_therapist_action
             return True
         else:
-            # No improving target found - stay in current phase
+            # No target with positive net value - stay in current phase
             self.current_target_client_action = None
             self.current_target_therapist_action = None
             return False
@@ -340,11 +734,13 @@ class OmniscientStrategicTherapist:
     def _should_start_ladder_climbing(self) -> bool:
         """Check if we should transition from relationship_building to ladder_climbing.
 
-        Conditions:
-        - Bond is above a safety threshold (to avoid dropout risk)
-        - We're past the critical dropout check session (session 10)
-        - There exists a reachable higher-utility interaction
-        - Seeding would actually be beneficial (not just always complement)
+        SIMPLIFIED: Now that _identify_target_interaction() does integrated cost-benefit
+        analysis (via _calculate_target_net_value), we only need to check:
+        - Safety thresholds (session count, bond level)
+        - Whether a target with positive net value exists
+
+        The old checks for perception_accuracy and seeding_needed are redundant
+        because _calculate_target_net_value already accounts for seeding cost/benefit.
 
         Returns:
             True if we should start ladder climbing
@@ -354,27 +750,13 @@ class OmniscientStrategicTherapist:
             return False
 
         # Check if bond is high enough (prevent risk of retreat)
-        # Lower threshold to start seeding earlier (before cold history dominates)
-        bond_threshold = 0.1  # Start earlier
+        bond_threshold = 0.1
         if self.client_ref.bond < bond_threshold:
             return False
 
-        # Check if there's a beneficial target to climb toward
-        if not self._identify_target_interaction():
-            return False
-
-        # Check if seeding would actually help
-        # If perception accuracy is already high, we don't need ladder-climbing
-        if self.current_target_therapist_action is not None:
-            seeding_req = self.calculate_seeding_requirement(self.current_target_therapist_action)
-            if seeding_req['perception_accuracy_estimate'] > self.skip_seeding_accuracy_threshold:
-                return False
-
-            # If no seeding is needed, stay in relationship_building
-            if seeding_req['adjusted_seeding_needed'] == 0:
-                return False
-
-        return True
+        # Check if there's a target with positive net value
+        # _identify_target_interaction now does integrated cost-benefit analysis
+        return self._identify_target_interaction()
 
     def _new_ladder_step_available(self) -> bool:
         """Check if a new, higher ladder step has become available.
@@ -435,16 +817,19 @@ class OmniscientStrategicTherapist:
         return False
 
     def _is_seeding_beneficial(self, client_action: int) -> bool:
-        """Determine if seeding is worth the cost at this moment.
+        """Determine if we should seed on this specific session.
 
-        Seeding has a cost: we don't complement, so we may get lower utility.
-        It's only worth it if:
-        1. The complement equals the seeding target (free seeding!)
-        2. The expected future value of seeding exceeds current cost
-        3. We haven't reached a point where seeding is futile
+        SIMPLIFIED: Cost-benefit analysis is now integrated into target selection
+        via _calculate_target_net_value(). Once a target is selected, we commit
+        to seeding it. This method handles only per-session edge cases:
 
-        The key insight is that seeding changes what gets stored in memory,
-        which affects future expectations, which affects future action selection.
+        1. No target set → don't seed
+        2. Complement == target → always seed (free!)
+        3. Seeding complete (target dominant) → stop seeding
+        4. Otherwise → continue seeding (we committed to this target)
+
+        The feedback monitoring system (_should_abort_target) handles cases where
+        seeding isn't working and we should abandon the target.
 
         Args:
             client_action: Current client action
@@ -457,66 +842,18 @@ class OmniscientStrategicTherapist:
 
         complement = self._get_complementary_action(client_action)
 
-        # Case 1: Complement IS the seeding target - always do it!
+        # Case 1: Complement IS the seeding target - always do it (free seeding!)
         if complement == self.current_target_therapist_action:
             return True
 
-        # Case 2: Calculate costs and benefits
-        u_matrix = self.client_ref.u_matrix
+        # Case 2: Check if seeding is complete (target already dominant)
+        seeding_sessions_needed = self._estimate_seeding_sessions(self.current_target_therapist_action)
+        if seeding_sessions_needed == 0:
+            return False  # Target is dominant, switch to consolidation
 
-        # Utility if we complement
-        utility_complement = u_matrix[client_action, complement]
-
-        # Utility if we seed
-        utility_seed = u_matrix[client_action, self.current_target_therapist_action]
-
-        # Check seeding progress
-        seeding_req = self.calculate_seeding_requirement(self.current_target_therapist_action)
-        perception_accuracy = seeding_req['perception_accuracy_estimate']
-        actions_needed = seeding_req['adjusted_seeding_needed']
-
-        # If perception is already high, no need to seed
-        if perception_accuracy > self.skip_seeding_accuracy_threshold:
-            return False
-
-        # If very few actions needed, just do it
-        if actions_needed <= self.quick_seed_actions_threshold:
-            return True
-
-        # Calculate expected value of completing seeding
-        target_utility = u_matrix[
-            self.current_target_client_action,
-            self.current_target_therapist_action
-        ]
-        current_rs = self.client_ref.relationship_satisfaction
-
-        # Expected improvement per session once seeding is complete
-        expected_improvement = target_utility - current_rs
-
-        # If target doesn't improve RS, don't seed
-        if expected_improvement <= 0:
-            return False
-
-        # How many sessions until we benefit?
-        sessions_until_benefit = actions_needed + 3
-
-        # Remaining sessions in therapy
-        remaining_sessions = 100 - self.session_count
-
-        # If not enough time to benefit, don't seed
-        if remaining_sessions < sessions_until_benefit:
-            return False
-
-        # Calculate total expected value (more aggressive)
-        benefit_sessions = remaining_sessions - sessions_until_benefit
-        total_expected_value = expected_improvement * benefit_sessions * self.seeding_benefit_scaling
-
-        # Calculate total cost of seeding
-        utility_cost_per_action = max(0, utility_complement - utility_seed)
-        total_seeding_cost = utility_cost_per_action * actions_needed
-
-        # More aggressive: seed if expected value exceeds cost
-        return total_expected_value > total_seeding_cost
+        # Case 3: Continue seeding - we committed to this target via _identify_target_interaction
+        # which already validated positive net value
+        return True
 
     def _initialize_seeding_monitor(self, target_action: int, target_client_action: int, session: int) -> None:
         """Initialize feedback monitor when starting to seed a new target.
@@ -750,7 +1087,7 @@ class OmniscientStrategicTherapist:
                     return True, f"Competitor action {boosted_action} boosted {max_boosts} times vs {monitor.successful_seeds} successes"
 
         # Criterion 3: Not enough time remaining
-        remaining_sessions = 100 - session
+        remaining_sessions = self.max_sessions - session
 
         # Estimate sessions still needed
         seeding_req = self.calculate_seeding_requirement(monitor.target_action)
