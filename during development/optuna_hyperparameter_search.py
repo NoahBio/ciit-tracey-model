@@ -1,38 +1,39 @@
-"""Optuna hyperparameter optimization for strategic therapist.
+"""Optuna hyperparameter optimization for V2 strategic therapist.
 
 This script uses Optuna to find optimal parameter configurations that maximize
-(or minimize) therapy success rates and other objectives.
+(or minimize) therapy success rates and other objectives using the V2 therapist
+with parataxic distortion and seeding mechanisms.
 
 Features:
 - Single-objective and multi-objective optimization
 - Support for both numerical and categorical parameters
-- Parameter constraint enforcement
+- V2 Therapist parameter optimization (perception_window, seeding thresholds, etc.)
 - Persistent SQLite storage with optuna-dashboard visualization
 - Resumable studies
 
 Example usage:
 
-# Single-objective: Maximize success rate
+# Single-objective: Maximize success rate with V2 therapist parameters
 python optuna_hyperparameter_search.py \
-  --study-name "strategic_optimization" \
+  --study-name "v2_therapist_optimization" \
   --mechanism conditional_amplifier \
   --pattern cold_warm \
-  --enable-strategic-therapist \
+  --enable-parataxic \
   --n-trials 100 \
   --objectives maximize:success_rate \
-  --optimize-params entropy rs_plateau_threshold plateau_window intervention_duration
+  --optimize-params entropy perception_window seeding_benefit_scaling
 
 # Multi-objective: Maximize success rate AND minimize sessions
 python optuna_hyperparameter_search.py \
-  --study-name "multi_obj_optimization" \
+  --study-name "multi_obj_v2_optimization" \
   --mechanism conditional_amplifier \
-  --enable-strategic-therapist \
+  --enable-parataxic \
   --n-trials 100 \
   --objectives maximize:success_rate minimize:avg_sessions_to_success \
-  --optimize-params entropy mechanism pattern plateau_window
+  --optimize-params entropy perception_window seeding_benefit_scaling abort_consecutive_failures_threshold
 
 # View results in browser:
-optuna-dashboard sqlite:///optuna_studies/strategic_optimization.db
+optuna-dashboard sqlite:///optuna_studies/v2_therapist_optimization.db
 """
 
 import sys
@@ -64,12 +65,15 @@ SEARCH_SPACE_DEFINITIONS = {
     'bond_power': ('float', 0.5, 3.0, 'uniform'),
     'bond_alpha': ('float', 1.0, 15.0, 'uniform'),
     'bond_offset': ('float', 0.5, 0.95, 'uniform'),
-    'rs_plateau_threshold': ('float', 2.0, 25.0, 'uniform'),
-    'plateau_window': ('int', 5, 30),
-    'intervention_duration': ('int', 3, 20),
     'threshold': ('float', 0.5, 0.95, 'uniform'),
     'baseline_accuracy': ('float', 0.1, 0.7, 'uniform'),
     'max_sessions': ('int', 50, 200),
+    # V2 Therapist parameters
+    'perception_window': ('int', 5, 25),
+    'seeding_benefit_scaling': ('float', 0.5, 3.0, 'uniform'),
+    'skip_seeding_accuracy_threshold': ('float', 0.6, 0.95, 'uniform'),
+    'quick_seed_actions_threshold': ('int', 1, 5),
+    'abort_consecutive_failures_threshold': ('int', 2, 10),
 
     # Categorical parameters
     'mechanism': ('categorical', [
@@ -127,14 +131,11 @@ def enforce_constraints(params: Dict[str, Any], trial: optuna.Trial) -> None:
     """Enforce parameter constraints.
 
     Raises optuna.TrialPruned if constraints are violated.
+
+    Note: V2 therapist parameters don't have hard constraints like V1 did.
+    This function is kept for potential future constraints.
     """
-    # Constraint: intervention_duration < plateau_window
-    if 'intervention_duration' in params and 'plateau_window' in params:
-        if params['intervention_duration'] >= params['plateau_window']:
-            raise optuna.TrialPruned(
-                f"Constraint violated: intervention_duration ({params['intervention_duration']}) "
-                f">= plateau_window ({params['plateau_window']})"
-            )
+    pass
 
 
 def extract_objectives(
@@ -504,10 +505,17 @@ def main():
     parser.add_argument('--bond-power', type=float, default=1.0, help='Bond power for bond_weighted mechanisms')
     parser.add_argument('--bond-alpha', type=float, default=5.0, help='Bond alpha (sigmoid steepness)')
     parser.add_argument('--bond-offset', type=float, default=0.8, help='Bond offset for sigmoid')
-    parser.add_argument('--enable-strategic-therapist', action='store_true', help='Enable strategic therapist')
-    parser.add_argument('--rs-plateau-threshold', type=float, default=5.0, help='RS plateau threshold')
-    parser.add_argument('--plateau-window', type=int, default=15, help='Plateau detection window')
-    parser.add_argument('--intervention-duration', type=int, default=10, help='Intervention duration')
+    # V2 Therapist parameters
+    parser.add_argument('--perception-window', type=int, default=10,
+                        help='Memory window for parataxic distortion (V2 therapist)')
+    parser.add_argument('--seeding-benefit-scaling', type=float, default=1.866,
+                        help='Scaling factor for seeding benefit (0.5-3.0)')
+    parser.add_argument('--skip-seeding-accuracy-threshold', type=float, default=0.815,
+                        help='Skip seeding if accuracy above this (0.6-0.95)')
+    parser.add_argument('--quick-seed-actions-threshold', type=int, default=1,
+                        help='Just do it seeding if actions_needed <= this (1-5)')
+    parser.add_argument('--abort-consecutive-failures-threshold', type=int, default=4,
+                        help='Abort after N consecutive failures (2-10)')
 
     args = parser.parse_args()
 
@@ -536,10 +544,12 @@ def main():
         'bond_power': args.bond_power,
         'bond_alpha': args.bond_alpha,
         'bond_offset': args.bond_offset,
-        'enable_strategic_therapist': args.enable_strategic_therapist,
-        'rs_plateau_threshold': args.rs_plateau_threshold,
-        'plateau_window': args.plateau_window,
-        'intervention_duration': args.intervention_duration,
+        # V2 Therapist parameters
+        'perception_window': args.perception_window,
+        'seeding_benefit_scaling': args.seeding_benefit_scaling,
+        'skip_seeding_accuracy_threshold': args.skip_seeding_accuracy_threshold,
+        'quick_seed_actions_threshold': args.quick_seed_actions_threshold,
+        'abort_consecutive_failures_threshold': args.abort_consecutive_failures_threshold,
     }
 
     for key, value in all_params.items():

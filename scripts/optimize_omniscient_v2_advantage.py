@@ -43,6 +43,8 @@ from optuna.visualization import (
     plot_optimization_history,
     plot_param_importances,
 )
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import multiprocessing as mp
 
 # Import evaluation infrastructure
 sys.path.insert(0, str(project_root / "scripts"))
@@ -96,7 +98,31 @@ def suggest_parameter(trial: optuna.Trial, param_name: str) -> Any:
         raise ValueError(f"Unknown parameter type: {param_type}")
 
 
-def objective(trial: optuna.Trial, n_seeds: int = 50, therapist_version: str = 'v2') -> float:
+def run_seed_therapist_pair(args):
+    """Helper function to run a single (seed, therapist_type) simulation.
+
+    Must be module-level for ProcessPoolExecutor pickling.
+
+    Parameters
+    ----------
+    args : tuple
+        (seed, therapist_type, therapist_version, sim_kwargs)
+
+    Returns
+    -------
+    SimulationResult
+        Result of the simulation
+    """
+    seed, therapist_type, therapist_version, sim_kwargs = args
+    return run_single_simulation(
+        seed=seed,
+        therapist_type=therapist_type,
+        therapist_version=therapist_version,
+        **sim_kwargs
+    )
+
+
+def objective(trial: optuna.Trial, n_seeds: int = 50, therapist_version: str = 'v2', n_workers: int | None = None) -> float:
     """Objective function that maximizes (omniscient_success - complementary_success).
 
     Parameters
@@ -107,6 +133,8 @@ def objective(trial: optuna.Trial, n_seeds: int = 50, therapist_version: str = '
         Number of random seeds per trial (default: 50)
     therapist_version : str
         Therapist version to use ('v1' or 'v2', default: 'v2')
+    n_workers : int
+        Number of parallel workers (default: CPU count)
 
     Returns
     -------
@@ -153,28 +181,35 @@ def objective(trial: optuna.Trial, n_seeds: int = 50, therapist_version: str = '
         'abort_consecutive_failures_threshold': abort_consecutive_failures_threshold,
     }
 
-    # Run BOTH therapists with same configuration
-    omniscient_results = []
-    complementary_results = []
+    # Run BOTH therapists with same configuration (parallelized)
+    if n_workers is None:
+        n_workers = mp.cpu_count()
 
+    ctx = mp.get_context('spawn')
+
+    # Prepare all tasks (omniscient + complementary for each seed)
+    tasks = []
     for seed in range(n_seeds):
-        # Omniscient therapist
-        omni_result = run_single_simulation(
-            seed=seed,
-            therapist_type='omniscient',
-            therapist_version=therapist_version,
-            **sim_kwargs
-        )
-        omniscient_results.append(omni_result)
+        tasks.append((seed, 'omniscient', therapist_version, sim_kwargs))
+        tasks.append((seed, 'complementary', therapist_version, sim_kwargs))
 
-        # Complementary therapist (baseline)
-        comp_result = run_single_simulation(
-            seed=seed,
-            therapist_type='complementary',
-            therapist_version=therapist_version,
-            **sim_kwargs
-        )
-        complementary_results.append(comp_result)
+    # Execute in parallel
+    all_results = []
+    with ProcessPoolExecutor(max_workers=n_workers, mp_context=ctx) as executor:
+        futures = {executor.submit(run_seed_therapist_pair, task): i
+                   for i, task in enumerate(tasks)}
+
+        for future in as_completed(futures):
+            try:
+                result = future.result(timeout=600)  # 10 min timeout per sim
+                all_results.append(result)
+            except Exception as e:
+                print(f"Simulation failed with error: {e}")
+                raise
+
+    # Split results back into omniscient and complementary
+    omniscient_results = [r for r in all_results if r.therapist_type == 'omniscient']
+    complementary_results = [r for r in all_results if r.therapist_type == 'complementary']
 
     # Compute statistics
     omniscient_stats = compute_statistics(omniscient_results)
@@ -361,6 +396,13 @@ def main():
         help='Omniscient therapist version (v1=original, v2=with feedback monitoring)'
     )
 
+    parser.add_argument(
+        '--n-workers',
+        type=int,
+        default=None,
+        help='Number of parallel workers (default: CPU count)'
+    )
+
     args = parser.parse_args()
 
     # Setup paths
@@ -386,7 +428,9 @@ def main():
     # Run optimization
     try:
         study.optimize(
-            lambda trial: objective(trial, n_seeds=args.n_seeds, therapist_version=args.therapist_version),
+            lambda trial: objective(trial, n_seeds=args.n_seeds,
+                                   therapist_version=args.therapist_version,
+                                   n_workers=args.n_workers),
             n_trials=args.n_trials,
             timeout=args.timeout,
             show_progress_bar=True,
