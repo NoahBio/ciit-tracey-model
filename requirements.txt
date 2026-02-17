@@ -14,6 +14,7 @@ tensorboard>=2.13.0
 # Utilities
 PyYAML>=6.0
 tqdm>=4.65.0
+psutil>=7.0.0
 
 # Hyperparameter optimization
 optuna>=4.6.0
