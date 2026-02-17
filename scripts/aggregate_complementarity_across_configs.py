@@ -156,14 +156,16 @@ class ConfigResult:
 def load_and_sample_configs(
     db_path: str,
     study_name: str,
-    n_configs: int = 1000
+    n_configs: int = 1000,
+    top_n: Optional[int] = None
 ) -> List[Dict]:
-    """Load trials from Optuna DB and sample uniformly across v2_advantage spectrum.
+    """Load trials from Optuna DB and sample configs.
 
     Args:
         db_path: Path to SQLite database
         study_name: Name of the study
-        n_configs: Number of configs to sample
+        n_configs: Number of configs to sample (used if top_n is None)
+        top_n: If provided, select the top N configs by advantage instead of uniform sampling
 
     Returns:
         List of config dicts with trial info and params
@@ -188,9 +190,13 @@ def load_and_sample_configs(
 
     print(f"Advantage range: {min(advantages):.2f} to {max(advantages):.2f}")
 
-    # Sample uniformly across the advantage spectrum
+    # Sample configs based on top_n or uniform sampling
     n_available = len(trials_sorted)
-    if n_configs >= n_available:
+    if top_n is not None:
+        # Select top N configs by advantage (highest values)
+        print(f"Selecting top {top_n} configs by advantage...")
+        sampled_trials = trials_sorted[-top_n:][::-1]  # Take last N and reverse for descending order
+    elif n_configs >= n_available:
         print(f"Requested {n_configs} configs, but only {n_available} available. Using all.")
         sampled_trials = trials_sorted
     else:
@@ -539,6 +545,8 @@ def main():
     # Sampling parameters
     parser.add_argument('--n-configs', type=int, default=1000,
                        help='Number of configs to sample from database')
+    parser.add_argument('--top-n', type=int, default=None,
+                       help='If provided, select the top N configs by advantage (overrides uniform sampling)')
     parser.add_argument('--n-seeds', type=int, default=10000,
                        help='Number of seeds per config')
 
@@ -593,7 +601,8 @@ def main():
     configs = load_and_sample_configs(
         str(db_path),
         args.study_name,
-        args.n_configs
+        args.n_configs,
+        top_n=args.top_n
     )
 
     # Save config info
