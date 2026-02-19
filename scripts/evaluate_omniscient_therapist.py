@@ -6,16 +6,12 @@ across multiple random seeds and provides statistical analysis.
 Usage:
     python scripts/evaluate_omniscient_therapist.py --n-seeds 100 --pattern cold_stuck
 
-For baseline comparison (complementary therapist ~18% success rate):
+For baseline comparison with optimized defaults (from top >20% advantage Optuna trials):
     python scripts/evaluate_omniscient_therapist.py \
         --n-seeds 100 \
         --pattern cold_stuck \
         --enable-parataxic \
-        --entropy 0.1 \
-        --bond-offset 0.7 \
-        --baseline-accuracy 0.5 \
-        --mechanism frequency_amplifier \
-        --threshold 0.8
+        --mechanism frequency_amplifier
 """
 
 import sys
@@ -108,19 +104,19 @@ def run_single_simulation(
     initial_memory_pattern: str,
     success_threshold_percentile: float,
     enable_parataxic: bool = False,
-    baseline_accuracy: float = 0.2,
-    perception_window: int = 15,
-    max_sessions: int = 100,
+    baseline_accuracy: float = 0.4477,
+    perception_window: int = 17,
+    max_sessions: int = 132,
     entropy: float = 3.0,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
-    bond_alpha: float = 5.0,
-    bond_offset: float = 0.8,
+    bond_alpha: float = 13.4426,
+    bond_offset: float = 0.5122,
     recency_weighting_factor: int = 2,
-    seeding_benefit_scaling: float = 0.3,
-    skip_seeding_accuracy_threshold: float = 0.9,
-    quick_seed_actions_threshold: int = 3,
-    abort_consecutive_failures_threshold: int = 5,
+    seeding_benefit_scaling: float = 1.4928,
+    skip_seeding_accuracy_threshold: float = 0.8924,
+    quick_seed_actions_threshold: int = 2,
+    abort_consecutive_failures_threshold: int = 4,
     therapist_version: str = 'v2',  # 'v1' or 'v2'
 ) -> SimulationResult:
     """Run a single therapy simulation with specified therapist type."""
@@ -475,16 +471,16 @@ def run_evaluation(
     n_seeds: int,
     mechanism: str = 'frequency_amplifier',
     initial_memory_pattern: str = 'cold_stuck',
-    success_threshold_percentile: float = 0.8,
+    success_threshold_percentile: float = 0.9755,
     enable_parataxic: bool = True,
-    baseline_accuracy: float = 0.5,
-    perception_window: int = 15,
-    max_sessions: int = 100,
+    baseline_accuracy: float = 0.4477,
+    perception_window: int = 17,
+    max_sessions: int = 132,
     entropy: float = 0.1,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
-    bond_alpha: float = 5.0,
-    bond_offset: float = 0.7,
+    bond_alpha: float = 13.4426,
+    bond_offset: float = 0.5122,
     recency_weighting_factor: int = 2,
     verbose: bool = True,
     therapist_version: str = 'v2',
@@ -620,8 +616,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '--threshold', '-t',
         type=float,
-        default=0.8,
-        help='Success threshold percentile (0.0-1.0)'
+        default=0.9755,
+        help='Success threshold percentile (0.0-1.0, default: 0.9755 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
@@ -634,22 +630,22 @@ if __name__ == "__main__":
     parser.add_argument(
         '--baseline-accuracy',
         type=float,
-        default=0.5,
-        help='Baseline accuracy for parataxic distortion'
+        default=0.4477,
+        help='Baseline accuracy for parataxic distortion (default: 0.4477 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
         '--perception-window',
         type=int,
-        default=15,
-        help='Perception window size for parataxic distortion'
+        default=17,
+        help='Perception window size for parataxic distortion (default: 17 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
         '--max-sessions', '-s',
         type=int,
-        default=100,
-        help='Maximum number of therapy sessions'
+        default=132,
+        help='Maximum number of therapy sessions (default: 132 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
@@ -676,15 +672,15 @@ if __name__ == "__main__":
     parser.add_argument(
         '--bond-alpha', '-ba',
         type=float,
-        default=5.0,
-        help='Bond alpha (sigmoid steepness)'
+        default=13.4426,
+        help='Bond alpha (sigmoid steepness, default: 13.4426 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
         '--bond-offset', '-bo',
         type=float,
-        default=0.7,
-        help='Bond offset for sigmoid'
+        default=0.5122,
+        help='Bond offset for sigmoid (default: 0.5122 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
