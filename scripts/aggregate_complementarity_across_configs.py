@@ -253,15 +253,15 @@ def run_config_simulations(
     baseline_kwargs = {
         'mechanism': mechanism,
         'pattern': pattern,
-        'success_threshold_percentile': params.get('threshold', 0.8),
+        'success_threshold_percentile': params.get('threshold', 0.9755),
         'enable_parataxic': enable_parataxic,
-        'baseline_accuracy': params.get('baseline_accuracy', 0.5),
+        'baseline_accuracy': params.get('baseline_accuracy', 0.4477),
         'max_sessions': max_sessions,
         'entropy': entropy,
         'history_weight': 1.0,
         'bond_power': 1.0,
-        'bond_alpha': params.get('bond_alpha', 5.0),
-        'bond_offset': params.get('bond_offset', 0.8),
+        'bond_alpha': params.get('bond_alpha', 13.4426),
+        'bond_offset': params.get('bond_offset', 0.5122),
         'recency_weighting_factor': params.get('recency_weighting_factor', 2),
     }
 
@@ -273,11 +273,11 @@ def run_config_simulations(
     v2_kwargs = v2_sim_kwargs.copy()
     v2_kwargs.update({
         'therapist_version': 'v2',
-        'perception_window': params.get('perception_window', 15),
-        'seeding_benefit_scaling': params.get('seeding_benefit_scaling', 0.3),
-        'skip_seeding_accuracy_threshold': params.get('skip_seeding_accuracy_threshold', 0.9),
-        'quick_seed_actions_threshold': params.get('quick_seed_actions_threshold', 3),
-        'abort_consecutive_failures_threshold': params.get('abort_consecutive_failures_threshold', 5),
+        'perception_window': params.get('perception_window', 17),
+        'seeding_benefit_scaling': params.get('seeding_benefit_scaling', 1.4928),
+        'skip_seeding_accuracy_threshold': params.get('skip_seeding_accuracy_threshold', 0.8924),
+        'quick_seed_actions_threshold': params.get('quick_seed_actions_threshold', 2),
+        'abort_consecutive_failures_threshold': params.get('abort_consecutive_failures_threshold', 4),
     })
 
     # Initialize result storage

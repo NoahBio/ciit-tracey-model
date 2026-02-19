@@ -184,15 +184,15 @@ def run_baseline_complementary_simulation(
     seed: int,
     mechanism: str,
     pattern: str,
-    max_sessions: int = 100,
-    success_threshold_percentile: float = 0.8,
+    max_sessions: int = 132,
+    success_threshold_percentile: float = 0.9755,
     enable_parataxic: bool = False,
     entropy: float = 0.1,
-    baseline_accuracy: float = 0.5,
+    baseline_accuracy: float = 0.4477,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
-    bond_alpha: float = 5.0,
-    bond_offset: float = 0.7,
+    bond_alpha: float = 13.4426,
+    bond_offset: float = 0.5122,
     recency_weighting_factor: int = 2,
     u_matrix_name: Optional[str] = None,
 ) -> bool:
@@ -295,21 +295,21 @@ def run_simulation_with_complementarity_tracking(
     pattern: str,
     therapist_version: str,
     window_size: int = 10,
-    max_sessions: int = 100,
-    success_threshold_percentile: float = 0.8,
+    max_sessions: int = 132,
+    success_threshold_percentile: float = 0.9755,
     enable_parataxic: bool = False,
     entropy: float = 0.1,
-    baseline_accuracy: float = 0.5,
-    perception_window: int = 15,
+    baseline_accuracy: float = 0.4477,
+    perception_window: int = 17,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
-    bond_alpha: float = 5.0,
-    bond_offset: float = 0.7,
+    bond_alpha: float = 13.4426,
+    bond_offset: float = 0.5122,
     recency_weighting_factor: int = 2,
-    seeding_benefit_scaling: float = 0.3,
-    skip_seeding_accuracy_threshold: float = 0.9,
-    quick_seed_actions_threshold: int = 3,
-    abort_consecutive_failures_threshold: int = 5,
+    seeding_benefit_scaling: float = 1.4928,
+    skip_seeding_accuracy_threshold: float = 0.8924,
+    quick_seed_actions_threshold: int = 2,
+    abort_consecutive_failures_threshold: int = 4,
     u_matrix_name: Optional[str] = None,
 ) -> SimulationResult:
     """Run a single simulation with complementarity tracking.
@@ -992,13 +992,13 @@ def parse_arguments():
     parser.add_argument('--n-seeds', type=int, default=30,
                        help='Number of random seeds per configuration')
 
-    # Simulation parameters - defaults from best Optuna trial (rank 1, trial 2643)
-    # Achieved 88% omniscient success vs 73.3% baseline (14.7% advantage)
-    parser.add_argument('--max-sessions', type=int, default=1940,
-                       help='Maximum therapy sessions (default: 1940 from best Optuna trial)')
+    # Simulation parameters - defaults from converged means of top 223 trials (>20% advantage)
+    # From v2_updated_advantage_optimization Optuna study (46,682 trials)
+    parser.add_argument('--max-sessions', type=int, default=132,
+                       help='Maximum therapy sessions (default: 132 from top >20%% advantage trials)')
 
-    parser.add_argument('--threshold', type=float, default=0.9358603798762596,
-                       help='Success threshold percentile (default: 0.936 from best Optuna trial)')
+    parser.add_argument('--threshold', type=float, default=0.9755,
+                       help='Success threshold percentile (default: 0.9755 from top >20%% advantage trials)')
 
     parser.add_argument('--entropy', type=float, default=0.1,
                        help='Client entropy parameter')
@@ -1009,32 +1009,32 @@ def parse_arguments():
     parser.add_argument('--disable-parataxic', dest='enable_parataxic', action='store_false',
                        help='Disable parataxic distortion')
 
-    parser.add_argument('--baseline-accuracy', type=float, default=0.5549619551286054,
-                       help='Baseline perception accuracy (default: 0.555 from best Optuna trial)')
+    parser.add_argument('--baseline-accuracy', type=float, default=0.4477,
+                       help='Baseline perception accuracy (default: 0.4477 from top >20%% advantage trials)')
 
-    parser.add_argument('--bond-offset', type=float, default=0.624462461360537,
-                       help='Bond offset parameter (default: 0.624 from best Optuna trial)')
+    parser.add_argument('--bond-offset', type=float, default=0.5122,
+                       help='Bond offset parameter (default: 0.5122 from top >20%% advantage trials)')
 
-    parser.add_argument('--bond-alpha', type=float, default=11.847676335038303,
-                       help='Bond alpha parameter (default: 11.85 from best Optuna trial)')
+    parser.add_argument('--bond-alpha', type=float, default=13.4426,
+                       help='Bond alpha parameter (default: 13.4426 from top >20%% advantage trials)')
 
     parser.add_argument('--recency-weighting-factor', type=int, default=2,
                        help='Recency weighting factor for client memory')
 
-    parser.add_argument('--perception-window', type=int, default=10,
-                       help='Perception window size for therapist (default: 10 from best Optuna trial)')
+    parser.add_argument('--perception-window', type=int, default=17,
+                       help='Perception window size for therapist (default: 17 from top >20%% advantage trials)')
 
-    parser.add_argument('--seeding-benefit-scaling', type=float, default=1.8658722646107764,
-                       help='Seeding benefit scaling (default: 1.87 from best Optuna trial)')
+    parser.add_argument('--seeding-benefit-scaling', type=float, default=1.4928,
+                       help='Seeding benefit scaling (default: 1.4928 from top >20%% advantage trials)')
 
-    parser.add_argument('--skip-seeding-accuracy-threshold', type=float, default=0.814677493978211,
-                       help='Skip seeding accuracy threshold (default: 0.815 from best Optuna trial)')
+    parser.add_argument('--skip-seeding-accuracy-threshold', type=float, default=0.8924,
+                       help='Skip seeding accuracy threshold (default: 0.8924 from top >20%% advantage trials)')
 
-    parser.add_argument('--quick-seed-actions-threshold', type=int, default=1,
-                       help='Quick seed actions threshold (default: 1 from best Optuna trial)')
+    parser.add_argument('--quick-seed-actions-threshold', type=int, default=2,
+                       help='Quick seed actions threshold (default: 2 from top >20%% advantage trials)')
 
     parser.add_argument('--abort-consecutive-failures-threshold', type=int, default=4,
-                       help='Abort consecutive failures threshold (default: 4 from best Optuna trial)')
+                       help='Abort consecutive failures threshold (default: 4 from top >20%% advantage trials)')
 
     # Highlighting
     parser.add_argument('--highlight-v2-advantage', action='store_true',

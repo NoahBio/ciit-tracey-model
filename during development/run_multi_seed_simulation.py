@@ -146,19 +146,19 @@ def run_single_simulation(
     initial_memory_pattern: str,
     success_threshold_percentile: float,
     enable_parataxic: bool = False,
-    baseline_accuracy: float = 0.5549619551286054,
-    max_sessions: int = 1940,
+    baseline_accuracy: float = 0.4477,
+    max_sessions: int = 132,
     entropy: float = 3.0,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
-    bond_alpha: float = 11.847676335038303,
-    bond_offset: float = 0.624462461360537,
+    bond_alpha: float = 13.4426,
+    bond_offset: float = 0.5122,
     u_matrix_name: Optional[str] = None,
     # V2 Therapist parameters
-    perception_window: int = 10,
-    seeding_benefit_scaling: float = 1.8658722646107764,
-    skip_seeding_accuracy_threshold: float = 0.814677493978211,
-    quick_seed_actions_threshold: int = 1,
+    perception_window: int = 17,
+    seeding_benefit_scaling: float = 1.4928,
+    skip_seeding_accuracy_threshold: float = 0.8924,
+    quick_seed_actions_threshold: int = 2,
     abort_consecutive_failures_threshold: int = 4,
 ) -> SimulationResult:
     """
@@ -734,21 +734,21 @@ def run_multi_seed_simulation(
     n_seeds: int,
     mechanism: str = 'bond_only',
     initial_memory_pattern: str = 'cold_warm',
-    success_threshold_percentile: float = 0.9358603798762596,
+    success_threshold_percentile: float = 0.9755,
     enable_parataxic: bool = False,
-    baseline_accuracy: float = 0.5549619551286054,
-    max_sessions: int = 1940,
+    baseline_accuracy: float = 0.4477,
+    max_sessions: int = 132,
     entropy: float = 3.0,
     history_weight: float = 1.0,
     bond_power: float = 1.0,
-    bond_alpha: float = 11.847676335038303,
-    bond_offset: float = 0.624462461360537,
+    bond_alpha: float = 13.4426,
+    bond_offset: float = 0.5122,
     u_matrix_name: Optional[str] = None,
     # V2 Therapist parameters
-    perception_window: int = 10,
-    seeding_benefit_scaling: float = 1.8658722646107764,
-    skip_seeding_accuracy_threshold: float = 0.814677493978211,
-    quick_seed_actions_threshold: int = 1,
+    perception_window: int = 17,
+    seeding_benefit_scaling: float = 1.4928,
+    skip_seeding_accuracy_threshold: float = 0.8924,
+    quick_seed_actions_threshold: int = 2,
     abort_consecutive_failures_threshold: int = 4,
     show_trajectories: bool = True,
     show_actions: bool = True,
@@ -913,8 +913,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '--threshold', '-t',
         type=float,
-        default=0.9358603798762596,
-        help='Success threshold percentile (0.0-1.0, default: 0.936 from optimized trial)'
+        default=0.9755,
+        help='Success threshold percentile (0.0-1.0, default: 0.9755 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
@@ -935,15 +935,15 @@ if __name__ == "__main__":
     parser.add_argument(
         '--baseline-accuracy',
         type=float,
-        default=0.5549619551286054,
-        help='Baseline accuracy for parataxic distortion (default: 0.555 from optimized trial)'
+        default=0.4477,
+        help='Baseline accuracy for parataxic distortion (default: 0.4477 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
         '--max-sessions', '-s',
         type=int,
-        default=1940,
-        help='Maximum number of therapy sessions per run (default: 1940 from optimized trial)'
+        default=132,
+        help='Maximum number of therapy sessions per run (default: 132 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
@@ -970,15 +970,15 @@ if __name__ == "__main__":
     parser.add_argument(
         '--bond-alpha', '-ba',
         type=float,
-        default=11.847676335038303,
-        help='Bond alpha (sigmoid steepness parameter, default: 11.85 from optimized trial)'
+        default=13.4426,
+        help='Bond alpha (sigmoid steepness parameter, default: 13.4426 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
         '--bond-offset', '-bo',
         type=float,
-        default=0.624462461360537,
-        help='Bond offset for sigmoid inflection point (default: 0.624 from optimized trial)'
+        default=0.5122,
+        help='Bond offset for sigmoid inflection point (default: 0.5122 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
@@ -993,29 +993,29 @@ if __name__ == "__main__":
     parser.add_argument(
         '--perception-window',
         type=int,
-        default=10,
-        help='Memory window size for parataxic distortion (V2 therapist)'
+        default=17,
+        help='Memory window size for parataxic distortion (V2 therapist, default: 17 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
         '--seeding-benefit-scaling',
         type=float,
-        default=1.8658722646107764,
-        help='Scaling factor for expected seeding benefit (0.1-2.0)'
+        default=1.4928,
+        help='Scaling factor for expected seeding benefit (default: 1.4928 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
         '--skip-seeding-accuracy-threshold',
         type=float,
-        default=0.814677493978211,
-        help='Skip seeding if accuracy above this (0.75-0.95)'
+        default=0.8924,
+        help='Skip seeding if accuracy above this (default: 0.8924 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
         '--quick-seed-actions-threshold',
         type=int,
-        default=1,
-        help='"Just do it" if actions_needed <= this (1-5)'
+        default=2,
+        help='"Just do it" if actions_needed <= this (default: 2 from top >20%% advantage trials)'
     )
 
     parser.add_argument(
