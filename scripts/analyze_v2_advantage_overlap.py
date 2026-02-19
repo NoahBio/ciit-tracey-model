@@ -215,8 +215,8 @@ def main():
     print("=" * 80)
 
     # Load top 15 configs
-    db_path = project_root / "optuna_studies" / "freq_amp_v2_optimization.db"
-    configs = load_top_configs(str(db_path), "freq_amp_v2_optimization", top_k=15)
+    db_path = project_root / "optuna_studies" / "v2_updated_advantage_optimization.db"
+    configs = load_top_configs(str(db_path), "v2_updated_advantage_optimization", top_k=15)
 
     print(f"\nLoaded {len(configs)} configs from Optuna study")
     for i, cfg in enumerate(configs):
