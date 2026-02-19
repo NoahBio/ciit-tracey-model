@@ -62,7 +62,7 @@ SEARCH_SPACE = {
     'threshold': ('float', 0.5, 0.95, 'uniform'),
     'bond_alpha': ('float', 1.0, 15.0, 'uniform'),
     'bond_offset': ('float', 0.5, 0.95, 'uniform'),
-    'recency_weighting_factor': ('int', 1, 5),
+    'recency_weighting_factor': ('float', 1.0, 5.0, 'uniform'),
     'perception_window': ('int', 5, 30),
     'max_sessions': ('int', 50, 200),
 

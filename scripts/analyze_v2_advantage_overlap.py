@@ -82,7 +82,7 @@ def run_simulations_for_config(
         'bond_power': 1.0,
         'bond_alpha': params.get('bond_alpha', 5.0),
         'bond_offset': params.get('bond_offset', 0.8),
-        'recency_weighting_factor': params.get('recency_weighting_factor', 2),
+        'recency_weighting_factor': params.get('recency_weighting_factor', 2.0),
         'seeding_benefit_scaling': params.get('seeding_benefit_scaling', 0.3),
         'skip_seeding_accuracy_threshold': params.get('skip_seeding_accuracy_threshold', 0.9),
         'quick_seed_actions_threshold': params.get('quick_seed_actions_threshold', 3),

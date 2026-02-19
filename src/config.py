@@ -238,23 +238,23 @@ MEMORY_SIZE = 50  # Number of interaction pairs stored
 # Relationship Satisfaction weighting scheme: square root recency bias
 def get_memory_weights(
     n_interactions: int = MEMORY_SIZE,
-    recency_weighting_factor: int | None = None,
+    recency_weighting_factor: float | None = None,
 ) -> NDArray[np.float64]:
     """
     Recency-weighted memory with configurable newest:oldest ratio.
 
     - Preserves the previous sqrt-shaped recency curve.
-    - `recency_weighting_factor` selects the newest:oldest weight ratio:
-        1 -> 1.5x, 2 -> 2.0x (default), 3 -> 3.0x, 4 -> 4.0x, 5 -> 5.0x
+    - `recency_weighting_factor` is the newest:oldest weight ratio directly.
+      E.g., 2.0 means the newest interaction is weighted 2x the oldest.
     - If `recency_weighting_factor` is None, uses global config.RECENCY_WEIGHTING_FACTOR
 
     Parameters
     ----------
     n_interactions : int
         Number of interactions to weight
-    recency_weighting_factor : int or None
-        Integer in [1..5] mapping to newest:oldest ratio {1.5, 2, 3, 4, 5}
-        If None, uses global config.RECENCY_WEIGHTING_FACTOR (default: 2)
+    recency_weighting_factor : float or None
+        Newest:oldest weight ratio (must be >= 1.0).
+        If None, uses global config.RECENCY_WEIGHTING_FACTOR (default: 2.0)
 
     Returns
     -------
@@ -270,11 +270,10 @@ def get_memory_weights(
     if recency_weighting_factor is None:
         recency_weighting_factor = RECENCY_WEIGHTING_FACTOR
 
-    if recency_weighting_factor not in (1, 2, 3, 4, 5):
-        raise ValueError(f"recency_weighting_factor must be in [1..5], got {recency_weighting_factor}")
+    if recency_weighting_factor < 1.0:
+        raise ValueError(f"recency_weighting_factor must be >= 1.0, got {recency_weighting_factor}")
 
-    ratio_map = {1: 1.5, 2: 2.0, 3: 3.0, 4: 4.0, 5: 5.0}
-    ratio = ratio_map[recency_weighting_factor]
+    ratio = float(recency_weighting_factor)
     # sqrt-shaped recency (oldest=1.0, newest=ratio)
     t = np.arange(n_interactions) / (n_interactions - 1)
     shape = np.sqrt(t)
@@ -351,7 +350,7 @@ CLIENT_ENTROPY_MAX = 5
 HISTORY_WEIGHT = 1.0  # Weighting factor for client history in utility calculation (used in amplifier mechanisms)
 
 # Recency weighting for memory
-RECENCY_WEIGHTING_FACTOR = 2  # Default: 2.0x newest:oldest ratio
+RECENCY_WEIGHTING_FACTOR = 2.0  # Default: 2.0x newest:oldest ratio
 
 # =============================================================================
 # PARATAXIC DISTORTION PARAMETERS

@@ -112,7 +112,7 @@ def run_single_simulation(
     bond_power: float = 1.0,
     bond_alpha: float = 13.4426,
     bond_offset: float = 0.5122,
-    recency_weighting_factor: int = 2,
+    recency_weighting_factor: float = 2.0,
     seeding_benefit_scaling: float = 1.4928,
     skip_seeding_accuracy_threshold: float = 0.8924,
     quick_seed_actions_threshold: int = 2,
@@ -481,7 +481,7 @@ def run_evaluation(
     bond_power: float = 1.0,
     bond_alpha: float = 13.4426,
     bond_offset: float = 0.5122,
-    recency_weighting_factor: int = 2,
+    recency_weighting_factor: float = 2.0,
     verbose: bool = True,
     therapist_version: str = 'v2',
 ):
@@ -685,10 +685,9 @@ if __name__ == "__main__":
 
     parser.add_argument(
         '--recency-weighting-factor', '-rwf',
-        type=int,
-        default=2,
-        choices=[1, 2, 3, 4, 5],
-        help='Recency weighting factor (1=1.5x, 2=2.0x, 3=3.0x, 4=4.0x, 5=5.0x newest:oldest ratio)'
+        type=float,
+        default=2.0,
+        help='Recency weighting factor (newest:oldest weight ratio, must be >= 1.0, default: 2.0)'
     )
 
     parser.add_argument(

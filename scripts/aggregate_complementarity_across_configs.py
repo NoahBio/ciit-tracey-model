@@ -262,7 +262,7 @@ def run_config_simulations(
         'bond_power': 1.0,
         'bond_alpha': params.get('bond_alpha', 13.4426),
         'bond_offset': params.get('bond_offset', 0.5122),
-        'recency_weighting_factor': params.get('recency_weighting_factor', 2),
+        'recency_weighting_factor': params.get('recency_weighting_factor', 2.0),
     }
 
     # V2 simulation kwargs (includes window_size)

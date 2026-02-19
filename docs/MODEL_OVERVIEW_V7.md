@@ -189,7 +189,7 @@ Direction: **MAXIMIZE** (find parameters where V2 therapist outperforms simple c
 | `threshold` | float | [0.8, 0.99] | Success threshold percentile |
 | `bond_alpha` | float | [1.0, 15.0] | Bond sigmoid steepness |
 | `bond_offset` | float | [0.5, 0.95] | Bond sigmoid inflection point |
-| `recency_weighting_factor` | int | [1, 5] | Memory recency ratio (1.5x-5.0x) |
+| `recency_weighting_factor` | float | [1.0, 5.0] | Memory recency newest:oldest weight ratio |
 | `max_sessions` | int | [100, 2000] | Maximum therapy sessions |
 
 #### Therapist V2 Parameters (5)
@@ -267,8 +267,8 @@ Where:
 **Source**: `src/config.py:get_memory_weights()`
 
 Square-root shaped recency bias:
-- `recency_weighting_factor` maps to newest:oldest ratio
-- Factor 1 = 1.5x, Factor 2 = 2.0x, Factor 3 = 3.0x, Factor 4 = 4.0x, Factor 5 = 5.0x
+- `recency_weighting_factor` is the newest:oldest weight ratio directly (float, >= 1.0)
+- E.g., 2.0 means the newest interaction is weighted 2x the oldest
 
 ### Complementary Action Mapping
 

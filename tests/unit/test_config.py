@@ -130,11 +130,11 @@ class TestGetMemoryWeights:
 
         try:
             # Test default behavior
-            config_module.RECENCY_WEIGHTING_FACTOR = 3
+            config_module.RECENCY_WEIGHTING_FACTOR = 3.0
             weights_default = get_memory_weights(n_interactions=50)
 
             # Test explicit override
-            weights_explicit = get_memory_weights(n_interactions=50, recency_weighting_factor=2)
+            weights_explicit = get_memory_weights(n_interactions=50, recency_weighting_factor=2.0)
 
             # Should differ (3x vs 2x ratio)
             assert not np.allclose(weights_default, weights_explicit)
@@ -145,15 +145,26 @@ class TestGetMemoryWeights:
 
     def test_memory_weights_explicit_override(self):
         """Test explicit recency_weighting_factor overrides global config."""
-        weights_1 = get_memory_weights(n_interactions=50, recency_weighting_factor=1)
-        weights_5 = get_memory_weights(n_interactions=50, recency_weighting_factor=5)
+        weights_1 = get_memory_weights(n_interactions=50, recency_weighting_factor=1.0)
+        weights_5 = get_memory_weights(n_interactions=50, recency_weighting_factor=5.0)
 
         # Ratio of newest:oldest should differ significantly
         ratio_1 = weights_1[-1] / weights_1[0]
         ratio_5 = weights_5[-1] / weights_5[0]
 
-        assert abs(ratio_1 - 1.5) < 0.1, f"Expected ratio ~1.5, got {ratio_1:.2f}"
+        assert abs(ratio_1 - 1.0) < 0.01, f"Expected ratio 1.0 (uniform), got {ratio_1:.2f}"
         assert abs(ratio_5 - 5.0) < 0.5, f"Expected ratio ~5.0, got {ratio_5:.2f}"
+
+    def test_memory_weights_float_ratio(self):
+        """Test that non-integer float ratios work correctly."""
+        weights_2_5 = get_memory_weights(n_interactions=50, recency_weighting_factor=2.5)
+        ratio = weights_2_5[-1] / weights_2_5[0]
+        assert abs(ratio - 2.5) < 0.3, f"Expected ratio ~2.5, got {ratio:.2f}"
+
+        # Verify it's between integer neighbors
+        weights_2 = get_memory_weights(n_interactions=50, recency_weighting_factor=2.0)
+        weights_3 = get_memory_weights(n_interactions=50, recency_weighting_factor=3.0)
+        assert weights_2[-1] < weights_2_5[-1] < weights_3[-1]
 
 
 # ============================================================================

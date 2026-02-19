@@ -193,7 +193,7 @@ def run_baseline_complementary_simulation(
     bond_power: float = 1.0,
     bond_alpha: float = 13.4426,
     bond_offset: float = 0.5122,
-    recency_weighting_factor: int = 2,
+    recency_weighting_factor: float = 2.0,
     u_matrix_name: Optional[str] = None,
 ) -> bool:
     """Run a single simulation with always-complementary therapist.
@@ -305,7 +305,7 @@ def run_simulation_with_complementarity_tracking(
     bond_power: float = 1.0,
     bond_alpha: float = 13.4426,
     bond_offset: float = 0.5122,
-    recency_weighting_factor: int = 2,
+    recency_weighting_factor: float = 2.0,
     seeding_benefit_scaling: float = 1.4928,
     skip_seeding_accuracy_threshold: float = 0.8924,
     quick_seed_actions_threshold: int = 2,
@@ -1018,8 +1018,8 @@ def parse_arguments():
     parser.add_argument('--bond-alpha', type=float, default=13.4426,
                        help='Bond alpha parameter (default: 13.4426 from top >20%% advantage trials)')
 
-    parser.add_argument('--recency-weighting-factor', type=int, default=2,
-                       help='Recency weighting factor for client memory')
+    parser.add_argument('--recency-weighting-factor', type=float, default=2.0,
+                       help='Recency weighting factor (newest:oldest weight ratio, default: 2.0)')
 
     parser.add_argument('--perception-window', type=int, default=17,
                        help='Perception window size for therapist (default: 17 from top >20%% advantage trials)')

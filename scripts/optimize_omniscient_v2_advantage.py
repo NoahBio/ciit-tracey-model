@@ -61,7 +61,7 @@ SEARCH_SPACE = {
     'threshold': ('float', 0.8, 0.99, 'uniform'),
     'bond_alpha': ('float', 1.0, 15.0, 'uniform'),
     'bond_offset': ('float', 0.5, 0.95, 'uniform'),
-    'recency_weighting_factor': ('int', 1, 5),
+    'recency_weighting_factor': ('float', 1.0, 5.0, 'uniform'),
     'max_sessions': ('int', 100, 2000),
 
     # Therapist parameters
