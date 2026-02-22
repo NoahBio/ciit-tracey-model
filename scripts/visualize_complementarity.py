@@ -105,6 +105,10 @@ class SimulationResult:
     warm_perceived_distance_trajectory: List[float] = field(default_factory=list)
     cold_perceived_distance_trajectory: List[float] = field(default_factory=list)
 
+    # RS and Bond trajectories (scaled to 0-100%)
+    rs_percentile_trajectory: List[float] = field(default_factory=list)
+    bond_percentile_trajectory: List[float] = field(default_factory=list)
+
     # Additional tracking
     final_rs: float = 0.0
     final_bond: float = 0.0
@@ -155,6 +159,12 @@ class AggregatedResults:
     std_cold_enacted_distance: np.ndarray = field(default_factory=lambda: np.array([]))
     mean_cold_perceived_distance: np.ndarray = field(default_factory=lambda: np.array([]))
     std_cold_perceived_distance: np.ndarray = field(default_factory=lambda: np.array([]))
+
+    # RS and Bond trajectories (scaled to 0-100%)
+    mean_rs_percentile: np.ndarray = field(default_factory=lambda: np.array([]))
+    std_rs_percentile: np.ndarray = field(default_factory=lambda: np.array([]))
+    mean_bond_percentile: np.ndarray = field(default_factory=lambda: np.array([]))
+    std_bond_percentile: np.ndarray = field(default_factory=lambda: np.array([]))
 
     # Additional statistics
     baseline_success_rate: float = 0.0  # Success rate of always-complementary therapist
@@ -432,6 +442,11 @@ def run_simulation_with_complementarity_tracking(
     warm_perceived_dist_traj = []
     cold_perceived_dist_traj = []
 
+    # RS and Bond trajectories (scaled to 0-100%)
+    rs_percentile_traj = []
+    bond_percentile_traj = []
+    rs_range = client.rs_max - client.rs_min
+
     # Run sessions
     success = False
     session = 0
@@ -501,6 +516,11 @@ def run_simulation_with_complementarity_tracking(
         new_rs = client.relationship_satisfaction
         new_bond = client.bond
 
+        # Record RS and Bond as percentiles (0-100%)
+        rs_pct = (new_rs - client.rs_min) / rs_range * 100
+        rs_percentile_traj.append(rs_pct)
+        bond_percentile_traj.append(new_bond * 100)
+
         # Check termination
         if new_rs >= rs_threshold:
             success = True
@@ -529,6 +549,8 @@ def run_simulation_with_complementarity_tracking(
         overall_perceived_distance_trajectory=overall_perceived_dist_traj,
         warm_perceived_distance_trajectory=warm_perceived_dist_traj,
         cold_perceived_distance_trajectory=cold_perceived_dist_traj,
+        rs_percentile_trajectory=rs_percentile_traj,
+        bond_percentile_trajectory=bond_percentile_traj,
         final_rs=new_rs,
         final_bond=new_bond,
     )
@@ -572,6 +594,10 @@ def aggregate_results(results: List[SimulationResult], baseline_success_rate: fl
     warm_perceived_dist_arr = np.full((n_runs, max_length), np.nan)
     cold_perceived_dist_arr = np.full((n_runs, max_length), np.nan)
 
+    # Initialize RS and Bond arrays with NaN
+    rs_percentile_arr = np.full((n_runs, max_length), np.nan)
+    bond_percentile_arr = np.full((n_runs, max_length), np.nan)
+
     # Fill arrays
     for i, result in enumerate(results):
         length = len(result.overall_enacted_trajectory)
@@ -594,6 +620,12 @@ def aggregate_results(results: List[SimulationResult], baseline_success_rate: fl
             overall_perceived_dist_arr[i, :length] = result.overall_perceived_distance_trajectory
             warm_perceived_dist_arr[i, :length] = result.warm_perceived_distance_trajectory
             cold_perceived_dist_arr[i, :length] = result.cold_perceived_distance_trajectory
+
+        # Fill RS and Bond arrays
+        if result.rs_percentile_trajectory:
+            rs_percentile_arr[i, :length] = result.rs_percentile_trajectory
+        if result.bond_percentile_trajectory:
+            bond_percentile_arr[i, :length] = result.bond_percentile_trajectory
 
     # Calculate overall non-complementarity percentage
     # Average complementarity across all sessions and seeds
@@ -637,6 +669,11 @@ def aggregate_results(results: List[SimulationResult], baseline_success_rate: fl
         std_cold_enacted_distance=np.nanstd(cold_enacted_dist_arr, axis=0),
         mean_cold_perceived_distance=np.nanmean(cold_perceived_dist_arr, axis=0),
         std_cold_perceived_distance=np.nanstd(cold_perceived_dist_arr, axis=0),
+        # RS and Bond statistics
+        mean_rs_percentile=np.nanmean(rs_percentile_arr, axis=0),
+        std_rs_percentile=np.nanstd(rs_percentile_arr, axis=0),
+        mean_bond_percentile=np.nanmean(bond_percentile_arr, axis=0),
+        std_bond_percentile=np.nanstd(bond_percentile_arr, axis=0),
         # Additional statistics
         baseline_success_rate=baseline_success_rate,
         overall_noncomplementarity_pct=overall_noncomplementarity_pct,  # type: ignore[arg-type]
@@ -669,18 +706,20 @@ class ComplementarityVisualizer:
         self.filter_mode = 'overall'
         self.seed_breakdown = seed_breakdown
 
-        # Create figure - add extra row for breakdown table if provided
+        # Create figure - layout: [complementarity, combined RS/Bond, success bar, (table)]
         if seed_breakdown:
-            self.fig, self.axes = plt.subplots(3, 1, figsize=(14, 12),
-                                                gridspec_kw={'height_ratios': [3, 1, 0.6]})
+            self.fig, self.axes = plt.subplots(4, 1, figsize=(14, 18),
+                                                gridspec_kw={'height_ratios': [3, 3, 1, 0.6]})
             self.ax_comp = self.axes[0]
-            self.ax_success = self.axes[1]
-            self.ax_table = self.axes[2]
+            self.ax_combined = self.axes[1]
+            self.ax_success = self.axes[2]
+            self.ax_table = self.axes[3]
         else:
-            self.fig, self.axes = plt.subplots(2, 1, figsize=(14, 10),
-                                                gridspec_kw={'height_ratios': [3, 1]})
+            self.fig, self.axes = plt.subplots(3, 1, figsize=(14, 16),
+                                                gridspec_kw={'height_ratios': [3, 3, 1]})
             self.ax_comp = self.axes[0]
-            self.ax_success = self.axes[1]
+            self.ax_combined = self.axes[1]
+            self.ax_success = self.axes[2]
             self.ax_table = None
 
 
@@ -865,6 +904,131 @@ class ComplementarityVisualizer:
                 bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8, edgecolor='black', linewidth=1.5),
                 family='monospace'
             )
+
+        # =====================================================================
+        # Combined plot: Complementarity (left Y) + RS & Bond (right Y)
+        # =====================================================================
+        self.ax_combined.clear()
+        ax_right = self.ax_combined.twinx()
+
+        legend_handles = []
+        legend_labels = []
+
+        for agg_result in self.aggregated_results:
+            # Select complementarity data (same as first plot, enacted only)
+            if self.metric == 'octant_distance':
+                if self.filter_mode == 'overall':
+                    mean_comp = agg_result.mean_overall_enacted_distance
+                    std_comp = agg_result.std_overall_enacted_distance
+                elif self.filter_mode == 'warm':
+                    mean_comp = agg_result.mean_warm_enacted_distance
+                    std_comp = agg_result.std_warm_enacted_distance
+                else:
+                    mean_comp = agg_result.mean_cold_enacted_distance
+                    std_comp = agg_result.std_cold_enacted_distance
+            else:
+                if self.filter_mode == 'overall':
+                    mean_comp = agg_result.mean_overall_enacted
+                    std_comp = agg_result.std_overall_enacted
+                elif self.filter_mode == 'warm':
+                    mean_comp = agg_result.mean_warm_enacted
+                    std_comp = agg_result.std_warm_enacted
+                else:
+                    mean_comp = agg_result.mean_cold_enacted
+                    std_comp = agg_result.std_cold_enacted
+
+            sessions = np.arange(len(mean_comp)) + 1
+            style = self.get_line_style(
+                agg_result.mechanism,
+                agg_result.pattern,
+                agg_result.therapist_version,
+                agg_result.config_name
+            )
+
+            # Display name for legend
+            if agg_result.config_name.endswith('_v2_advantage'):
+                display_name = f"V2 Advantage (n={agg_result.n_runs})"
+            elif agg_result.config_name.endswith('_remaining'):
+                display_name = f"Remaining (n={agg_result.n_runs})"
+            else:
+                display_name = agg_result.config_name
+
+            color = style['color']
+
+            # Plot complementarity on left axis (solid line)
+            h_comp, = self.ax_combined.plot(
+                sessions, mean_comp,
+                color=color, linestyle='-', linewidth=style['linewidth'],
+                marker=style['marker'], markevery=10, markersize=6,
+                alpha=style['alpha'],
+            )
+            self.ax_combined.fill_between(
+                sessions, mean_comp - std_comp, mean_comp + std_comp,
+                alpha=0.15, color=color
+            )
+            legend_handles.append(h_comp)
+            legend_labels.append(f"{display_name} (comp)")
+
+            # Plot RS percentile on right axis (dotted line)
+            mean_rs = agg_result.mean_rs_percentile
+            std_rs = agg_result.std_rs_percentile
+            if len(mean_rs) > 0:
+                rs_sessions = np.arange(len(mean_rs)) + 1
+                h_rs, = ax_right.plot(
+                    rs_sessions, mean_rs,
+                    color=color, linestyle=':', linewidth=style['linewidth'],
+                    alpha=style['alpha'],
+                )
+                ax_right.fill_between(
+                    rs_sessions, mean_rs - std_rs, mean_rs + std_rs,
+                    alpha=0.1, color=color
+                )
+                legend_handles.append(h_rs)
+                legend_labels.append(f"{display_name} (RS)")
+
+            # Plot Bond percentile on right axis (dashed line)
+            mean_bond = agg_result.mean_bond_percentile
+            std_bond = agg_result.std_bond_percentile
+            if len(mean_bond) > 0:
+                bond_sessions = np.arange(len(mean_bond)) + 1
+                h_bond, = ax_right.plot(
+                    bond_sessions, mean_bond,
+                    color=color, linestyle='--', linewidth=style['linewidth'],
+                    alpha=style['alpha'],
+                )
+                ax_right.fill_between(
+                    bond_sessions, mean_bond - std_bond, mean_bond + std_bond,
+                    alpha=0.1, color=color
+                )
+                legend_handles.append(h_bond)
+                legend_labels.append(f"{display_name} (Bond)")
+
+        # Configure left axis (complementarity)
+        self.ax_combined.set_xlabel('Session Number', fontsize=14, fontweight='bold')
+        if self.metric == 'octant_distance':
+            self.ax_combined.set_ylabel('Octant Distance', fontsize=14, fontweight='bold')
+            self.ax_combined.set_ylim(-0.2, 4.2)
+        else:
+            self.ax_combined.set_ylabel('Complementarity Rate (%)', fontsize=14, fontweight='bold')
+            self.ax_combined.set_ylim(0, 100)
+
+        # Configure right axis (RS & Bond)
+        ax_right.set_ylabel('RS / Bond (%)', fontsize=14, fontweight='bold')
+        ax_right.set_ylim(0, 100)
+
+        self.ax_combined.set_title(
+            f'Complementarity + RS & Bond ({self.filter_mode.capitalize()})',
+            fontsize=16, fontweight='bold', pad=15
+        )
+        self.ax_combined.grid(True, alpha=0.3, linewidth=0.8)
+        self.ax_combined.tick_params(axis='both', which='major', labelsize=12)
+        ax_right.tick_params(axis='both', which='major', labelsize=12)
+
+        # Combined legend
+        self.ax_combined.legend(
+            legend_handles, legend_labels,
+            loc='best', fontsize=9, ncol=1, framealpha=0.9
+        )
 
         # Plot success rate - use green/black if highlight mode, otherwise mechanism colors
         success_rates = [r.success_rate for r in self.aggregated_results]
