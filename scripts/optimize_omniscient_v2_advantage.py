@@ -238,7 +238,8 @@ def objective(trial: optuna.Trial, n_seeds: int = 50, therapist_version: str = '
 
 def create_or_load_study(
     study_name: str,
-    storage_path: Path
+    storage_path: Path,
+    n_startup_trials: int = 25,
 ) -> optuna.Study:
     """Create new study or load existing one.
 
@@ -248,6 +249,8 @@ def create_or_load_study(
         Name of the study
     storage_path : Path
         Path to SQLite database file
+    n_startup_trials : int
+        Number of startup (random) trials before TPE begins modelling (default: 25)
 
     Returns
     -------
@@ -261,10 +264,69 @@ def create_or_load_study(
         storage=storage_url,
         load_if_exists=True,
         direction='maximize',  # Maximize advantage
-        sampler=optuna.samplers.TPESampler(seed=42)
+        sampler=optuna.samplers.TPESampler(seed=42, n_startup_trials=n_startup_trials)
     )
 
     return study
+
+
+def enqueue_top_trials_from_study(
+    study: optuna.Study,
+    source_db: str,
+    source_study_name: str,
+    top_k: int,
+) -> int:
+    """Load the top-k trials from a source study and enqueue their parameters.
+
+    Only enqueues trials whose parameter sets have not already been enqueued
+    (checked against existing waiting trials).
+
+    Parameters
+    ----------
+    study : optuna.Study
+        Target study to receive the enqueued trials
+    source_db : str
+        Path to the source SQLite database file
+    source_study_name : str
+        Name of the study inside the source database
+    top_k : int
+        Number of top trials (by objective value) to enqueue
+
+    Returns
+    -------
+    int
+        Number of trials actually enqueued
+    """
+    source_url = f"sqlite:///{source_db}"
+    source_study = optuna.load_study(
+        study_name=source_study_name,
+        storage=source_url,
+    )
+
+    # Collect completed trials with valid values, sorted best-first
+    finished = [
+        t for t in source_study.trials
+        if t.state == optuna.trial.TrialState.COMPLETE and t.value is not None
+    ]
+    finished.sort(key=lambda t: t.value, reverse=True)
+    candidates = finished[:top_k]
+
+    # Gather already-waiting param sets to avoid duplicates
+    existing_waiting = {
+        frozenset(t.params.items())
+        for t in study.trials
+        if t.state == optuna.trial.TrialState.WAITING
+    }
+
+    enqueued = 0
+    for t in candidates:
+        key = frozenset(t.params.items())
+        if key not in existing_waiting:
+            study.enqueue_trial(t.params)
+            existing_waiting.add(key)
+            enqueued += 1
+
+    return enqueued
 
 
 def export_results(study: optuna.Study, output_dir: Path, top_k: int = 15):
@@ -403,6 +465,31 @@ def main():
         help='Number of parallel workers (default: CPU count)'
     )
 
+    parser.add_argument(
+        '--n-startup-trials',
+        type=int,
+        default=25,
+        help='Number of random startup trials before TPE begins modelling (default: 25)'
+    )
+
+    parser.add_argument(
+        '--enqueue-from',
+        type=str,
+        default=None,
+        metavar='DB_PATH:STUDY_NAME',
+        help=(
+            'Enqueue top trials from another study before running. '
+            'Format: path/to/source.db:source_study_name'
+        )
+    )
+
+    parser.add_argument(
+        '--enqueue-top-k',
+        type=int,
+        default=10,
+        help='Number of top trials to enqueue from the source study (default: 10)'
+    )
+
     args = parser.parse_args()
 
     # Setup paths
@@ -421,9 +508,30 @@ def main():
     print(f"Database: {storage_path}")
     print(f"Trials: {args.n_trials}")
     print(f"Seeds per trial: {args.n_seeds}")
+    print(f"Startup trials (random): {args.n_startup_trials}")
     print(f"{'='*80}\n")
 
-    study = create_or_load_study(args.study_name, storage_path)
+    study = create_or_load_study(args.study_name, storage_path,
+                                 n_startup_trials=args.n_startup_trials)
+
+    # Enqueue top trials from a previous study if requested
+    if args.enqueue_from:
+        if ':' not in args.enqueue_from:
+            parser.error(
+                "--enqueue-from must be in the format 'db_path:study_name', "
+                f"got: {args.enqueue_from!r}"
+            )
+        source_db, source_study_name = args.enqueue_from.split(':', 1)
+        source_db_path = project_root / source_db if not Path(source_db).is_absolute() else Path(source_db)
+        print(f"Enqueueing top-{args.enqueue_top_k} trials from "
+              f"{source_db_path}:{source_study_name} ...")
+        n_enqueued = enqueue_top_trials_from_study(
+            study=study,
+            source_db=str(source_db_path),
+            source_study_name=source_study_name,
+            top_k=args.enqueue_top_k,
+        )
+        print(f"  {n_enqueued} trial(s) enqueued.\n")
 
     # Run optimization
     try:
