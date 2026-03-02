@@ -5,11 +5,6 @@ matplotlib>=3.7.0
 seaborn>=0.12.0
 scipy>=1.10.0
 
-# RL framework
-gymnasium>=0.28.0,<0.29.0  # Tianshou 1.x requires <0.29.0
-torch>=2.0.0
-tianshou>=1.0.0,<2.0.0
-tensorboard>=2.13.0
 
 # Utilities
 PyYAML>=6.0
