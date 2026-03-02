@@ -63,10 +63,10 @@ SEARCH_SPACE = {
     'initial_memory_pattern': ('categorical', ['cold_stuck', 'dominant_stuck', 'submissive_stuck']),
 
     # Client parameters
-    'baseline_accuracy': ('float', 0.21, 0.9, 'uniform'),
+    'baseline_accuracy': ('float', 0.15, 0.95, 'uniform'),
     'threshold': ('float', 0.8, 0.99, 'uniform'),
     'bond_alpha': ('float', 1.0, 15.0, 'uniform'),
-    'bond_offset': ('float', 0.5, 0.95, 'uniform'),
+    'bond_offset': ('float', 0.1, 0.95, 'uniform'),
     'recency_weighting_factor': ('float', 1.0, 5.0, 'uniform'),
     'max_sessions': ('int', 100, 2000),
 
