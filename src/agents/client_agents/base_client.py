@@ -23,6 +23,20 @@ from src.config import (
 )
 from src import config
 
+# Anticomplementarity map: for each octant, the single most anticomplementary response.
+# Logic: flip communion (warm↔cold), keep agency.
+# Pure-agency octants (D=0, S=4) map to themselves.
+ANTICOMP_MAP: dict[int, int] = {
+    0: 0,  # D  → D   (self; pure dominant)
+    1: 7,  # WD → CD  (flip warm→cold, keep high agency)
+    2: 6,  # W  → C   (flip warm→cold, neutral agency)
+    3: 5,  # WS → CS  (flip warm→cold, keep low agency)
+    4: 4,  # S  → S   (self; pure submissive)
+    5: 3,  # CS → WS  (flip cold→warm, keep low agency)
+    6: 2,  # C  → W   (flip cold→warm, neutral agency)
+    7: 1,  # CD → WD  (flip cold→warm, keep high agency)
+}
+
 
 class BaseClientAgent:
     """
@@ -276,7 +290,7 @@ class BaseClientAgent:
 
         Creates interaction history where:
         1. Problem client samples from problematic octants 80% of time, random 20%
-        2. Other person responds anticomplementarily (maximum interpersonal tension)
+        2. Other person responds anticomplementarily in reponse to the problematic octants, random otherwise
 
         Parameters
         ----------
@@ -304,29 +318,29 @@ class BaseClientAgent:
         # Define problematic octant pools and anticomplementary responses
         if pattern_type == "cold_stuck":
             problematic_octants = [5, 6, 7]  # CS, C, CD
-            # Anticomplementary: Warm responses (maximum communion violation)
+            # Anticomplementary: flip communion cold→warm, keep agency
             anticomp_map = {
-                5: [1, 2, 3],  # CS → WD, W, WS (warm + agency mismatch)
-                6: [1, 2, 3],  # C → WD, W, WS (warm responses)
-                7: [1, 2, 3]   # CD → WD, W, WS (warm + agency conflict)
+                5: 3,  # CS → WS
+                6: 2,  # C  → W
+                7: 1,  # CD → WD
             }
 
         elif pattern_type == "dominant_stuck":
             problematic_octants = [0, 1, 7]  # D, WD, CD
-            # Anticomplementary: Dominant responses (agency anticomplementarity)
+            # Anticomplementary: flip communion (warm↔cold), keep agency; D self-maps
             anticomp_map = {
-                0: [0, 1, 7],  # D → D, WD, CD (power struggle)
-                1: [0, 1, 7],  # WD → D, WD, CD (power struggle)
-                7: [0, 1, 7]   # CD → D, WD, CD (power struggle)
+                0: 0,  # D  → D   (self; pure dominant)
+                1: 7,  # WD → CD
+                7: 1,  # CD → WD
             }
 
         elif pattern_type == "submissive_stuck":
             problematic_octants = [3, 4, 5]  # WS, S, CS
-            # Anticomplementary: Submissive responses (leadership vacuum)
+            # Anticomplementary: flip communion (warm↔cold), keep agency; S self-maps
             anticomp_map = {
-                3: [3, 4, 5],  # WS → WS, S, CS (no leadership)
-                4: [3, 4, 5],  # S → WS, S, CS (no leadership)
-                5: [3, 4, 5]   # CS → WS, S, CS (no leadership)
+                3: 5,  # WS → CS
+                4: 4,  # S  → S   (self; pure submissive)
+                5: 3,  # CS → WS
             }
 
         elif pattern_type == "cold_warm":
@@ -398,8 +412,8 @@ class BaseClientAgent:
 
             # Other's response: ANTICOMPLEMENTARY if client action is problematic
             if client_action in problematic_octants:
-                # Strongly anticomplementary response
-                other_action = rng.choice(anticomp_map[client_action])
+                # Deterministically anticomplementary response
+                other_action = anticomp_map[client_action]
             else:
                 # Random response for non-problematic actions
                 other_action = rng.choice(8)
