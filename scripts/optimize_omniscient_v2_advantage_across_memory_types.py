@@ -64,16 +64,16 @@ SEARCH_SPACE = {
 
     # Client parameters
     'baseline_accuracy': ('float', 0.15, 0.95, 'uniform'),
-    'threshold': ('float', 0.8, 0.99, 'uniform'),
+    'threshold': ('float', 0.65, 0.99, 'uniform'),
     'bond_alpha': ('float', 1.0, 15.0, 'uniform'),
     'bond_offset': ('float', 0.1, 0.95, 'uniform'),
-    'recency_weighting_factor': ('float', 1.0, 5.0, 'uniform'),
-    'max_sessions': ('int', 100, 2000),
+    'recency_weighting_factor': ('float', 1.0, 10.0, 'uniform'),
+    'max_sessions': ('int', 25, 2000),
 
     # Therapist parameters
-    'perception_window': ('int', 7, 20),
-    'seeding_benefit_scaling': ('float', 0.1, 2.0, 'uniform'),
-    'skip_seeding_accuracy_threshold': ('float', 0.75, 0.95, 'uniform'),
+    'perception_window': ('int', 5, 25),
+    'seeding_benefit_scaling': ('float', 0.1, 3.0, 'uniform'),
+    'skip_seeding_accuracy_threshold': ('float', 0.50, 0.95, 'uniform'),
     'quick_seed_actions_threshold': ('int', 1, 5),
     'abort_consecutive_failures_threshold': ('int', 4, 9),
 }
