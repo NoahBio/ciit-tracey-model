@@ -536,10 +536,10 @@ def main():
 
     # Database parameters
     parser.add_argument('--db-path', type=str,
-                       default='optuna_studies/freq_amp_v2_optimization.db',
+                       default='optuna_studies/optimize_everything_0303_2026.db',
                        help='Path to Optuna database')
     parser.add_argument('--study-name', type=str,
-                       default='freq_amp_v2_optimization',
+                       default='optimize_everything_0303_2026',
                        help='Name of the Optuna study')
 
     # Sampling parameters
