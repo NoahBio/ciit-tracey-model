@@ -406,6 +406,7 @@ def run_simulation_with_complementarity_tracking(
         'client_ref': client,
         'perception_window': perception_window,
         'baseline_accuracy': baseline_accuracy,
+        'max_sessions': max_sessions,
     }
     
     # V2-specific parameters

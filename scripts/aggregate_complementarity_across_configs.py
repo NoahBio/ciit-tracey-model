@@ -136,12 +136,50 @@ class IncrementalTrajectoryStats:
         return int(self.count[0]) if len(self.count) > 0 and self.count[0] > 0 else 0
 
 
+def normalize_trajectory(trajectory: List[float], max_sessions: int, n_bins: int) -> List[float]:
+    """Normalize a trajectory to a fixed number of bins on [0, 1].
+
+    Maps session indices to normalized positions (proportion of max_sessions),
+    then interpolates onto a regular grid. Bins beyond the trajectory's actual
+    length are filled with NaN.
+
+    Args:
+        trajectory: Raw trajectory values (one per session)
+        max_sessions: The therapist's max_sessions for this trial
+        n_bins: Number of bins on the normalized [0, 1] axis
+
+    Returns:
+        List of length n_bins with interpolated values (NaN beyond data)
+    """
+    L = len(trajectory)
+    if L == 0:
+        return [float('nan')] * n_bins
+
+    # Normalized positions of each session: session i is at i / max_sessions
+    # (0-indexed: first session at 0/M, last at (L-1)/M)
+    x_orig = np.array([i / max_sessions for i in range(L)])
+    y_orig = np.array(trajectory)
+
+    # Target grid: evenly spaced in [0, 1)
+    x_grid = np.linspace(0, 1, n_bins, endpoint=False)
+
+    # Interpolate onto grid; fill NaN beyond data range
+    coverage = (L - 1) / max_sessions  # last data point's normalized position
+    result = np.full(n_bins, np.nan)
+    in_range = x_grid <= coverage
+    if np.any(in_range):
+        result[in_range] = np.interp(x_grid[in_range], x_orig, y_orig)
+
+    return result.tolist()
+
+
 @dataclass
 class ConfigResult:
     """Results for a single config across all seeds."""
     config_idx: int
     trial_number: int
     params: Dict
+    max_sessions: int = 0  # Always set explicitly by run_config_simulations()
 
     # Categorized results
     v2_advantage_results: List = field(default_factory=list)
@@ -224,7 +262,7 @@ def load_and_sample_configs(
 def run_config_simulations(
     config: Dict,
     n_seeds: int,
-    max_sessions: int,
+    max_sessions_fallback: int,
     mechanism: str = 'frequency_amplifier',
     pattern: str = 'cold_stuck',
     window_size: int = 10,
@@ -235,7 +273,7 @@ def run_config_simulations(
     Args:
         config: Config dict with params
         n_seeds: Number of seeds to simulate
-        max_sessions: Maximum sessions per simulation
+        max_sessions_fallback: Fallback max_sessions if not in trial params
         mechanism: Client mechanism
         pattern: Initial memory pattern
         window_size: Complementarity tracking window
@@ -244,6 +282,9 @@ def run_config_simulations(
         ConfigResult with categorized simulation results
     """
     params = config['params']
+
+    # Use per-trial max_sessions from Optuna params, fall back to CLI value
+    max_sessions = params.get('max_sessions', max_sessions_fallback)
 
     # Fixed parameters
     enable_parataxic = True
@@ -285,6 +326,7 @@ def run_config_simulations(
         config_idx=config['config_idx'],
         trial_number=config['trial_number'],
         params=params,
+        max_sessions=max_sessions,
     )
 
     # Run simulations for each seed
@@ -319,9 +361,9 @@ def run_config_simulations(
 
 def process_config_wrapper(args):
     """Wrapper for multiprocessing."""
-    config, n_seeds, max_sessions, mechanism, pattern, window_size, u_matrix_name = args
+    config, n_seeds, max_sessions_fallback, mechanism, pattern, window_size, u_matrix_name = args
     return run_config_simulations(
-        config, n_seeds, max_sessions, mechanism, pattern, window_size, u_matrix_name
+        config, n_seeds, max_sessions_fallback, mechanism, pattern, window_size, u_matrix_name
     )
 
 
@@ -431,41 +473,43 @@ def visualize_aggregated_results(
     ax_comp = axes[0]
     ax_table = axes[1]
 
+    # X-axis: proportion of therapy as percentage
+    n_bins = len(v2_adv_mean) if len(v2_adv_mean) > 0 else (
+        len(baseline_adv_mean) if len(baseline_adv_mean) > 0 else len(remaining_mean))
+    x_pct = np.linspace(0, 100, n_bins, endpoint=False) if n_bins > 0 else np.array([])
+
     # Plot V2 advantage (green)
     if len(v2_adv_mean) > 0:
-        sessions = np.arange(len(v2_adv_mean)) + 1
-        ax_comp.plot(sessions, v2_adv_mean,
+        ax_comp.plot(x_pct[:len(v2_adv_mean)], v2_adv_mean,
                     color='#00AA00', linewidth=3, alpha=1.0,
                     label=f'V2 Advantage (n={breakdown["v2_advantage"]})')
-        ax_comp.fill_between(sessions,
+        ax_comp.fill_between(x_pct[:len(v2_adv_mean)],
                             v2_adv_mean - v2_adv_std,
                             v2_adv_mean + v2_adv_std,
                             color='#00AA00', alpha=0.2)
 
     # Plot baseline advantage (red)
     if len(baseline_adv_mean) > 0:
-        sessions = np.arange(len(baseline_adv_mean)) + 1
-        ax_comp.plot(sessions, baseline_adv_mean,
+        ax_comp.plot(x_pct[:len(baseline_adv_mean)], baseline_adv_mean,
                     color='#CC0000', linewidth=3, alpha=1.0,
                     label=f'Baseline Advantage (n={breakdown["baseline_advantage"]})')
-        ax_comp.fill_between(sessions,
+        ax_comp.fill_between(x_pct[:len(baseline_adv_mean)],
                             baseline_adv_mean - baseline_adv_std,
                             baseline_adv_mean + baseline_adv_std,
                             color='#CC0000', alpha=0.2)
 
     # Plot remaining (black)
     if len(remaining_mean) > 0:
-        sessions = np.arange(len(remaining_mean)) + 1
-        ax_comp.plot(sessions, remaining_mean,
+        ax_comp.plot(x_pct[:len(remaining_mean)], remaining_mean,
                     color='#333333', linewidth=2, alpha=0.8,
                     label=f'Remaining (n={breakdown["both_success"] + breakdown["both_fail"]})')
-        ax_comp.fill_between(sessions,
+        ax_comp.fill_between(x_pct[:len(remaining_mean)],
                             remaining_mean - remaining_std,
                             remaining_mean + remaining_std,
                             color='#333333', alpha=0.2)
 
     # Formatting
-    ax_comp.set_xlabel('Session Number', fontsize=14, fontweight='bold')
+    ax_comp.set_xlabel('% of Therapy Completed', fontsize=14, fontweight='bold')
     ax_comp.set_ylabel('Mean Octant Distance', fontsize=14, fontweight='bold')
     ax_comp.set_ylim(-0.2, 4.2)
     ax_comp.set_title(f'Aggregated Octant Distance Over Time{title_suffix}',
@@ -552,7 +596,9 @@ def main():
 
     # Simulation parameters
     parser.add_argument('--max-sessions', type=int, default=300,
-                       help='Maximum sessions per simulation')
+                       help='Fallback max sessions (used if trial params lack max_sessions)')
+    parser.add_argument('--n-bins', type=int, default=100,
+                       help='Number of bins on the normalized [0, 1] x-axis')
     parser.add_argument('--window-size', type=int, default=10,
                        help='Complementarity tracking window size')
     parser.add_argument('--mechanism', type=str, default='frequency_amplifier',
@@ -591,7 +637,8 @@ def main():
     print(f"Study: {args.study_name}")
     print(f"Configs to sample: {args.n_configs}")
     print(f"Seeds per config: {args.n_seeds}")
-    print(f"Max sessions: {args.max_sessions}")
+    print(f"Max sessions (fallback): {args.max_sessions}")
+    print(f"Normalization bins: {args.n_bins}")
     print(f"Output directory: {output_dir}")
     print("=" * 80)
 
@@ -633,10 +680,11 @@ def main():
 
     # Initialize online statistics accumulators (memory-efficient approach)
     print("\nInitializing online statistics accumulators...")
-    v2_adv_stats = IncrementalTrajectoryStats(max_length=args.max_sessions)
-    baseline_adv_stats = IncrementalTrajectoryStats(max_length=args.max_sessions)
-    both_success_stats = IncrementalTrajectoryStats(max_length=args.max_sessions)
-    both_fail_stats = IncrementalTrajectoryStats(max_length=args.max_sessions)
+    n_bins = args.n_bins
+    v2_adv_stats = IncrementalTrajectoryStats(max_length=n_bins)
+    baseline_adv_stats = IncrementalTrajectoryStats(max_length=n_bins)
+    both_success_stats = IncrementalTrajectoryStats(max_length=n_bins)
+    both_fail_stats = IncrementalTrajectoryStats(max_length=n_bins)
 
     # Counters for breakdown
     breakdown_counts = {
@@ -677,21 +725,30 @@ def main():
                     # Save checkpoint to disk immediately
                     save_config_checkpoint(config_result, output_dir)
 
-                    # Update online statistics (memory-efficient aggregation)
+                    # Update online statistics with normalized trajectories
+                    trial_max = config_result.max_sessions
                     for sim_result in config_result.v2_advantage_results:
-                        v2_adv_stats.update(sim_result.overall_enacted_distance_trajectory)
+                        normed = normalize_trajectory(
+                            sim_result.overall_enacted_distance_trajectory, trial_max, n_bins)
+                        v2_adv_stats.update(normed)
                         breakdown_counts['v2_advantage'] += 1
 
                     for sim_result in config_result.baseline_advantage_results:
-                        baseline_adv_stats.update(sim_result.overall_enacted_distance_trajectory)
+                        normed = normalize_trajectory(
+                            sim_result.overall_enacted_distance_trajectory, trial_max, n_bins)
+                        baseline_adv_stats.update(normed)
                         breakdown_counts['baseline_advantage'] += 1
 
                     for sim_result in config_result.both_success_results:
-                        both_success_stats.update(sim_result.overall_enacted_distance_trajectory)
+                        normed = normalize_trajectory(
+                            sim_result.overall_enacted_distance_trajectory, trial_max, n_bins)
+                        both_success_stats.update(normed)
                         breakdown_counts['both_success'] += 1
 
                     for sim_result in config_result.both_fail_results:
-                        both_fail_stats.update(sim_result.overall_enacted_distance_trajectory)
+                        normed = normalize_trajectory(
+                            sim_result.overall_enacted_distance_trajectory, trial_max, n_bins)
+                        both_fail_stats.update(normed)
                         breakdown_counts['both_fail'] += 1
 
                     # Free memory immediately - don't keep ConfigResult in RAM!
@@ -740,7 +797,7 @@ def main():
 
     # Combine both_success and both_fail for "remaining" category
     print("Combining both_success and both_fail into 'remaining' category...")
-    remaining_stats = IncrementalTrajectoryStats(max_length=args.max_sessions)
+    remaining_stats = IncrementalTrajectoryStats(max_length=n_bins)
 
     # Re-aggregate from checkpoints for remaining category
     # (This is the only place we reload from disk, but just to combine two categories)
@@ -750,13 +807,18 @@ def main():
     print(f"Re-aggregating {len(checkpoint_files)} configs for 'remaining' category...")
     for checkpoint_path in tqdm(checkpoint_files, desc="Merging remaining"):
         config_result = load_config_checkpoint(checkpoint_path)
+        trial_max = config_result.max_sessions
 
-        # Add both_success and both_fail to remaining stats
+        # Add both_success and both_fail to remaining stats (normalized)
         for sim_result in config_result.both_success_results:
-            remaining_stats.update(sim_result.overall_enacted_distance_trajectory)
+            normed = normalize_trajectory(
+                sim_result.overall_enacted_distance_trajectory, trial_max, n_bins)
+            remaining_stats.update(normed)
 
         for sim_result in config_result.both_fail_results:
-            remaining_stats.update(sim_result.overall_enacted_distance_trajectory)
+            normed = normalize_trajectory(
+                sim_result.overall_enacted_distance_trajectory, trial_max, n_bins)
+            remaining_stats.update(normed)
 
         # Free memory
         del config_result
