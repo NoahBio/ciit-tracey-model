@@ -36,6 +36,9 @@ import json
 from datetime import datetime
 from scipy import stats
 from typing import List, Dict, Tuple
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import LabelEncoder
 
 
 # Suppress Optuna info logs
@@ -117,6 +120,37 @@ def analysis_1_fanova(study, output_dir: Path, report: dict, max_trials: int = 5
 
     report['fanova_importances'] = importances
 
+    # --- Compute R² of the surrogate forest (model quality check) ---
+    trials_for_r2 = sampled_trials if n_total > max_trials else completed
+    r2_param_names = list(trials_for_r2[0].params.keys())
+
+    encoders = {}
+    X_rows = []
+    for t in trials_for_r2:
+        row = []
+        for p in r2_param_names:
+            val = t.params[p]
+            if isinstance(val, str):
+                if p not in encoders:
+                    encoders[p] = LabelEncoder()
+                    all_vals = [tr.params[p] for tr in trials_for_r2]
+                    encoders[p].fit(all_vals)
+                val = encoders[p].transform([val])[0]
+            row.append(val)
+        X_rows.append(row)
+
+    X = np.array(X_rows)
+    y = np.array([t.value for t in trials_for_r2])
+
+    forest = RandomForestRegressor(n_estimators=64, max_depth=64, random_state=42)
+    r2_scores = cross_val_score(forest, X, y, cv=5, scoring='r2')
+    r2_mean = r2_scores.mean()
+    r2_std = r2_scores.std()
+
+    report['fanova_r2_mean'] = round(r2_mean, 4)
+    report['fanova_r2_std'] = round(r2_std, 4)
+    print(f"    Surrogate forest R²: {r2_mean:.3f} ± {r2_std:.3f}")
+
     # Plot
     fig, ax = plt.subplots(figsize=(10, 6))
     params = list(importances.keys())
@@ -137,15 +171,24 @@ def analysis_1_fanova(study, output_dir: Path, report: dict, max_trials: int = 5
 
     ax.set_xlim(0, max(values) * 1.15)
     ax.grid(axis='x', alpha=0.3)
+
+    n_trials_used = len(trials_for_r2)
+    ax.text(0.98, 0.02,
+            f'Surrogate forest R² = {r2_mean:.3f} ± {r2_std:.3f}\n'
+            f'Trained on {n_trials_used:,} trials',
+            transform=ax.transAxes, ha='right', va='bottom',
+            fontsize=9, color='#444444',
+            bbox=dict(boxstyle='round,pad=0.4', facecolor='#f0f0f0', edgecolor='#cccccc', alpha=0.9))
+
     fig.tight_layout()
     fig.savefig(output_dir / '1_hyperparameter_importance.png', dpi=200, bbox_inches='tight')
     plt.close(fig)
     print(f"    Top 3: {params[0]}={values[0]:.1f}%, {params[1]}={values[1]:.1f}%, {params[2]}={values[2]:.1f}%")
 
 
-# ============================================================================
+# 
 # ANALYSIS 2: Deep Dive - Top 15 Trials
-# ============================================================================
+# ========================================================================================================================================================
 def analysis_2_top15(trials: list, output_dir: Path, report: dict):
     """Detailed analysis and parallel coordinates of top 15 trials."""
     print("  [2/8] Deep dive into top 15 trials...")
@@ -153,7 +196,10 @@ def analysis_2_top15(trials: list, output_dir: Path, report: dict):
     sorted_trials = sorted(trials, key=lambda t: t.value, reverse=True)
     top15 = sorted_trials[:15]
 
-    param_names = sorted(top15[0].params.keys())
+    param_names = sorted(
+        p for p in top15[0].params.keys()
+        if isinstance(top15[0].params[p], (int, float))
+    )
 
     # Collect data for report
     top15_data = []
@@ -164,7 +210,7 @@ def analysis_2_top15(trials: list, output_dir: Path, report: dict):
             'v2_success': round(t.user_attrs.get('omniscient_success', 0) * 100, 1),
             'bl_success': round(t.user_attrs.get('complementary_success', 0) * 100, 1),
             'v2_dropout': round(t.user_attrs.get('omniscient_dropout', 0) * 100, 2),
-            'params': {k: round(v, 4) for k, v in t.params.items()},
+            'params': {k: round(v, 4) if isinstance(v, float) else v for k, v in t.params.items()},
         }
         top15_data.append(entry)
     report['top15_trials'] = top15_data
@@ -546,7 +592,10 @@ def analysis_6_percentile_contrast(trials: list, output_dir: Path, report: dict)
     top_10pct = sorted_trials[:int(n * 0.1)]
     bottom_10pct = sorted_trials[int(n * 0.9):]
 
-    param_names = sorted(top_10pct[0].params.keys())
+    param_names = sorted(
+        p for p in top_10pct[0].params.keys()
+        if isinstance(top_10pct[0].params[p], (int, float))
+    )
 
     contrast_data = {}
     for p in param_names:
@@ -782,7 +831,10 @@ def analysis_8_negative_results(trials: list, output_dir: Path, report: dict):
         'mean_negative_advantage': round(np.mean([t.value for t in negative_trials]) * 100, 2) if negative_trials else 0,
     }
 
-    param_names = sorted(trials[0].params.keys())
+    param_names = sorted(
+        p for p in trials[0].params.keys()
+        if isinstance(trials[0].params[p], (int, float))
+    )
 
     # Compare parameter distributions: negative vs positive trials
     param_comparison = {}
