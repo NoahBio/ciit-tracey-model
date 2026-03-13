@@ -15,6 +15,7 @@ psutil>=7.0.0
 optuna>=4.6.0
 optuna-dashboard>=0.20.0
 plotly>=5.0.0
+scikit-learn>=1.8.0
 
 # Testing
 pytest>=7.4.0
