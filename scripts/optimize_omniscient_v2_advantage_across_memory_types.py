@@ -247,7 +247,7 @@ def objective(trial: optuna.Trial, n_seeds: int = 50, therapist_version: str = '
 def create_or_load_study(
     study_name: str,
     storage_path: Path,
-    n_startup_trials: int = 25,
+    n_startup_trials: int = 3000,
 ) -> optuna.Study:
     """Create new study or load existing one.
 
